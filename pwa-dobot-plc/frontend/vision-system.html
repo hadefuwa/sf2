@@ -789,11 +789,24 @@
                                 <div>Start: DB123.DBX40.0</div>
                                 <div>Connected: DB123.DBX40.1</div>
                                 <div>Busy: DB123.DBX40.2</div>
-                                <div>Object_Detected: DB123.DBX40.3</div>
-                                <div>Object_OK: DB123.DBX40.4</div>
-                                <div>Defect_Detected: DB123.DBX40.5</div>
+                                <div>Completed: DB123.DBX40.3</div>
+                                <div>Object_Detected: DB123.DBX40.4</div>
+                                <div>Object_OK: DB123.DBX40.5</div>
+                                <div>Defect_Detected: DB123.DBX40.6</div>
                                 <div>Object_Number: DB123.DBW42</div>
                                 <div>Defect_Number: DB123.DBW44</div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <h5 style="color: var(--primary-cyan); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 0;">Current Tag Status</h5>
+                                <button class="btn btn-primary" onclick="refreshPlcTags()" style="font-size: 9px; padding: 4px 8px;">
+                                    &#128260; Refresh
+                                </button>
+                            </div>
+                            <div id="plcTagsStatus" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 10px;">
+                                <div style="color: var(--text-muted); text-align: center; padding: 12px; grid-column: 1 / -1;">Loading tag status...</div>
                             </div>
                         </div>
 
@@ -932,6 +945,7 @@
             startStreamImmediately();
             loadDetectionParams();
             loadDb123Config();
+            updatePlcTagsStatus();
             topLevelObjectDetectionEnabled = true;
             objectDetectionEnabled = true;
             topLevelDefectDetectionEnabled = true;
@@ -1975,6 +1989,9 @@
 
         // Update status every 5 seconds
         setInterval(updateDb123Status, 5000);
+        
+        // Update PLC tags every 2 seconds
+        setInterval(updatePlcTagsStatus, 2000);
 
         // PLC Connection Functions
         async function connectToPLC() {
@@ -1989,6 +2006,7 @@
                 if (result.success && result.connected) {
                     addSerialLog('✓ PLC connected successfully', 'success');
                     updateDb123Status();
+                    updatePlcTagsStatus();
                     alert('PLC connected successfully!');
                 } else {
                     addSerialLog(`✗ PLC connection failed: ${result.error || 'Unknown error'}`, 'error');
@@ -1999,6 +2017,100 @@
                 addSerialLog(`PLC connection error: ${error.message}`, 'error');
                 alert(`Error connecting to PLC: ${error.message}`);
             }
+        }
+
+        // PLC Tags Status Functions
+        async function updatePlcTagsStatus() {
+            const tagsDiv = document.getElementById('plcTagsStatus');
+            if (!tagsDiv) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/plc/db123/read`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                if (data.error) {
+                    tagsDiv.innerHTML = `
+                        <div style="color: var(--accent-red); text-align: center; padding: 12px; grid-column: 1 / -1;">
+                            Error: ${data.error}
+                        </div>
+                    `;
+                    return;
+                }
+                
+                const tags = data.tags || {};
+                
+                // Helper function to format boolean values
+                const formatBool = (value) => {
+                    if (value === true || value === 1) {
+                        return '<span style="color: var(--accent-green); font-weight: 700;">TRUE</span>';
+                    } else {
+                        return '<span style="color: var(--text-muted);">FALSE</span>';
+                    }
+                };
+                
+                tagsDiv.innerHTML = `
+                    <div style="padding: 8px; background: var(--bg-panel); border: 1px solid var(--border-color); clip-path: polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px);">
+                        <div style="color: var(--text-secondary); font-size: 9px; margin-bottom: 4px;">Start</div>
+                        <div style="color: var(--primary-cyan); font-size: 11px; font-weight: 700;">${formatBool(tags.start)}</div>
+                        <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBX40.0</div>
+                    </div>
+                    <div style="padding: 8px; background: var(--bg-panel); border: 1px solid var(--border-color); clip-path: polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px);">
+                        <div style="color: var(--text-secondary); font-size: 9px; margin-bottom: 4px;">Connected</div>
+                        <div style="color: var(--primary-cyan); font-size: 11px; font-weight: 700;">${formatBool(tags.connected)}</div>
+                        <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBX40.1</div>
+                    </div>
+                    <div style="padding: 8px; background: var(--bg-panel); border: 1px solid var(--border-color); clip-path: polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px);">
+                        <div style="color: var(--text-secondary); font-size: 9px; margin-bottom: 4px;">Busy</div>
+                        <div style="color: var(--primary-cyan); font-size: 11px; font-weight: 700;">${formatBool(tags.busy)}</div>
+                        <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBX40.2</div>
+                    </div>
+                    <div style="padding: 8px; background: var(--bg-panel); border: 1px solid var(--border-color); clip-path: polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px);">
+                        <div style="color: var(--text-secondary); font-size: 9px; margin-bottom: 4px;">Completed</div>
+                        <div style="color: var(--primary-cyan); font-size: 11px; font-weight: 700;">${formatBool(tags.completed)}</div>
+                        <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBX40.3</div>
+                    </div>
+                    <div style="padding: 8px; background: var(--bg-panel); border: 1px solid var(--border-color); clip-path: polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px);">
+                        <div style="color: var(--text-secondary); font-size: 9px; margin-bottom: 4px;">Object_Detected</div>
+                        <div style="color: var(--primary-cyan); font-size: 11px; font-weight: 700;">${formatBool(tags.object_detected)}</div>
+                        <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBX40.4</div>
+                    </div>
+                    <div style="padding: 8px; background: var(--bg-panel); border: 1px solid var(--border-color); clip-path: polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px);">
+                        <div style="color: var(--text-secondary); font-size: 9px; margin-bottom: 4px;">Object_OK</div>
+                        <div style="color: var(--primary-cyan); font-size: 11px; font-weight: 700;">${formatBool(tags.object_ok)}</div>
+                        <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBX40.5</div>
+                    </div>
+                    <div style="padding: 8px; background: var(--bg-panel); border: 1px solid var(--border-color); clip-path: polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px);">
+                        <div style="color: var(--text-secondary); font-size: 9px; margin-bottom: 4px;">Defect_Detected</div>
+                        <div style="color: var(--primary-cyan); font-size: 11px; font-weight: 700;">${formatBool(tags.defect_detected)}</div>
+                        <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBX40.6</div>
+                    </div>
+                    <div style="padding: 8px; background: var(--bg-panel); border: 1px solid var(--border-color); clip-path: polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px);">
+                        <div style="color: var(--text-secondary); font-size: 9px; margin-bottom: 4px;">Object_Number</div>
+                        <div style="color: var(--primary-cyan); font-size: 11px; font-weight: 700;">${tags.object_number || 0}</div>
+                        <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBW42</div>
+                    </div>
+                    <div style="padding: 8px; background: var(--bg-panel); border: 1px solid var(--border-color); clip-path: polygon(6px 0%, 100% 0%, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0% 100%, 0% 6px);">
+                        <div style="color: var(--text-secondary); font-size: 9px; margin-bottom: 4px;">Defect_Number</div>
+                        <div style="color: var(--primary-cyan); font-size: 11px; font-weight: 700;">${tags.defect_number || 0}</div>
+                        <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBW44</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error updating PLC tags status:', error);
+                tagsDiv.innerHTML = `
+                    <div style="color: var(--accent-red); text-align: center; padding: 12px; grid-column: 1 / -1;">
+                        Error loading tags: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        async function refreshPlcTags() {
+            addSerialLog('Refreshing PLC tag status...', 'plc');
+            await updatePlcTagsStatus();
         }
     </script>
 </body>
