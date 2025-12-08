@@ -1756,95 +1756,82 @@ def vision_analyze():
                 object_results = camera_service.detect_objects(frame, method=object_method, params=object_params)
                 detected_objects = object_results.get('objects', [])
             
-            # Assign counter numbers to detected objects using position-based matching
-            # Sort by x position (left to right) for consistent ordering
-            detected_objects.sort(key=lambda obj: obj.get('x', 0))
+            # Find the most central counter (only process 1 counter)
+            central_counter = find_most_central_counter(detected_objects, frame.shape)
             
-            # Load existing counter positions (from JSON file and saved images)
-            existing_counters = load_existing_counter_positions()
-            existing_counter_numbers = set(existing_counters.keys())
-            
-            # Track which detected objects have been matched in this frame
-            detection_timestamp = time.time()
-            matched_counters = {}  # Maps counter_number -> obj for position tracking
-            updated_positions = {}  # Track positions to save at end
-            
-            for obj in detected_objects:
-                obj_center = obj.get('center', (obj.get('x', 0) + obj.get('width', 0) // 2,
-                                                obj.get('y', 0) + obj.get('height', 0) // 2))
+            if central_counter:
+                # Only process the most central counter
+                logger.info(f"🎯 Processing most central counter (out of {len(detected_objects)} detected)")
+                
+                # Load existing counter positions (from JSON file and saved images)
+                existing_counters = load_existing_counter_positions()
+                existing_counter_numbers = set(existing_counters.keys())
+                
+                # Track which detected objects have been matched in this frame
+                detection_timestamp = time.time()
+                matched_counters = {}  # Maps counter_number -> obj for position tracking
+                updated_positions = {}  # Track positions to save at end
+                
+                obj_center = central_counter.get('center', (central_counter.get('x', 0) + central_counter.get('width', 0) // 2,
+                                                            central_counter.get('y', 0) + central_counter.get('height', 0) // 2))
                 
                 # Try to match this object to an existing counter by position
-                matched_counter_num = find_matching_counter(obj, existing_counters)
+                matched_counter_num = find_matching_counter(central_counter, existing_counters)
                 
                 if matched_counter_num:
                     # Matched to an existing counter - use that number
-                    obj['counterNumber'] = matched_counter_num
+                    central_counter['counterNumber'] = matched_counter_num
                     # Update position for future matching
                     updated_positions[matched_counter_num] = {
-                        'x': obj.get('x', 0),
-                        'y': obj.get('y', 0),
+                        'x': central_counter.get('x', 0),
+                        'y': central_counter.get('y', 0),
                         'center': obj_center,
                         'last_seen_timestamp': detection_timestamp
                     }
                     matched_counters[matched_counter_num] = updated_positions[matched_counter_num]
                     # Always save a new image with timestamp (allows multiple images per counter)
-                    saved_path = save_counter_image(frame, obj, matched_counter_num, detection_timestamp)
+                    saved_path = save_counter_image(frame, central_counter, matched_counter_num, detection_timestamp)
                     if saved_path:
-                        obj['saved_image_path'] = saved_path
-                elif len(existing_counter_numbers) < 16:
-                    # No match found and we have room for new counters
-                    # Assign new number and save image
+                        central_counter['saved_image_path'] = saved_path
+                else:
+                    # No match found - assign new number and save image
                     counter_num = get_next_counter_number()
-                    saved_path = save_counter_image(frame, obj, counter_num, detection_timestamp)
+                    saved_path = save_counter_image(frame, central_counter, counter_num, detection_timestamp)
                     if saved_path:
-                        obj['counterNumber'] = counter_num
+                        central_counter['counterNumber'] = counter_num
                         existing_counter_numbers.add(counter_num)
                         # Track position for future matching
                         updated_positions[counter_num] = {
-                            'x': obj.get('x', 0),
-                            'y': obj.get('y', 0),
+                            'x': central_counter.get('x', 0),
+                            'y': central_counter.get('y', 0),
                             'center': obj_center,
                             'last_seen_timestamp': detection_timestamp
                         }
                         matched_counters[counter_num] = updated_positions[counter_num]
-                        obj['saved_image_path'] = saved_path
-                        
-                        # Check if we've now reached 16 counters - if so, clean up all images
-                        if len(existing_counter_numbers) >= 16:
-                            logger.info("16 counters detected - cleaning up all images to start fresh")
-                            cleanup_all_counter_images()
-                            # Also reset counter tracker and positions
-                            _counter_tracker['max_counter_number'] = 0
-                            if os.path.exists(COUNTER_POSITIONS_FILE):
-                                try:
-                                    os.remove(COUNTER_POSITIONS_FILE)
-                                except Exception as e:
-                                    logger.warning(f"Failed to delete counter positions file: {e}")
-                    else:
-                        # Image already exists (shouldn't happen with new number, but handle it)
-                        _counter_tracker['max_counter_number'] = max(0, _counter_tracker['max_counter_number'] - 1)
-                else:
-                    # Already have 16 counters and no match found - skip this detection
-                    logger.debug(f"Skipping counter detection - max limit reached and no position match")
-                    pass
-            
-            # Save updated positions for next detection cycle
-            if updated_positions:
-                # Merge with existing positions
-                all_positions = existing_counters.copy()
-                all_positions.update(updated_positions)
-                save_counter_positions(all_positions)
-            
-            # Extract ROI regions from detected objects
-            for obj in detected_objects:
-                x, y = obj['x'], obj['y']
-                w, h = obj['width'], obj['height']
+                        central_counter['saved_image_path'] = saved_path
+                
+                # Save updated positions for next detection cycle
+                if updated_positions:
+                    # Merge with existing positions
+                    all_positions = existing_counters.copy()
+                    all_positions.update(updated_positions)
+                    save_counter_positions(all_positions)
+                
+                # Extract ROI region from the central counter
+                x, y = central_counter['x'], central_counter['y']
+                w, h = central_counter['width'], central_counter['height']
                 padding = object_params.get('roi_padding', 10)
                 x1 = max(0, x - padding)
                 y1 = max(0, y - padding)
                 x2 = min(frame.shape[1], x + w + padding)
                 y2 = min(frame.shape[0], y + h + padding)
                 roi_regions.append((x1, y1, x2, y2))
+                
+                # Update detected_objects to only include the central counter
+                detected_objects = [central_counter]
+            else:
+                detected_objects = []
+                logger.info("No counters detected")
         
         # Return object detection results only (defect detection disabled)
         results = {
