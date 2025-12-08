@@ -1302,22 +1302,41 @@
                         defect_detection_enabled: false
                     })
                 });
-                if (captureResponse.ok) {
-                    const blob = await captureResponse.blob();
-                    const url = URL.createObjectURL(blob);
-                    const analyzedImg = document.getElementById('analyzedImage');
-                    const analyzedPlaceholder = document.getElementById('analyzedPlaceholder');
-                    if (analyzedImg.src && analyzedImg.src.startsWith('blob:')) {
-                        URL.revokeObjectURL(analyzedImg.src);
+                
+                if (captureResponse.status === 403) {
+                    // Start command not active - backend rejected the request
+                    const errorText = await captureResponse.text();
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (e) {
+                        errorData = { message: errorText };
                     }
-                    analyzedImg.src = url;
-                    analyzedImg.style.display = 'block';
-                    analyzedPlaceholder.style.display = 'none';
-                    const analyzedStatusIndicator = document.getElementById('analyzedStatusIndicator');
-                    const analyzedStatusText = document.getElementById('analyzedStatusText');
-                    if (analyzedStatusIndicator) analyzedStatusIndicator.classList.add('connected');
-                    if (analyzedStatusText) analyzedStatusText.textContent = 'Analysis Complete';
-                    const detectResponse = await fetch(`${API_BASE}/api/vision/detect`, {
+                    addSerialLog(`⏸️ ${errorData.message || 'PLC Start command not active'}`, 'warning');
+                    return;
+                }
+                
+                if (!captureResponse.ok) {
+                    addSerialLog(`Analysis API error: ${captureResponse.status}`, 'error');
+                    return;
+                }
+                
+                const blob = await captureResponse.blob();
+                const url = URL.createObjectURL(blob);
+                const analyzedImg = document.getElementById('analyzedImage');
+                const analyzedPlaceholder = document.getElementById('analyzedPlaceholder');
+                if (analyzedImg.src && analyzedImg.src.startsWith('blob:')) {
+                    URL.revokeObjectURL(analyzedImg.src);
+                }
+                analyzedImg.src = url;
+                analyzedImg.style.display = 'block';
+                analyzedPlaceholder.style.display = 'none';
+                const analyzedStatusIndicator = document.getElementById('analyzedStatusIndicator');
+                const analyzedStatusText = document.getElementById('analyzedStatusText');
+                if (analyzedStatusIndicator) analyzedStatusIndicator.classList.add('connected');
+                if (analyzedStatusText) analyzedStatusText.textContent = 'Analysis Complete';
+                
+                const detectResponse = await fetch(`${API_BASE}/api/vision/detect`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
