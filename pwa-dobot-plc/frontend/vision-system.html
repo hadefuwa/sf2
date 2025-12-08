@@ -625,6 +625,16 @@
                 </div>
             </div>
 
+            <!-- PLC Start Command Status Banner -->
+            <div id="plcStartStatusBanner" class="content" style="margin-bottom: 24px; padding: 16px 24px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="status-indicator" id="plcStartIndicator"></span>
+                    <span id="plcStartStatusText" style="color: var(--text-secondary); font-size: 13px; font-weight: 600;">
+                        Loading PLC status...
+                    </span>
+                </div>
+            </div>
+
             <!-- Top-Level Detection Settings -->
             <div class="content">
                 <div class="camera-section">
@@ -946,6 +956,7 @@
             loadDetectionParams();
             loadDb123Config();
             updatePlcTagsStatus();
+            updatePlcStartStatusBanner();
             topLevelObjectDetectionEnabled = true;
             objectDetectionEnabled = true;
             topLevelDefectDetectionEnabled = true;
@@ -2041,6 +2052,9 @@
         
         // Update PLC tags every 2 seconds
         setInterval(updatePlcTagsStatus, 2000);
+        
+        // Update PLC Start status banner every 2 seconds
+        setInterval(updatePlcStartStatusBanner, 2000);
 
         // PLC Connection Functions
         async function connectToPLC() {
@@ -2160,6 +2174,75 @@
         async function refreshPlcTags() {
             addSerialLog('Refreshing PLC tag status...', 'plc');
             await updatePlcTagsStatus();
+        }
+
+        // PLC Start Status Banner Functions
+        async function updatePlcStartStatusBanner() {
+            const banner = document.getElementById('plcStartStatusBanner');
+            const indicator = document.getElementById('plcStartIndicator');
+            const statusText = document.getElementById('plcStartStatusText');
+            
+            if (!banner || !indicator || !statusText) return;
+            
+            try {
+                const configResponse = await fetch(`${API_BASE}/api/config`);
+                const config = await configResponse.json();
+                const db123Config = config.plc?.db123 || {};
+                
+                if (!db123Config.enabled) {
+                    // DB123 disabled - hide banner or show disabled message
+                    banner.style.display = 'none';
+                    return;
+                }
+                
+                banner.style.display = 'block';
+                
+                // Get PLC connection status
+                let plcConnected = false;
+                try {
+                    const plcStatusResponse = await fetch(`${API_BASE}/api/plc/status`);
+                    const plcStatus = await plcStatusResponse.json();
+                    plcConnected = plcStatus.connected || false;
+                } catch (e) {
+                    plcConnected = false;
+                }
+                
+                if (!plcConnected) {
+                    indicator.classList.remove('connected');
+                    statusText.innerHTML = '<span style="color: var(--accent-red);">⚠️ PLC Not Connected - Cannot read Start command</span>';
+                    banner.style.borderLeft = '4px solid var(--accent-red)';
+                    return;
+                }
+                
+                // Get Start command status
+                const tagsResponse = await fetch(`${API_BASE}/api/plc/db123/read`);
+                if (!tagsResponse.ok) {
+                    indicator.classList.remove('connected');
+                    statusText.innerHTML = '<span style="color: var(--accent-orange);">⚠️ Cannot read Start command from PLC</span>';
+                    banner.style.borderLeft = '4px solid var(--accent-orange)';
+                    return;
+                }
+                
+                const tagsData = await tagsResponse.json();
+                const startCommand = tagsData.tags?.start || false;
+                
+                if (startCommand) {
+                    // Start command is active
+                    indicator.classList.add('connected');
+                    statusText.innerHTML = '<span style="color: var(--accent-green);">✓ Start Command ACTIVE - Vision processing enabled</span>';
+                    banner.style.borderLeft = '4px solid var(--accent-green)';
+                } else {
+                    // Start command is not active
+                    indicator.classList.remove('connected');
+                    statusText.innerHTML = '<span style="color: var(--primary-cyan);">⏸️ Awaiting Start command from PLC</span>';
+                    banner.style.borderLeft = '4px solid var(--primary-cyan)';
+                }
+            } catch (error) {
+                console.error('Error updating PLC Start status banner:', error);
+                indicator.classList.remove('connected');
+                statusText.innerHTML = `<span style="color: var(--accent-red);">⚠️ Error: ${error.message}</span>`;
+                banner.style.borderLeft = '4px solid var(--accent-red)';
+            }
         }
     </script>
 </body>
