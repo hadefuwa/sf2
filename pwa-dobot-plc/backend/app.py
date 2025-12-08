@@ -1722,11 +1722,32 @@ def vision_detect_objects():
 
 @app.route('/api/vision/analyze', methods=['POST'])
 def vision_analyze():
-    """Analyze frame and return annotated image (with optional object detection)"""
+    """Analyze frame and return annotated image (with optional object detection)
+    
+    Note: Vision processing is gated by PLC Start command (DB123.DBX40.0).
+    Processing will only occur when Start command is active.
+    """
     if camera_service is None:
         return jsonify({'error': 'Camera service not initialized'}), 503
     
     try:
+        # Check if PLC Start command is active (if DB123 is enabled)
+        config = load_config()
+        db123_config = config.get('plc', {}).get('db123', {})
+        if db123_config.get('enabled', False):
+            if plc_client is None or not plc_client.is_connected():
+                return jsonify({'error': 'PLC not connected - cannot check Start command'}), 503
+            
+            db_number = db123_config.get('db_number', 123)
+            start_command = plc_client.read_vision_start_command(db_number)
+            
+            if not start_command:
+                logger.debug("Vision analyze blocked - PLC Start command not active")
+                return jsonify({
+                    'error': 'PLC Start command not active',
+                    'message': 'Vision processing requires PLC Start command (DB123.DBX40.0) to be True'
+                }), 403
+        
         data = request.json or {}
         method = data.get('method', 'combined')
         use_object_detection = data.get('use_object_detection', False)
@@ -1876,11 +1897,32 @@ def vision_analyze():
 
 @app.route('/api/vision/detect', methods=['POST'])
 def vision_detect():
-    """Detect objects/defects and return JSON results (no image)"""
+    """Detect objects/defects and return JSON results (no image)
+    
+    Note: Vision processing is gated by PLC Start command (DB123.DBX40.0).
+    Processing will only occur when Start command is active.
+    """
     if camera_service is None:
         return jsonify({'error': 'Camera service not initialized'}), 503
 
     try:
+        # Check if PLC Start command is active (if DB123 is enabled)
+        config = load_config()
+        db123_config = config.get('plc', {}).get('db123', {})
+        if db123_config.get('enabled', False):
+            if plc_client is None or not plc_client.is_connected():
+                return jsonify({'error': 'PLC not connected - cannot check Start command'}), 503
+            
+            db_number = db123_config.get('db_number', 123)
+            start_command = plc_client.read_vision_start_command(db_number)
+            
+            if not start_command:
+                logger.debug("Vision detect blocked - PLC Start command not active")
+                return jsonify({
+                    'error': 'PLC Start command not active',
+                    'message': 'Vision processing requires PLC Start command (DB123.DBX40.0) to be True'
+                }), 403
+        
         data = request.json or {}
         object_detection_enabled = data.get('object_detection_enabled', True)
         defect_detection_enabled = data.get('defect_detection_enabled', False)
