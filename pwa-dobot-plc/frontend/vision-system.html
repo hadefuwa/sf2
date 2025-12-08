@@ -1261,6 +1261,31 @@
 
         async function detectObjectsOnly() {
             try {
+                // Check if PLC Start command is active before processing
+                const configResponse = await fetch(`${API_BASE}/api/config`);
+                const config = await configResponse.json();
+                const db123Config = config.plc?.db123 || {};
+                
+                if (db123Config.enabled) {
+                    // DB123 is enabled - check Start command
+                    const tagsResponse = await fetch(`${API_BASE}/api/plc/db123/read`);
+                    if (tagsResponse.ok) {
+                        const tagsData = await tagsResponse.json();
+                        const startCommand = tagsData.tags?.start || false;
+                        
+                        if (!startCommand) {
+                            // Start command is False - skip detection
+                            addSerialLog('⏸️ Detection skipped - PLC Start command not active', 'warning');
+                            return;
+                        }
+                    } else {
+                        // Can't read tags - skip to be safe
+                        addSerialLog('⏸️ Detection skipped - Cannot read PLC tags', 'warning');
+                        return;
+                    }
+                }
+                // If DB123 is disabled, allow processing (for testing)
+                
                 const objectMethodElement = document.getElementById('objectDetectionMethod');
                 const objectMethod = objectMethodElement ? objectMethodElement.value : 'circle';
                 addSerialLog(`Running YOLO detection`, 'detection');
@@ -1307,6 +1332,11 @@
                         const objectCount = results.object_count || 0;
                         const objects = results.objects || [];
                         addSerialLog(`Detection results: ${objectCount} counters found`, 'detection');
+                    } else if (detectResponse.status === 403) {
+                        // Start command not active - backend rejected the request
+                        const errorData = await detectResponse.json();
+                        addSerialLog(`⏸️ ${errorData.message || 'PLC Start command not active'}`, 'warning');
+                        return;
                         if (objects.length > 0) {
                             objects.forEach((obj, idx) => {
                                 addSerialLog(`  Counter ${idx + 1}: center=(${obj.center[0]},${obj.center[1]}), radius=${obj.radius || 'N/A'}px, area=${obj.area?.toFixed(0) || 'N/A'}px², confidence=${(obj.confidence * 100).toFixed(0) || 'N/A'}%`, 'detection');
