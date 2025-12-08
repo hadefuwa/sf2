@@ -153,6 +153,10 @@ poll_thread = None
 poll_running = False
 poll_interval = 0.1  # 100ms
 
+# Vision handshaking state
+vision_handshake_processing = False
+vision_handshake_last_start_state = False
+
 def call_vision_service(frame: np.ndarray, params: Dict) -> Dict:
     """
     Call the vision service for YOLO detection
@@ -523,7 +527,8 @@ def save_config(config):
     with open(config_path, 'w') as f:
         json.dump(config, f, indent=2)
 
-def write_vision_to_plc(object_count: int, defect_count: int, object_ok: bool, defect_detected: bool, busy: bool = False):
+def write_vision_to_plc(object_count: int, defect_count: int, object_ok: bool, defect_detected: bool, 
+                       busy: bool = False, completed: bool = False):
     """Write vision detection results to PLC DB123 tags
     
     This is a wrapper function that uses the unified PLC client methods.
@@ -535,6 +540,7 @@ def write_vision_to_plc(object_count: int, defect_count: int, object_ok: bool, d
         object_ok: Whether objects are OK (no defects)
         defect_detected: Whether any defects were detected
         busy: Whether vision system is currently processing (default: False)
+        completed: Whether vision processing is completed (default: False)
     """
     if plc_client is None:
         return False
@@ -556,6 +562,7 @@ def write_vision_to_plc(object_count: int, defect_count: int, object_ok: bool, d
             object_ok=object_ok,
             defect_detected=defect_detected,
             busy=busy,
+            completed=completed,
             db_number=db_number
         )
     except Exception as e:
@@ -1265,9 +1272,115 @@ def start_polling_thread():
     poll_thread.start()
     logger.info("Polling thread started")
 
+def process_vision_handshake():
+    """Process vision detection when Start command is received from PLC
+    
+    This function:
+    1. Detects objects
+    2. Saves images
+    3. Checks for defects
+    4. Writes results to PLC
+    5. Sets Completed flag when done
+    """
+    global vision_handshake_processing
+    
+    if camera_service is None:
+        logger.warning("Camera service not available for handshake processing")
+        return False
+    
+    try:
+        vision_handshake_processing = True
+        logger.info("🔄 Vision handshake: Starting processing (Start command received)")
+        
+        # Set busy flag
+        write_vision_to_plc(0, 0, True, False, busy=True, completed=False)
+        
+        # Read current frame
+        frame = camera_service.read_frame()
+        if frame is None:
+            logger.error("Vision handshake: Failed to read frame")
+            write_vision_to_plc(0, 0, True, False, busy=False, completed=True)
+            return False
+        
+        # Run object detection using YOLO
+        object_params = {}
+        object_results = call_vision_service(frame, object_params)
+        
+        if 'error' in object_results:
+            logger.error(f"Vision handshake: Object detection error: {object_results['error']}")
+            write_vision_to_plc(0, 0, True, False, busy=False, completed=True)
+            return False
+        
+        detected_objects = object_results.get('objects', [])
+        object_count = len(detected_objects)
+        
+        # Save images for detected objects (similar to vision_analyze endpoint)
+        if detected_objects:
+            # Sort by x position (left to right) for consistent ordering
+            detected_objects.sort(key=lambda obj: obj.get('x', 0))
+            
+            # Load existing counter positions
+            existing_counters = load_existing_counter_positions()
+            existing_counter_numbers = set(existing_counters.keys())
+            
+            detection_timestamp = time.time()
+            
+            for obj in detected_objects:
+                obj_center = obj.get('center', (obj.get('x', 0) + obj.get('width', 0) // 2,
+                                                obj.get('y', 0) + obj.get('height', 0) // 2))
+                
+                # Try to match this object to an existing counter by position
+                matched_counter_num = find_matching_counter(obj, existing_counters)
+                
+                if matched_counter_num:
+                    # Matched to an existing counter - save image
+                    saved_path = save_counter_image(frame, obj, matched_counter_num, detection_timestamp)
+                    if saved_path:
+                        obj['counterNumber'] = matched_counter_num
+                        obj['saved_image_path'] = saved_path
+                elif len(existing_counter_numbers) < 16:
+                    # Assign new number and save image
+                    counter_num = get_next_counter_number()
+                    saved_path = save_counter_image(frame, obj, counter_num, detection_timestamp)
+                    if saved_path:
+                        obj['counterNumber'] = counter_num
+                        existing_counter_numbers.add(counter_num)
+                        obj['saved_image_path'] = saved_path
+        
+        # Check for defects (from stored results)
+        defect_count = 0
+        defect_detected = False
+        object_ok = True
+        
+        try:
+            if os.path.exists(COUNTER_DEFECTS_FILE):
+                with open(COUNTER_DEFECTS_FILE, 'r') as f:
+                    defect_data = json.load(f)
+                    # Count defects with significant issues
+                    defect_count = sum(1 for item in defect_data.values() 
+                                     if item.get('defect_results', {}).get('defects_found', False))
+                    defect_detected = defect_count > 0
+                    object_ok = not defect_detected
+        except Exception as e:
+            logger.debug(f"Error reading defect data: {e}")
+        
+        # Write final results to PLC (busy=False, completed=True)
+        write_vision_to_plc(object_count, defect_count, object_ok, defect_detected, 
+                          busy=False, completed=True)
+        
+        logger.info(f"✅ Vision handshake: Completed - {object_count} objects, {defect_count} defects")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Error in vision handshake processing: {e}", exc_info=True)
+        write_vision_to_plc(0, 0, True, False, busy=False, completed=True)
+        return False
+    finally:
+        vision_handshake_processing = False
+
 def poll_loop():
     """Background polling loop for real-time data"""
-    global poll_running
+    global poll_running, vision_handshake_last_start_state, vision_handshake_processing
 
     while poll_running:
         try:
@@ -1278,6 +1391,37 @@ def poll_loop():
                 'suction': False, 'ready': False, 'busy': False, 'error': False
             }
             target_pose = {'x': 0.0, 'y': 0.0, 'z': 0.0}
+            
+            # Vision handshaking: Check Start command from PLC
+            start_command = False
+            if plc_client and hasattr(plc_client, 'client') and plc_client.client is not None:
+                try:
+                    if plc_client.is_connected():
+                        try:
+                            config = load_config()
+                            db123_config = config.get('plc', {}).get('db123', {})
+                            if db123_config.get('enabled', False):
+                                db_number = db123_config.get('db_number', 123)
+                                start_command = plc_client.read_vision_start_command(db_number)
+                                
+                                # Detect rising edge of Start command (False -> True)
+                                if start_command and not vision_handshake_last_start_state and not vision_handshake_processing:
+                                    # Start command just went high - trigger vision processing
+                                    logger.info("📸 Vision Start command received from PLC - triggering processing")
+                                    # Run in a separate thread to avoid blocking polling
+                                    threading.Thread(target=process_vision_handshake, daemon=True).start()
+                                
+                                # Detect falling edge of Start command (True -> False)
+                                if not start_command and vision_handshake_last_start_state:
+                                    # Start command just went low - reset Completed flag
+                                    logger.info("🔄 Vision Start command released - resetting Completed flag")
+                                    write_vision_to_plc(0, 0, True, False, busy=False, completed=False)
+                                
+                                vision_handshake_last_start_state = start_command
+                        except Exception as e:
+                            logger.debug(f"PLC vision handshake read error: {e}")
+                except Exception as e:
+                    logger.debug(f"PLC check error in polling: {e}")
             
             # Only try PLC operations if snap7 is available and client exists
             if plc_client and hasattr(plc_client, 'client') and plc_client.client is not None:

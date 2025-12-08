@@ -430,6 +430,7 @@ class PLCClient:
                 'start': False,
                 'connected': False,
                 'busy': False,
+                'completed': False,
                 'object_detected': False,
                 'object_ok': False,
                 'defect_detected': False,
@@ -442,6 +443,7 @@ class PLCClient:
                     'start': False,
                     'connected': False,
                     'busy': False,
+                    'completed': False,
                     'object_detected': False,
                     'object_ok': False,
                     'defect_detected': False,
@@ -457,12 +459,13 @@ class PLCClient:
             defect_number = self.read_db_int(db_number, 44)
             
             return {
-                'start': get_bool(bool_data, 0, 0),
-                'connected': get_bool(bool_data, 0, 1),
-                'busy': get_bool(bool_data, 0, 2),
-                'object_detected': get_bool(bool_data, 0, 3),
-                'object_ok': get_bool(bool_data, 0, 4),
-                'defect_detected': get_bool(bool_data, 0, 5),
+                'start': get_bool(bool_data, 0, 0),          # 40.0
+                'connected': get_bool(bool_data, 0, 1),     # 40.1
+                'busy': get_bool(bool_data, 0, 2),          # 40.2
+                'completed': get_bool(bool_data, 0, 3),     # 40.3 (NEW)
+                'object_detected': get_bool(bool_data, 0, 4),  # 40.4 (was 40.3)
+                'object_ok': get_bool(bool_data, 0, 5),     # 40.5 (was 40.4)
+                'defect_detected': get_bool(bool_data, 0, 6),  # 40.6 (was 40.5)
                 'object_number': object_number if object_number is not None else 0,
                 'defect_number': defect_number if defect_number is not None else 0
             }
@@ -473,6 +476,7 @@ class PLCClient:
                 'start': False,
                 'connected': False,
                 'busy': False,
+                'completed': False,
                 'object_detected': False,
                 'object_ok': False,
                 'defect_detected': False,
@@ -484,9 +488,20 @@ class PLCClient:
         """Write vision system tags to DB123 with retry logic for "Job pending" errors
         
         Args:
-            tags: Dictionary with keys: start, connected, busy, object_detected, 
+            tags: Dictionary with keys: start, connected, busy, completed, object_detected, 
                   object_ok, defect_detected, object_number, defect_number
             db_number: Data block number (default 123)
+            
+        Address mapping:
+            - Start: 40.0
+            - Connected: 40.1
+            - Busy: 40.2
+            - Completed: 40.3 (NEW)
+            - Object_Detected: 40.4
+            - Object_OK: 40.5
+            - Defect_Detected: 40.6
+            - Object_Number: 42.0 (INT)
+            - Defect_Number: 44.0 (INT)
         """
         if not snap7_available or self.client is None:
             return False
@@ -509,19 +524,21 @@ class PLCClient:
                         continue
                     raise
                 
-                # Set individual bits
+                # Set individual bits (updated addresses with Completed at 40.3)
                 if 'start' in tags:
-                    set_bool(current_byte, 0, 0, bool(tags['start']))
+                    set_bool(current_byte, 0, 0, bool(tags['start']))  # 40.0
                 if 'connected' in tags:
-                    set_bool(current_byte, 0, 1, bool(tags['connected']))
+                    set_bool(current_byte, 0, 1, bool(tags['connected']))  # 40.1
                 if 'busy' in tags:
-                    set_bool(current_byte, 0, 2, bool(tags['busy']))
+                    set_bool(current_byte, 0, 2, bool(tags['busy']))  # 40.2
+                if 'completed' in tags:
+                    set_bool(current_byte, 0, 3, bool(tags['completed']))  # 40.3 (NEW)
                 if 'object_detected' in tags:
-                    set_bool(current_byte, 0, 3, bool(tags['object_detected']))
+                    set_bool(current_byte, 0, 4, bool(tags['object_detected']))  # 40.4 (was 40.3)
                 if 'object_ok' in tags:
-                    set_bool(current_byte, 0, 4, bool(tags['object_ok']))
+                    set_bool(current_byte, 0, 5, bool(tags['object_ok']))  # 40.5 (was 40.4)
                 if 'defect_detected' in tags:
-                    set_bool(current_byte, 0, 5, bool(tags['defect_detected']))
+                    set_bool(current_byte, 0, 6, bool(tags['defect_detected']))  # 40.6 (was 40.5)
                 
                 # Write byte 40 with all bool flags (with retry)
                 try:
@@ -582,7 +599,8 @@ class PLCClient:
     
     def write_vision_detection_results(self, object_count: int, defect_count: int, 
                                        object_ok: bool, defect_detected: bool, 
-                                       busy: bool = False, db_number: int = 123) -> bool:
+                                       busy: bool = False, completed: bool = False,
+                                       db_number: int = 123) -> bool:
         """Write vision detection results to PLC DB123 tags
         
         This is a high-level method that combines all vision system data into one call.
@@ -593,6 +611,7 @@ class PLCClient:
             object_ok: Whether objects are OK (no defects)
             defect_detected: Whether any defects were detected
             busy: Whether vision system is currently processing
+            completed: Whether vision processing is completed
             db_number: Data block number (default 123)
         
         Returns:
@@ -611,6 +630,7 @@ class PLCClient:
         tags = {
             'connected': connected,
             'busy': busy,
+            'completed': completed,
             'object_detected': object_detected,
             'object_ok': object_ok,
             'defect_detected': defect_detected,
@@ -652,57 +672,25 @@ class PLCClient:
         except Exception as e:
             logger.debug(f"Error writing vision fault bit: {e}")
             return {'written': False, 'reason': 'write_error', 'error': str(e)}
-
-    # ==================================================
-    # High-level Vision System Methods
-    # ==================================================
     
-    def write_vision_detection_results(self, object_count: int, defect_count: int, 
-                                       object_ok: bool, defect_detected: bool, 
-                                       busy: bool = False, db_number: int = 123) -> bool:
-        """Write vision detection results to PLC DB123 tags
-        
-        This is a high-level method that combines all vision system data into one call.
+    def read_vision_start_command(self, db_number: int = 123) -> bool:
+        """Read Start command from PLC (DB123.DBX40.0)
         
         Args:
-            object_count: Number of objects detected
-            defect_count: Number of defects found
-            object_ok: Whether objects are OK (no defects)
-            defect_detected: Whether any defects were detected
-            busy: Whether vision system is currently processing
             db_number: Data block number (default 123)
         
         Returns:
-            True if successful, False otherwise
+            True if Start command is active, False otherwise
         """
         if not self.is_connected():
             return False
         
-        # Determine tag values
-        connected = self.is_connected()
-        object_detected = object_count > 0
-        object_number = object_count
-        defect_number = defect_count
-        
-        # Prepare tags dictionary
-        tags = {
-            'connected': connected,
-            'busy': busy,
-            'object_detected': object_detected,
-            'object_ok': object_ok,
-            'defect_detected': defect_detected,
-            'object_number': object_number,
-            'defect_number': defect_number
-        }
-        
-        # Add small delay before writing to avoid "Job pending" if polling just ran
-        time.sleep(0.1)
-        
-        # Write using the unified write_vision_tags method
-        success = self.write_vision_tags(tags, db_number)
-        if success:
-            logger.debug(f"Vision detection results written to DB{db_number}: {tags}")
-        return success
+        try:
+            bool_data = self.client.db_read(db_number, 40, 1)
+            return get_bool(bool_data, 0, 0)  # Bit 0 = Start
+        except Exception as e:
+            logger.debug(f"Error reading Start command: {e}")
+            return False
     
     def write_vision_fault_bit(self, defects_found: bool, byte_offset: int = 1, bit_offset: int = 0) -> Dict[str, Any]:
         """Write vision fault status to PLC memory bit

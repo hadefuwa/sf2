@@ -31,17 +31,21 @@
           "byte": 40,
           "bit": 2
         },
-        "object_detected": {
+        "completed": {
           "byte": 40,
           "bit": 3
         },
-        "object_ok": {
+        "object_detected": {
           "byte": 40,
           "bit": 4
         },
-        "defect_detected": {
+        "object_ok": {
           "byte": 40,
           "bit": 5
+        },
+        "defect_detected": {
+          "byte": 40,
+          "bit": 6
         },
         "object_number": {
           "byte": 42
