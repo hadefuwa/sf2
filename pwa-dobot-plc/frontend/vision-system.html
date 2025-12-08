@@ -1348,54 +1348,58 @@
                 if (analyzedStatusText) analyzedStatusText.textContent = 'Analysis Complete';
                 
                 const detectResponse = await fetch(`${API_BASE}/api/vision/detect`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            object_detection_enabled: true,
-                            defect_detection_enabled: false,
-                            object_method: objectMethod,
-                            object_params: objectParams
-                        })
-                    });
-                    if (detectResponse.ok) {
-                        const results = await detectResponse.json();
-                        const objectCount = results.object_count || 0;
-                        const objects = results.objects || [];
-                        addSerialLog(`Detection results: ${objectCount} counters found`, 'detection');
-                    } else if (detectResponse.status === 403) {
-                        // Start command not active - backend rejected the request
-                        const errorData = await detectResponse.json();
-                        addSerialLog(`⏸️ ${errorData.message || 'PLC Start command not active'}`, 'warning');
-                        return;
-                        if (objects.length > 0) {
-                            objects.forEach((obj, idx) => {
-                                addSerialLog(`  Counter ${idx + 1}: center=(${obj.center[0]},${obj.center[1]}), radius=${obj.radius || 'N/A'}px, area=${obj.area?.toFixed(0) || 'N/A'}px², confidence=${(obj.confidence * 100).toFixed(0) || 'N/A'}%`, 'detection');
-                            });
-                        } else {
-                            addSerialLog('  No counters detected - check camera view and lighting', 'warning');
-                            addSerialLog(`  Model settings: Confidence=${objectParams.conf}, IOU=${objectParams.iou}`, 'info');
-                        }
-                        const statsDiv = document.getElementById('objectDetectionStats');
-                        if (statsDiv) statsDiv.style.display = 'block';
-                        const countElement = document.getElementById('currentObjectCount');
-                        const timeElement = document.getElementById('lastDetectionTime');
-                        if (countElement) countElement.textContent = objectCount;
-                        if (timeElement) timeElement.textContent = new Date().toLocaleTimeString();
-                        if (countElement) {
-                            if (objectCount === 4) {
-                                countElement.style.color = '#10b981';
-                            } else if (objectCount > 4) {
-                                countElement.style.color = '#f59e0b';
-                            } else {
-                                countElement.style.color = '#ef4444';
-                            }
-                        }
-                        updateCounterTimelineFromImages();
-                        addSerialLog(`Counter detection complete: Found ${objectCount} counters`, objectCount > 0 ? 'info' : 'detection');
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        object_detection_enabled: true,
+                        defect_detection_enabled: false,
+                        object_method: objectMethod,
+                        object_params: objectParams
+                    })
+                });
+                
+                if (detectResponse.status === 403) {
+                    // Start command not active - backend rejected the request
+                    const errorData = await detectResponse.json();
+                    addSerialLog(`⏸️ ${errorData.message || 'PLC Start command not active'}`, 'warning');
+                    return;
+                }
+                
+                if (detectResponse.ok) {
+                    const results = await detectResponse.json();
+                    const objectCount = results.object_count || 0;
+                    const objects = results.objects || [];
+                    addSerialLog(`Detection results: ${objectCount} counters found`, 'detection');
+                    
+                    if (objects.length > 0) {
+                        objects.forEach((obj, idx) => {
+                            addSerialLog(`  Counter ${idx + 1}: center=(${obj.center[0]},${obj.center[1]}), radius=${obj.radius || 'N/A'}px, area=${obj.area?.toFixed(0) || 'N/A'}px², confidence=${(obj.confidence * 100).toFixed(0) || 'N/A'}%`, 'detection');
+                        });
                     } else {
-                        const errorText = await detectResponse.text();
-                        addSerialLog(`Detection API error: ${detectResponse.status} - ${errorText}`, 'error');
+                        addSerialLog('  No counters detected - check camera view and lighting', 'warning');
+                        addSerialLog(`  Model settings: Confidence=${objectParams.conf}, IOU=${objectParams.iou}`, 'info');
                     }
+                    
+                    const statsDiv = document.getElementById('objectDetectionStats');
+                    if (statsDiv) statsDiv.style.display = 'block';
+                    const countElement = document.getElementById('currentObjectCount');
+                    const timeElement = document.getElementById('lastDetectionTime');
+                    if (countElement) countElement.textContent = objectCount;
+                    if (timeElement) timeElement.textContent = new Date().toLocaleTimeString();
+                    if (countElement) {
+                        if (objectCount === 4) {
+                            countElement.style.color = '#10b981';
+                        } else if (objectCount > 4) {
+                            countElement.style.color = '#f59e0b';
+                        } else {
+                            countElement.style.color = '#ef4444';
+                        }
+                    }
+                    updateCounterTimelineFromImages();
+                    addSerialLog(`Counter detection complete: Found ${objectCount} counters`, objectCount > 0 ? 'info' : 'detection');
+                } else {
+                    const errorText = await detectResponse.text();
+                    addSerialLog(`Detection API error: ${detectResponse.status} - ${errorText}`, 'error');
                 }
             } catch (error) {
                 console.error('Error in object detection:', error);
