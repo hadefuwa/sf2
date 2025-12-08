@@ -1459,15 +1459,18 @@ def poll_loop():
                                 # Detect rising edge of Start command (False -> True)
                                 if start_command and not vision_handshake_last_start_state and not vision_handshake_processing:
                                     # Start command just went high - trigger vision processing
-                                    logger.info("📸 Vision Start command received from PLC - triggering processing")
+                                    logger.info("📸 Vision Start command received from PLC (rising edge) - triggering processing")
                                     # Run in a separate thread to avoid blocking polling
                                     threading.Thread(target=process_vision_handshake, daemon=True).start()
-                                elif start_command and vision_handshake_last_start_state:
-                                    # Start command is still True (already processed or processing)
-                                    if vision_handshake_processing:
-                                        logger.debug("Vision processing already in progress")
-                                    else:
-                                        logger.debug("Start command still active but no rising edge detected")
+                                elif start_command and vision_handshake_last_start_state and not vision_handshake_processing:
+                                    # Start command is still True but we haven't processed it yet
+                                    # This can happen if Start was already True when app started
+                                    # Trigger processing once, then wait for next rising edge
+                                    logger.info("📸 Vision Start command is active (was already True) - triggering processing")
+                                    threading.Thread(target=process_vision_handshake, daemon=True).start()
+                                elif start_command and vision_handshake_processing:
+                                    # Start command is True and processing is in progress
+                                    logger.debug("Vision processing already in progress - waiting for completion")
                                 
                                 # Detect falling edge of Start command (True -> False)
                                 if not start_command and vision_handshake_last_start_state:
