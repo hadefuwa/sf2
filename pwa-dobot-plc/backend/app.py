@@ -1460,7 +1460,6 @@ def poll_loop():
                                 if start_command and not vision_handshake_last_start_state and not vision_handshake_processing:
                                     # Start command just went high - trigger vision processing
                                     logger.info("📸 Vision Start command received from PLC - triggering processing")
-                                    addSerialLog('📸 Vision Start command received from PLC - triggering processing', 'detection')
                                     # Run in a separate thread to avoid blocking polling
                                     threading.Thread(target=process_vision_handshake, daemon=True).start()
                                 elif start_command and vision_handshake_last_start_state:
