@@ -488,15 +488,16 @@ class PLCClient:
         """Write vision system tags to DB123 with retry logic for "Job pending" errors
         
         Args:
-            tags: Dictionary with keys: start, connected, busy, completed, object_detected, 
+            tags: Dictionary with keys: connected, busy, completed, object_detected, 
                   object_ok, defect_detected, object_number, defect_number
+                  NOTE: 'start' is READ-ONLY - only PLC can write to it (40.0)
             db_number: Data block number (default 123)
             
         Address mapping:
-            - Start: 40.0
+            - Start: 40.0 (READ-ONLY - PLC controlled)
             - Connected: 40.1
             - Busy: 40.2
-            - Completed: 40.3 (NEW)
+            - Completed: 40.3
             - Object_Detected: 40.4
             - Object_OK: 40.5
             - Defect_Detected: 40.6
@@ -525,8 +526,8 @@ class PLCClient:
                     raise
                 
                 # Set individual bits (updated addresses with Completed at 40.3)
-                if 'start' in tags:
-                    set_bool(current_byte, 0, 0, bool(tags['start']))  # 40.0
+                # NOTE: 'start' bit (40.0) is READ-ONLY - only PLC can write to it
+                # We preserve the existing Start bit value by not modifying it
                 if 'connected' in tags:
                     set_bool(current_byte, 0, 1, bool(tags['connected']))  # 40.1
                 if 'busy' in tags:
