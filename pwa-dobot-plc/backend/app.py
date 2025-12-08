@@ -17,7 +17,7 @@ import cv2
 import numpy as np
 import requests
 import base64
-from typing import Dict, List
+from typing import Dict, List, Optional
 from datetime import datetime
 from plc_client import PLCClient
 from dobot_client import DobotClient
@@ -300,6 +300,47 @@ def delete_old_counter_images(counter_number: int):
     
     except Exception as e:
         logger.error(f"Error deleting old counter images: {e}", exc_info=True)
+
+def find_most_central_counter(detected_objects: List[Dict], frame_shape: tuple) -> Optional[Dict]:
+    """
+    Find the counter that is closest to the center of the image
+    
+    Args:
+        detected_objects: List of detected counter objects
+        frame_shape: Tuple of (height, width) of the frame
+    
+    Returns:
+        The most central counter object, or None if no objects detected
+    """
+    if not detected_objects:
+        return None
+    
+    # Calculate image center
+    frame_height, frame_width = frame_shape[:2]
+    image_center_x = frame_width // 2
+    image_center_y = frame_height // 2
+    
+    best_counter = None
+    min_distance = float('inf')
+    
+    for obj in detected_objects:
+        # Get counter center coordinates
+        obj_center = obj.get('center')
+        if obj_center:
+            center_x, center_y = obj_center
+        else:
+            # Calculate center from bounding box if center not available
+            center_x = obj.get('x', 0) + obj.get('width', 0) // 2
+            center_y = obj.get('y', 0) + obj.get('height', 0) // 2
+        
+        # Calculate distance from image center
+        distance = ((center_x - image_center_x) ** 2 + (center_y - image_center_y) ** 2) ** 0.5
+        
+        if distance < min_distance:
+            min_distance = distance
+            best_counter = obj
+    
+    return best_counter
 
 def find_matching_counter(obj: Dict, existing_counters: Dict[int, Dict]) -> int:
     """
@@ -1312,12 +1353,13 @@ def process_vision_handshake():
             return False
         
         detected_objects = object_results.get('objects', [])
-        object_count = len(detected_objects)
         
-        # Save images for detected objects (similar to vision_analyze endpoint)
-        if detected_objects:
-            # Sort by x position (left to right) for consistent ordering
-            detected_objects.sort(key=lambda obj: obj.get('x', 0))
+        # Find the most central counter (only process 1 counter)
+        central_counter = find_most_central_counter(detected_objects, frame.shape)
+        
+        if central_counter:
+            # Only process the most central counter
+            logger.info(f"🎯 Processing most central counter (out of {len(detected_objects)} detected)")
             
             # Load existing counter positions
             existing_counters = load_existing_counter_positions()
@@ -1325,27 +1367,32 @@ def process_vision_handshake():
             
             detection_timestamp = time.time()
             
-            for obj in detected_objects:
-                obj_center = obj.get('center', (obj.get('x', 0) + obj.get('width', 0) // 2,
-                                                obj.get('y', 0) + obj.get('height', 0) // 2))
-                
-                # Try to match this object to an existing counter by position
-                matched_counter_num = find_matching_counter(obj, existing_counters)
-                
-                if matched_counter_num:
-                    # Matched to an existing counter - save image
-                    saved_path = save_counter_image(frame, obj, matched_counter_num, detection_timestamp)
-                    if saved_path:
-                        obj['counterNumber'] = matched_counter_num
-                        obj['saved_image_path'] = saved_path
-                elif len(existing_counter_numbers) < 16:
-                    # Assign new number and save image
-                    counter_num = get_next_counter_number()
-                    saved_path = save_counter_image(frame, obj, counter_num, detection_timestamp)
-                    if saved_path:
-                        obj['counterNumber'] = counter_num
-                        existing_counter_numbers.add(counter_num)
-                        obj['saved_image_path'] = saved_path
+            obj_center = central_counter.get('center', (central_counter.get('x', 0) + central_counter.get('width', 0) // 2,
+                                                        central_counter.get('y', 0) + central_counter.get('height', 0) // 2))
+            
+            # Try to match this object to an existing counter by position
+            matched_counter_num = find_matching_counter(central_counter, existing_counters)
+            
+            if matched_counter_num:
+                # Matched to an existing counter - save image
+                saved_path = save_counter_image(frame, central_counter, matched_counter_num, detection_timestamp)
+                if saved_path:
+                    central_counter['counterNumber'] = matched_counter_num
+                    central_counter['saved_image_path'] = saved_path
+            else:
+                # Assign new number and save image
+                counter_num = get_next_counter_number()
+                saved_path = save_counter_image(frame, central_counter, counter_num, detection_timestamp)
+                if saved_path:
+                    central_counter['counterNumber'] = counter_num
+                    existing_counter_numbers.add(counter_num)
+                    central_counter['saved_image_path'] = saved_path
+            
+            # Update object_count to reflect only the central counter
+            object_count = 1
+        else:
+            object_count = 0
+            logger.info("No counters detected")
         
         # Check for defects (from stored results)
         defect_count = 0
