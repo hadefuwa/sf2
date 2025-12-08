@@ -1332,9 +1332,11 @@ def process_vision_handshake():
     try:
         vision_handshake_processing = True
         logger.info("🔄 Vision handshake: Starting processing (Start command received)")
+        logger.info("🔄 Vision handshake: Step 1 - Setting Busy flag")
         
         # Set busy flag
         write_vision_to_plc(0, 0, True, False, busy=True, completed=False)
+        logger.info("🔄 Vision handshake: Step 2 - Busy flag set, reading frame")
         
         # Read current frame
         frame = camera_service.read_frame()
@@ -1343,9 +1345,12 @@ def process_vision_handshake():
             write_vision_to_plc(0, 0, True, False, busy=False, completed=True)
             return False
         
+        logger.info("🔄 Vision handshake: Step 3 - Frame read successfully, running YOLO detection")
+        
         # Run object detection using YOLO
         object_params = {}
         object_results = call_vision_service(frame, object_params)
+        logger.info(f"🔄 Vision handshake: Step 4 - YOLO detection completed")
         
         if 'error' in object_results:
             logger.error(f"Vision handshake: Object detection error: {object_results['error']}")
@@ -1455,8 +1460,15 @@ def poll_loop():
                                 if start_command and not vision_handshake_last_start_state and not vision_handshake_processing:
                                     # Start command just went high - trigger vision processing
                                     logger.info("📸 Vision Start command received from PLC - triggering processing")
+                                    addSerialLog('📸 Vision Start command received from PLC - triggering processing', 'detection')
                                     # Run in a separate thread to avoid blocking polling
                                     threading.Thread(target=process_vision_handshake, daemon=True).start()
+                                elif start_command and vision_handshake_last_start_state:
+                                    # Start command is still True (already processed or processing)
+                                    if vision_handshake_processing:
+                                        logger.debug("Vision processing already in progress")
+                                    else:
+                                        logger.debug("Start command still active but no rising edge detected")
                                 
                                 # Detect falling edge of Start command (True -> False)
                                 if not start_command and vision_handshake_last_start_state:

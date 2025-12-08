@@ -1284,16 +1284,23 @@
                         const tagsData = await tagsResponse.json();
                         const startCommand = tagsData.tags?.start || false;
                         
+                        addSerialLog(`🔍 Checking Start command: ${startCommand ? 'TRUE' : 'FALSE'}`, 'info');
+                        
                         if (!startCommand) {
                             // Start command is False - skip detection
                             addSerialLog('⏸️ Detection skipped - PLC Start command not active', 'warning');
                             return;
                         }
+                        
+                        addSerialLog('✅ Start command is TRUE - proceeding with detection', 'success');
                     } else {
                         // Can't read tags - skip to be safe
-                        addSerialLog('⏸️ Detection skipped - Cannot read PLC tags', 'warning');
+                        const errorText = await tagsResponse.text();
+                        addSerialLog(`⏸️ Detection skipped - Cannot read PLC tags: ${tagsResponse.status} - ${errorText}`, 'warning');
                         return;
                     }
+                } else {
+                    addSerialLog('ℹ️ DB123 disabled - allowing detection (testing mode)', 'info');
                 }
                 // If DB123 is disabled, allow processing (for testing)
                 
