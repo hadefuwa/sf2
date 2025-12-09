@@ -185,6 +185,10 @@ plc_cache = {
     'plc_connected': False
 }
 
+# Polling thread state
+poll_thread = None
+poll_running = False
+
 # Vision handshaking state
 vision_handshake_processing = False
 vision_handshake_last_start_state = False
