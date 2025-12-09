@@ -2325,7 +2325,7 @@ def read_db123_tags():
 
 @app.route('/api/plc/db40/start', methods=['GET'])
 def read_db40_start_bit():
-    """Read vision start bit from PLC DB40.DBX0.0"""
+    """Read vision start bit from PLC DB123.DBX40.0 (Camera_UDT in DB123)"""
     if plc_client is None:
         return jsonify({
             'success': False,
@@ -2335,19 +2335,7 @@ def read_db40_start_bit():
         }), 503
 
     try:
-        # Get config to check if DB40 is enabled
-        config = load_config()
-        db40_config = config.get('plc', {}).get('db40', {})
-
-        if not db40_config.get('enabled', True):
-            return jsonify({
-                'success': False,
-                'error': 'DB40 reading is disabled in configuration',
-                'start': False,
-                'plc_connected': False
-            }), 503
-
-        # Read the start bit from DB40.0
+        # Read the start bit from DB123.40.0 (Camera_UDT in DB123)
         start_value = plc_client.read_db40_start_bit()
 
         # Handle None (lock busy) - return False as safe default
@@ -2362,7 +2350,7 @@ def read_db40_start_bit():
             'address': 'DB123.DBX40.0'
         })
     except Exception as e:
-        logger.error(f"Error reading DB40.0 start bit: {e}")
+        logger.error(f"Error reading DB123.40.0 start bit: {e}")
         return jsonify({
             'success': False,
             'error': str(e),
