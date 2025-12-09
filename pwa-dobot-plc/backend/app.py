@@ -1668,8 +1668,11 @@ def start_command_poll_loop():
                                 if camera_service is not None:
                                     if camera_service.camera is None or (camera_service.camera is not None and not camera_service.camera.isOpened()):
                                         try:
-                                            camera_service.initialize_camera()
-                                            logger.info("📷 Camera turned ON (Start command is TRUE)")
+                                            success = camera_service.initialize_camera()
+                                            if success:
+                                                logger.info("📷 Camera turned ON (Start command is TRUE)")
+                                            else:
+                                                logger.warning("📷 Camera initialization failed - camera may not be available")
                                         except Exception as e:
                                             logger.warning(f"Error initializing camera: {e}")
                                 
@@ -1767,12 +1770,22 @@ def camera_status():
         })
     
     try:
+        # SIMPLE: Check if camera is opened, not just if we can read a frame
+        # Camera might be initialized but still warming up
+        with camera_service.lock:
+            camera_opened = camera_service.camera is not None and camera_service.camera.isOpened()
+        
+        # Try to read a frame to confirm it's working
         frame = camera_service.read_frame()
-        connected = frame is not None
+        can_read = frame is not None
+        
+        # Camera is connected if it's opened (even if we can't read yet - might be warming up)
+        connected = camera_opened
         
         return jsonify({
             'initialized': True,
             'connected': connected,
+            'can_read': can_read,  # Additional info: can we actually read frames?
             'camera_index': camera_service.camera_index,
             'resolution': {
                 'width': camera_service.width,
