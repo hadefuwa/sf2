@@ -1892,35 +1892,12 @@ def vision_detect_objects():
 def vision_analyze():
     """Analyze frame and return annotated image (with optional object detection)
     
-    Note: Vision processing is gated by PLC Start command (DB123.DBX40.0).
-    Processing will only occur when Start command is active.
+    SIMPLE: No start command check - polling loop handles camera control.
     """
     if camera_service is None:
         return jsonify({'error': 'Camera service not initialized'}), 503
     
     try:
-        # Check if PLC Start command is active (if DB123 is enabled)
-        config = load_config()
-        db123_config = config.get('plc', {}).get('db123', {})
-        if db123_config.get('enabled', False):
-            if plc_client is None or not plc_client.is_connected():
-                logger.warning("Vision analyze blocked - PLC not connected")
-                return jsonify({'error': 'PLC not connected - cannot check Start command'}), 503
-            
-            db_number = db123_config.get('db_number', 123)
-            
-            # Read Start command (thread-safe, with stability filtering)
-            # No delay needed here - the lock in read_vision_start_command handles serialization
-            start_command = plc_client.read_vision_start_command(db_number)
-            
-            logger.info(f"Vision analyze check: Start command = {start_command} (DB{db_number}.DBX40.0)")
-            
-            if not start_command:
-                logger.warning(f"Vision analyze blocked - PLC Start command is False (DB{db_number}.DBX40.0)")
-                return jsonify({
-                    'error': 'PLC Start command not active',
-                    'message': f'Vision processing requires PLC Start command (DB{db_number}.DBX40.0) to be True. Current value: False'
-                }), 403
         
         data = request.json or {}
         method = data.get('method', 'combined')
@@ -2073,35 +2050,12 @@ def vision_analyze():
 def vision_detect():
     """Detect objects/defects and return JSON results (no image)
     
-    Note: Vision processing is gated by PLC Start command (DB123.DBX40.0).
-    Processing will only occur when Start command is active.
+    SIMPLE: No start command check - polling loop handles camera control.
     """
     if camera_service is None:
         return jsonify({'error': 'Camera service not initialized'}), 503
 
     try:
-        # Check if PLC Start command is active (if DB123 is enabled)
-        config = load_config()
-        db123_config = config.get('plc', {}).get('db123', {})
-        if db123_config.get('enabled', False):
-            if plc_client is None or not plc_client.is_connected():
-                logger.warning("Vision detect blocked - PLC not connected")
-                return jsonify({'error': 'PLC not connected - cannot check Start command'}), 503
-            
-            db_number = db123_config.get('db_number', 123)
-            
-            # Read Start command (thread-safe, with stability filtering)
-            # No delay needed here - the lock in read_vision_start_command handles serialization
-            start_command = plc_client.read_vision_start_command(db_number)
-            
-            logger.info(f"Vision detect check: Start command = {start_command} (DB{db_number}.DBX40.0)")
-            
-            if not start_command:
-                logger.warning(f"Vision detect blocked - PLC Start command is False (DB{db_number}.DBX40.0)")
-                return jsonify({
-                    'error': 'PLC Start command not active',
-                    'message': f'Vision processing requires PLC Start command (DB{db_number}.DBX40.0) to be True. Current value: False'
-                }), 403
         
         data = request.json or {}
         object_detection_enabled = data.get('object_detection_enabled', True)
