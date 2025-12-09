@@ -2253,18 +2253,22 @@
         async function updateDb123Status() {
             const statusDiv = document.getElementById('db123Status');
             if (!statusDiv) return;
-            
+
             try {
-                const configResponse = await fetch(`${API_BASE}/api/config`);
+                const configResponse = await fetch(`${API_BASE}/api/config`, {
+                    signal: AbortSignal.timeout(3000)  // 3 second timeout
+                });
                 const config = await configResponse.json();
                 const db123Config = config.plc?.db123 || {};
                 const enabled = db123Config.enabled || false;
                 const dbNumber = db123Config.db_number || 123;
-                
+
                 // Get PLC connection status from API
                 let plcConnected = false;
                 try {
-                    const plcStatusResponse = await fetch(`${API_BASE}/api/plc/status`);
+                    const plcStatusResponse = await fetch(`${API_BASE}/api/plc/status`, {
+                        signal: AbortSignal.timeout(3000)  // 3 second timeout
+                    });
                     const plcStatus = await plcStatusResponse.json();
                     plcConnected = plcStatus.connected || false;
                 } catch (e) {
@@ -2352,9 +2356,11 @@
         async function updatePlcTagsStatus() {
             const tagsDiv = document.getElementById('plcTagsStatus');
             if (!tagsDiv) return;
-            
+
             try {
-                const response = await fetch(`${API_BASE}/api/plc/db123/read`);
+                const response = await fetch(`${API_BASE}/api/plc/db123/read`, {
+                    signal: AbortSignal.timeout(3000)  // 3 second timeout
+                });
                 const data = await response.json();
                 
                 // Check for error in response (even if HTTP status is OK)
@@ -2484,7 +2490,9 @@
                 // Get config first
                 let config = {};
                 try {
-                    const configResponse = await fetch(`${API_BASE}/api/config`);
+                    const configResponse = await fetch(`${API_BASE}/api/config`, {
+                        signal: AbortSignal.timeout(3000)  // 3 second timeout
+                    });
                     if (!configResponse.ok) {
                         throw new Error(`Config fetch failed: HTTP ${configResponse.status}`);
                     }
@@ -2493,27 +2501,29 @@
                     console.error('Error fetching config:', configError);
                     indicator.classList.remove('connected');
                     let errorMsg = configError.message || 'Failed to load configuration';
-                    if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
+                    if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError') || errorMsg.includes('aborted')) {
                         errorMsg = 'Backend server not responding - check if app is running';
                     }
                     updateStatusText(statusText, `<span style="color: var(--accent-red);">⚠️ ${errorMsg}</span>`);
                     banner.style.borderLeft = '4px solid var(--accent-red)';
                     return;
                 }
-                
+
                 const db123Config = config.plc?.db123 || {};
-                
+
                 if (!db123Config.enabled) {
                     // DB123 disabled - hide banner or show disabled message
                     banner.style.display = 'none';
                     return;
                 }
-                
+
                 // Get PLC connection status
                 let plcConnected = false;
                 let plcStatusError = null;
                 try {
-                    const plcStatusResponse = await fetch(`${API_BASE}/api/plc/status`);
+                    const plcStatusResponse = await fetch(`${API_BASE}/api/plc/status`, {
+                        signal: AbortSignal.timeout(3000)  // 3 second timeout
+                    });
                     if (!plcStatusResponse.ok) {
                         throw new Error(`PLC status fetch failed: HTTP ${plcStatusResponse.status}`);
                     }
