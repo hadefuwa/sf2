@@ -684,14 +684,31 @@ class PLCClient:
             True if Start command is active, False otherwise
         """
         if not self.is_connected():
+            logger.debug("Cannot read Start command - PLC not connected")
             return False
         
-        try:
-            bool_data = self.client.db_read(db_number, 40, 1)
-            return get_bool(bool_data, 0, 0)  # Bit 0 = Start
-        except Exception as e:
-            logger.debug(f"Error reading Start command: {e}")
-            return False
+        max_retries = 3
+        retry_delay = 0.2  # 200ms delay between retries
+        
+        for attempt in range(max_retries):
+            try:
+                bool_data = self.client.db_read(db_number, 40, 1)
+                start_value = get_bool(bool_data, 0, 0)  # Bit 0 = Start
+                logger.debug(f"Start command read from DB{db_number}.DBX40.0: {start_value}")
+                return start_value
+            except Exception as e:
+                error_str = str(e)
+                if 'Job pending' in error_str and attempt < max_retries - 1:
+                    logger.debug(f"Job pending while reading Start command, retrying ({attempt + 1}/{max_retries})...")
+                    time.sleep(retry_delay)
+                    continue
+                else:
+                    logger.warning(f"Error reading Start command from DB{db_number}.DBX40.0: {error_str}")
+                    if attempt == max_retries - 1:
+                        self.last_error = f"Error reading Start command: {error_str}"
+                    return False
+        
+        return False
     
     def write_vision_fault_bit(self, defects_found: bool, byte_offset: int = 1, bit_offset: int = 0) -> Dict[str, Any]:
         """Write vision fault status to PLC memory bit

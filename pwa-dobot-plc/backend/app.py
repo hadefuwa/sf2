@@ -1755,11 +1755,13 @@ def vision_analyze():
             db_number = db123_config.get('db_number', 123)
             start_command = plc_client.read_vision_start_command(db_number)
             
+            logger.info(f"Vision analyze check: Start command = {start_command} (DB{db_number}.DBX40.0)")
+            
             if not start_command:
-                logger.debug("Vision analyze blocked - PLC Start command not active")
+                logger.warning(f"Vision analyze blocked - PLC Start command is False (DB{db_number}.DBX40.0)")
                 return jsonify({
                     'error': 'PLC Start command not active',
-                    'message': 'Vision processing requires PLC Start command (DB123.DBX40.0) to be True'
+                    'message': f'Vision processing requires PLC Start command (DB{db_number}.DBX40.0) to be True. Current value: False'
                 }), 403
         
         data = request.json or {}
@@ -1930,11 +1932,13 @@ def vision_detect():
             db_number = db123_config.get('db_number', 123)
             start_command = plc_client.read_vision_start_command(db_number)
             
+            logger.info(f"Vision detect check: Start command = {start_command} (DB{db_number}.DBX40.0)")
+            
             if not start_command:
-                logger.debug("Vision detect blocked - PLC Start command not active")
+                logger.warning(f"Vision detect blocked - PLC Start command is False (DB{db_number}.DBX40.0)")
                 return jsonify({
                     'error': 'PLC Start command not active',
-                    'message': 'Vision processing requires PLC Start command (DB123.DBX40.0) to be True'
+                    'message': f'Vision processing requires PLC Start command (DB{db_number}.DBX40.0) to be True. Current value: False'
                 }), 403
         
         data = request.json or {}
