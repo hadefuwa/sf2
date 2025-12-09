@@ -19,6 +19,7 @@ import requests
 import base64
 from typing import Dict, List, Optional
 from datetime import datetime
+import snap7.util
 from plc_client import PLCClient
 from dobot_client import DobotClient
 from camera_service import CameraService
@@ -148,18 +149,45 @@ camera_service = None
 VISION_SERVICE_URL = os.getenv('VISION_SERVICE_URL', 'http://127.0.0.1:5001')
 VISION_SERVICE_TIMEOUT = 5.0  # 5 second timeout
 
-# Polling state
-poll_thread = None
-poll_running = False
-poll_interval = 0.1  # 100ms
+# ==================================================
+# UNIFIED PLC CACHE - Single Source of Truth
+# ==================================================
+# All PLC data cached here, updated by ONE polling thread
+# All API endpoints read from cache (zero lock contention)
+
+plc_cache = {
+    'last_update': 0.0,
+    # DB123 Vision tags (byte 40-56)
+    'db123': {
+        'start': False,           # DB123.DBX40.0
+        'busy': False,            # DB123.DBX40.1
+        'complete': False,        # DB123.DBX40.2
+        'fault': False,           # DB123.DBX40.3
+        'x_pos': 0.0,            # DB123.DBD42
+        'y_pos': 0.0,            # DB123.DBD46
+        'z_pos': 0.0,            # DB123.DBD50
+        'counter': 0             # DB123.DBW54
+    },
+    # DB4 Robot tags (byte 4-32)
+    'db4': {
+        'connected': False,       # DB4.DBX4.0
+        'busy': False,           # DB4.DBX4.1
+        'cycle_complete': False, # DB4.DBX4.2
+        'target_x': 0.0,         # DB4.DBD6
+        'target_y': 0.0,         # DB4.DBD10
+        'target_z': 0.0,         # DB4.DBD14
+        'current_x': 0.0,        # DB4.DBD18
+        'current_y': 0.0,        # DB4.DBD22
+        'current_z': 0.0,        # DB4.DBD26
+        'status_code': 0,        # DB4.DBW30
+        'error_code': 0          # DB4.DBW32
+    },
+    'plc_connected': False
+}
 
 # Vision handshaking state
 vision_handshake_processing = False
 vision_handshake_last_start_state = False
-
-# Cached start bit state (updated by start_command_poll_loop to avoid lock contention)
-cached_start_bit_state = False
-cached_start_bit_timestamp = 0.0
 
 def call_vision_service(frame: np.ndarray, params: Dict) -> Dict:
     """
@@ -1561,187 +1589,95 @@ def process_vision_handshake():
         vision_handshake_processing = False
 
 def poll_loop():
-    """Background polling loop for real-time data"""
-    global poll_running, vision_handshake_last_start_state, vision_handshake_processing
+    """UNIFIED PLC POLLING LOOP - Single source of truth for all PLC data
 
-    while poll_running:
+    Reads ALL PLC tags once per second and updates plc_cache
+    All API endpoints read from cache (zero lock contention)
+    """
+    global vision_handshake_last_start_state, vision_handshake_processing, plc_cache
+
+    logger.info("🔄 Unified PLC polling loop started (1 second intervals)")
+
+    while True:
+        cycle_start = time.time()
+
         try:
-            # Skip PLC operations entirely if snap7 is not available
-            # This prevents snap7 crashes from killing the app
-            control_bits = {
-                'start': False, 'stop': False, 'home': False, 'estop': False,
-                'suction': False, 'ready': False, 'busy': False, 'error': False
-            }
-            target_pose = {'x': 0.0, 'y': 0.0, 'z': 0.0}
-            
-            # Vision handshaking: Check Start command from PLC
-            start_command = False
-            if plc_client and hasattr(plc_client, 'client') and plc_client.client is not None:
-                try:
-                    if plc_client.is_connected():
-                        try:
-                            config = load_config()
-                            db123_config = config.get('plc', {}).get('db123', {})
-                            if db123_config.get('enabled', False):
-                                db_number = db123_config.get('db_number', 123)
-                                # SIMPLE: Read start command
-                                start_command = plc_client.read_vision_start_command(db_number)
-                                
-                                # SIMPLE: If start is TRUE, camera on. If FALSE, camera off.
-                                if start_command:
-                                    # Start is TRUE - make sure camera is on
-                                    if camera_service is not None:
-                                        if camera_service.camera is None or (camera_service.camera is not None and not camera_service.camera.isOpened()):
-                                            try:
-                                                camera_service.initialize_camera()
-                                                logger.info("📷 Camera turned ON (Start command is TRUE)")
-                                            except Exception as e:
-                                                logger.warning(f"Error initializing camera: {e}")
-                                    
-                                    # Trigger vision processing if not already processing
-                                    if not vision_handshake_processing:
-                                        logger.info("📸 Start command is TRUE - triggering vision processing")
-                                        threading.Thread(target=process_vision_handshake, daemon=True).start()
-                                else:
-                                    # Start is FALSE - turn off camera
-                                    if camera_service is not None:
-                                        try:
-                                            camera_service.release_camera()
-                                            logger.info("📷 Camera turned OFF (Start command is FALSE)")
-                                        except Exception as e:
-                                            logger.warning(f"Error releasing camera: {e}")
-                                    
-                                    # Reset flags
-                                    if vision_handshake_last_start_state:
-                                        write_vision_to_plc(0, 0, True, False, busy=False, completed=False)
-                                
-                                vision_handshake_last_start_state = start_command
-                        except Exception as e:
-                            logger.debug(f"PLC vision handshake read error: {e}")
-                except Exception as e:
-                    logger.debug(f"PLC check error in polling: {e}")
-            
-            # Only try PLC operations if snap7 is available and client exists
-            if plc_client and hasattr(plc_client, 'client') and plc_client.client is not None:
-                try:
-                    # Don't try to connect - just check if already connected
-                    if plc_client.is_connected():
-                        try:
-                            # Read from configured DB number
-                            config = load_config()
-                            db_number = config.get('plc', {}).get('db_number', 123)
-                            control_bits = plc_client.read_control_bits()
-                            target_pose = plc_client.read_target_pose(db_number)
-                        except Exception as e:
-                            logger.debug(f"PLC read error in polling: {e}")
-                except Exception as e:
-                    logger.debug(f"PLC check error in polling: {e}")
+            # Check PLC connection
+            if not plc_client or not hasattr(plc_client, 'client') or not plc_client.is_connected():
+                plc_cache['plc_connected'] = False
+                time.sleep(1.0)
+                continue
 
-            # Read Dobot data
-            dobot_pose = None
+            plc_cache['plc_connected'] = True
+
+            # ==================================================
+            # READ ALL PLC TAGS IN ONE BATCH (minimize lock time)
+            # ==================================================
+
+            # Read DB123 Vision tags (byte 40-56 = 16 bytes)
             try:
-                if dobot_client.connected:
-                    dobot_pose = dobot_client.get_pose()
+                db123_data = plc_client.client.db_read(123, 40, 16)
+                plc_cache['db123']['start'] = snap7.util.get_bool(db123_data, 0, 0)    # DB123.DBX40.0
+                plc_cache['db123']['busy'] = snap7.util.get_bool(db123_data, 0, 1)     # DB123.DBX40.1
+                plc_cache['db123']['complete'] = snap7.util.get_bool(db123_data, 0, 2) # DB123.DBX40.2
+                plc_cache['db123']['fault'] = snap7.util.get_bool(db123_data, 0, 3)    # DB123.DBX40.3
+                plc_cache['db123']['x_pos'] = snap7.util.get_real(db123_data, 2)       # DB123.DBD42
+                plc_cache['db123']['y_pos'] = snap7.util.get_real(db123_data, 6)       # DB123.DBD46
+                plc_cache['db123']['z_pos'] = snap7.util.get_real(db123_data, 10)      # DB123.DBD50
+                plc_cache['db123']['counter'] = snap7.util.get_int(db123_data, 14)     # DB123.DBW54
             except Exception as e:
-                logger.debug(f"Dobot read error in polling: {e}")
+                logger.debug(f"DB123 read error: {e}")
 
-            # Emit data to all connected clients
+            # Read DB4 Robot tags (byte 4-32 = 29 bytes)
             try:
-                socketio.emit('plc_data', {
-                    'control_bits': control_bits,
-                    'target_pose': target_pose,
-                    'timestamp': time.time()
-                })
-
-                if dobot_pose:
-                    socketio.emit('dobot_data', {
-                        'pose': dobot_pose,
-                        'timestamp': time.time()
-                    })
+                db4_data = plc_client.client.db_read(4, 4, 29)
+                plc_cache['db4']['connected'] = snap7.util.get_bool(db4_data, 0, 0)       # DB4.DBX4.0
+                plc_cache['db4']['busy'] = snap7.util.get_bool(db4_data, 0, 1)            # DB4.DBX4.1
+                plc_cache['db4']['cycle_complete'] = snap7.util.get_bool(db4_data, 0, 2)  # DB4.DBX4.2
+                plc_cache['db4']['target_x'] = snap7.util.get_real(db4_data, 2)           # DB4.DBD6
+                plc_cache['db4']['target_y'] = snap7.util.get_real(db4_data, 6)           # DB4.DBD10
+                plc_cache['db4']['target_z'] = snap7.util.get_real(db4_data, 10)          # DB4.DBD14
+                plc_cache['db4']['current_x'] = snap7.util.get_real(db4_data, 14)         # DB4.DBD18
+                plc_cache['db4']['current_y'] = snap7.util.get_real(db4_data, 18)         # DB4.DBD22
+                plc_cache['db4']['current_z'] = snap7.util.get_real(db4_data, 22)         # DB4.DBD26
+                plc_cache['db4']['status_code'] = snap7.util.get_int(db4_data, 26)        # DB4.DBW30
+                plc_cache['db4']['error_code'] = snap7.util.get_int(db4_data, 27)         # DB4.DBW32 (FIXED: was 28)
             except Exception as e:
-                logger.debug(f"Socket emit error: {e}")
+                logger.debug(f"DB4 read error: {e}")
+
+            plc_cache['last_update'] = time.time()
+
+            # ==================================================
+            # VISION HANDSHAKING (using cached start bit)
+            # ==================================================
+            start_bit = plc_cache['db123']['start']
+
+            # Log state changes
+            if start_bit != vision_handshake_last_start_state:
+                logger.info(f"🔄 Start bit changed: {vision_handshake_last_start_state} -> {start_bit}")
+                vision_handshake_last_start_state = start_bit
+
+                if start_bit:
+                    # Start is TRUE - trigger vision processing
+                    if not vision_handshake_processing:
+                        logger.info("📸 Start bit TRUE - triggering vision processing")
+                        threading.Thread(target=process_vision_handshake, daemon=True).start()
+                else:
+                    # Start is FALSE - reset
+                    logger.info("📸 Start bit FALSE - resetting vision")
+                    write_vision_to_plc(0, 0, True, False, busy=False, completed=False)
 
         except Exception as e:
             logger.error(f"Polling error: {e}")
 
-        # Add delay to prevent flooding the PLC (minimum 50ms between cycles)
-        # This gives the S7-1200 time to process requests
-        time.sleep(max(poll_interval, 0.05))  # At least 50ms between polling cycles
+        # Sleep for exactly 1 second (or adjust to maintain 1 Hz polling)
+        cycle_time = time.time() - cycle_start
+        sleep_time = max(1.0 - cycle_time, 0.1)  # At least 100ms, target 1 second
+        time.sleep(sleep_time)
 
     logger.info("Polling thread stopped")
 
-# ==================================================
-# Start Command Polling Loop (Lightweight - Camera Control Only)
-# ==================================================
-
-def start_command_poll_loop():
-    """Lightweight polling loop that checks start command and enables/disables vision analysis
-    Camera stays always active - only analysis is controlled by start command
-    Also updates cached_start_bit_state for lock-free API access
-    """
-    global vision_handshake_last_start_state, vision_handshake_processing, cached_start_bit_state, cached_start_bit_timestamp
-    
-    while True:
-        try:
-            # Only check if PLC is connected and DB123 is enabled
-            if plc_client and hasattr(plc_client, 'client') and plc_client.client is not None:
-                if plc_client.is_connected():
-                    try:
-                        config = load_config()
-                        db123_config = config.get('plc', {}).get('db123', {})
-                        if db123_config.get('enabled', False):
-                            db_number = db123_config.get('db_number', 123)
-                            
-                            # SIMPLE: Read start command
-                            start_command = plc_client.read_vision_start_command(db_number)
-
-                            # Update cached state if we got a valid read (not None from lock busy)
-                            if start_command is not None:
-                                old_cache = cached_start_bit_state
-                                cached_start_bit_state = start_command
-                                cached_start_bit_timestamp = time.time()
-                                if old_cache != start_command:
-                                    logger.info(f"🔄 Cached start bit updated: {old_cache} -> {start_command}")
-                            else:
-                                logger.debug("🔒 PLC lock busy, cache not updated")
-
-                            # Only update state if we got a valid read (not False due to lock busy)
-                            # If lock was busy, start_command will be False, but we should keep last known state
-                            # We can detect lock busy by checking if we got False but last state was True
-                            # and we haven't seen a valid False read yet
-                            
-                            # Only process state change if we got a valid read
-                            # If start_command is False but last state was True, check if it's a real change
-                            # by trying once more (lock might have been busy)
-                            if start_command != vision_handshake_last_start_state:
-                                # State changed - but verify it's not just a lock busy issue
-                                if not start_command and vision_handshake_last_start_state:
-                                    # Might be lock busy - try one more time after a short delay
-                                    time.sleep(0.1)
-                                    start_command_retry = plc_client.read_vision_start_command(db_number)
-                                    if start_command_retry:  # If retry shows True, lock was busy
-                                        logger.debug("Start command read was blocked by lock, keeping last state")
-                                        continue  # Skip this cycle, keep last state
-                                
-                                # Real state change confirmed
-                                if start_command:
-                                    # Start is TRUE - trigger vision processing if not already processing
-                                    if not vision_handshake_processing:
-                                        logger.info("📸 Start command is TRUE - enabling vision analysis")
-                                        threading.Thread(target=process_vision_handshake, daemon=True).start()
-                                else:
-                                    # Start is FALSE - reset flags (analysis disabled, camera stays on)
-                                    logger.info("📸 Start command is FALSE - disabling vision analysis (camera stays active)")
-                                    write_vision_to_plc(0, 0, True, False, busy=False, completed=False)
-                                
-                                vision_handshake_last_start_state = start_command
-                    except Exception as e:
-                        logger.debug(f"Start command polling error: {e}")
-        except Exception as e:
-            logger.debug(f"Start command polling loop error: {e}")
-        
-        # Poll every 500ms (2 times per second) - fast enough to be responsive
-        time.sleep(0.5)
+# NOTE: start_command_poll_loop() REMOVED - replaced by unified poll_loop() above
 
 # ==================================================
 # Camera & Vision System Endpoints
@@ -2342,32 +2278,22 @@ def read_db123_tags():
 def read_db40_start_bit():
     """Read vision start bit from PLC DB123.DBX40.0 (Camera_UDT in DB123)
 
-    LOCK-FREE: Returns cached value updated by start_command_poll_loop
-    This eliminates lock contention with other PLC operations
+    LOCK-FREE: Returns cached value from unified poll_loop()
+    Zero lock contention - instant response
     """
-    global cached_start_bit_state, cached_start_bit_timestamp
-
-    if plc_client is None:
-        return jsonify({
-            'success': False,
-            'error': 'PLC client not initialized',
-            'start': False,
-            'plc_connected': False
-        }), 503
+    global plc_cache
 
     try:
-        # Return cached value from start_command_poll_loop (no lock contention)
-        # This is updated every 500ms by the polling loop
-        cache_age = time.time() - cached_start_bit_timestamp if cached_start_bit_timestamp > 0 else 999
+        cache_age = time.time() - plc_cache['last_update'] if plc_cache['last_update'] > 0 else 999
 
         return jsonify({
             'success': True,
-            'start': bool(cached_start_bit_state),
-            'plc_connected': plc_client.is_connected(),
+            'start': bool(plc_cache['db123']['start']),
+            'plc_connected': plc_cache['plc_connected'],
             'db_number': 123,
             'address': 'DB123.DBX40.0',
             'cache_age_ms': int(cache_age * 1000),
-            'cached': True  # Indicates this is a cached value
+            'cached': True
         })
     except Exception as e:
         logger.error(f"Error reading DB123.40.0 start bit: {e}")
@@ -2801,9 +2727,7 @@ if __name__ == '__main__':
 
     # Start lightweight polling for start command (camera control only)
     # This is separate from the main polling loop to avoid lock contention
-    start_command_polling_thread = threading.Thread(target=start_command_poll_loop, daemon=True)
-    start_command_polling_thread.start()
-    logger.info("Start command polling thread started")
+    # NOTE: Removed start_command_polling_thread - now handled by unified poll_loop()
 
     # Start server
     port = int(os.getenv('PORT', 8080))
