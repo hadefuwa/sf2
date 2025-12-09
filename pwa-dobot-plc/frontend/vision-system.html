@@ -2395,9 +2395,13 @@
                 `;
             } catch (error) {
                 console.error('Error updating PLC tags status:', error);
+                let errorMsg = error.message || 'Unknown error';
+                if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
+                    errorMsg = 'Backend server not responding - check if app is running';
+                }
                 tagsDiv.innerHTML = `
                     <div style="color: var(--accent-red); text-align: center; padding: 12px; grid-column: 1 / -1;">
-                        Error loading tags: ${error.message}
+                        Error loading tags: ${errorMsg}
                     </div>
                 `;
             }
