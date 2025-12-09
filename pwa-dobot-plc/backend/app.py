@@ -2673,7 +2673,9 @@ if __name__ == '__main__':
         logger.error("💡 Check the debug logs above for detailed troubleshooting steps")
 
     # Start polling
-    start_polling_thread()
+    # DISABLED: Polling thread causes lock contention with HTTP requests
+    # Browser already polls via HTTP every 3 seconds, no need for background thread
+    # start_polling_thread()
 
     # Start server
     port = int(os.getenv('PORT', 8080))
