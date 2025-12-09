@@ -625,11 +625,26 @@
                 </div>
             </div>
 
-            <!-- PLC Start Command Status Banner -->
-            <div id="plcStartStatusBanner" class="content" style="margin-bottom: 24px; padding: 16px 24px;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span class="status-indicator" id="plcStartIndicator"></span>
-                    <span id="plcStartStatusText" style="color: var(--text-secondary); font-size: 13px; font-weight: 600;">Loading PLC status...</span>
+            <!-- PLC Connection and Start Command Status Banner -->
+            <div class="content" style="margin-bottom: 24px; padding: 20px 24px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <!-- PLC Connection Status -->
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-panel); border: 1px solid var(--border-color); clip-path: polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px);">
+                        <span class="status-indicator" id="plcConnectionIndicator"></span>
+                        <div>
+                            <div style="color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">PLC CONNECTION</div>
+                            <div id="plcConnectionText" style="color: var(--text-secondary); font-size: 12px; font-weight: 600;">Loading...</div>
+                        </div>
+                    </div>
+
+                    <!-- DB40.0 Start Bit Status -->
+                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-panel); border: 1px solid var(--border-color); clip-path: polygon(8px 0%, 100% 0%, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0% 100%, 0% 8px);">
+                        <span class="status-indicator" id="db40StartIndicator"></span>
+                        <div>
+                            <div style="color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">DB40.DBX0.0 START BIT</div>
+                            <div id="db40StartText" style="color: var(--text-secondary); font-size: 12px; font-weight: 600;">Loading...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1057,7 +1072,8 @@
             loadDetectionParams();
             loadDb123Config();
             updatePlcTagsStatus();
-            updatePlcStartStatusBanner();
+            updatePlcConnectionStatus();
+            updateDb40StartBit();
             loadCropSettings();
             loadSingleCounterSettings();
             topLevelObjectDetectionEnabled = true;
@@ -2348,7 +2364,9 @@
                 // Update sequentially to avoid overloading browser connection pool
                 await updatePlcTagsStatus();
                 await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay between requests
-                await updatePlcStartStatusBanner();
+                await updatePlcConnectionStatus();
+                await new Promise(resolve => setTimeout(resolve, 100));
+                await updateDb40StartBit();
                 await new Promise(resolve => setTimeout(resolve, 100));
                 await updateDb123Status();
             } catch (error) {
@@ -2361,7 +2379,7 @@
                 } else if (error?.message) {
                     errorMsg = error.message;
                 }
-                
+
                 // Only log if it's not a timeout (timeouts are expected when backend is slow)
                 if (!errorMsg.includes('timeout') && !errorMsg.includes('aborted')) {
                     console.error('Error in updateAllStatus:', errorMsg, error);
@@ -2529,122 +2547,100 @@
             }
         }
 
-        // PLC Start Status Banner Functions
-        async function updatePlcStartStatusBanner() {
-            console.log('[PLC Banner] Starting update...', new Date().toISOString());
-            const banner = document.getElementById('plcStartStatusBanner');
-            const indicator = document.getElementById('plcStartIndicator');
-            const statusText = document.getElementById('plcStartStatusText');
-            
-            if (!banner || !indicator || !statusText) {
-                console.error('[PLC Banner] Elements not found!', {banner: !!banner, indicator: !!indicator, statusText: !!statusText});
+        // PLC Connection Status Functions
+        async function updatePlcConnectionStatus() {
+            const indicator = document.getElementById('plcConnectionIndicator');
+            const statusText = document.getElementById('plcConnectionText');
+
+            if (!indicator || !statusText) {
+                console.error('[PLC Connection] Elements not found!');
                 return;
             }
-            
-            // Immediately update status to show we're checking (replaces "Loading PLC status...")
-            updateStatusText(statusText, '<span style="color: var(--text-secondary);">Checking PLC status...</span>');
-            
+
             try {
-                // Always show banner initially (will be hidden if DB123 disabled)
-                banner.style.display = 'block';
-                
-                // Get config first
-                let config = {};
-                try {
-                    const configResponse = await fetch(`${API_BASE}/api/config`, {
-                        signal: AbortSignal.timeout(10000)  // 10 second timeout (PLC operations can be slow)
-                    });
-                    if (!configResponse.ok) {
-                        throw new Error(`Config fetch failed: HTTP ${configResponse.status}`);
-                    }
-                    config = await configResponse.json();
-                } catch (configError) {
-                    console.error('Error fetching config:', configError);
-                    indicator.classList.remove('connected');
-                    let errorMsg = configError.message || 'Failed to load configuration';
-                    if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError') || errorMsg.includes('aborted')) {
-                        errorMsg = 'Backend server not responding - check if app is running';
-                    }
-                    updateStatusText(statusText, `<span style="color: var(--accent-red);">⚠️ ${errorMsg}</span>`);
-                    banner.style.borderLeft = '4px solid var(--accent-red)';
-                    return;
+                // Get PLC status
+                const response = await fetch(`${API_BASE}/api/plc/status`, {
+                    signal: AbortSignal.timeout(5000)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
                 }
 
-                const db123Config = config.plc?.db123 || {};
+                const data = await response.json();
+                const connected = data.connected || false;
 
-                if (!db123Config.enabled) {
-                    // DB123 disabled - hide banner or show disabled message
-                    banner.style.display = 'none';
-                    return;
-                }
-
-                // SIMPLE: Get PLC connection status
-                let plcConnected = false;
-                try {
-                    const plcStatusResponse = await fetch(`${API_BASE}/api/plc/status`);
-                    if (plcStatusResponse.ok) {
-                        const plcStatus = await plcStatusResponse.json();
-                        plcConnected = plcStatus.connected || false;
-                    }
-                } catch (e) {
-                    plcConnected = false;
-                }
-                
-                if (!plcConnected) {
-                    indicator.classList.remove('connected');
-                    // Show better error message if backend is not responding
-                    if (plcStatusError) {
-                        updateStatusText(statusText, `<span style="color: var(--accent-red);">⚠️ ${plcStatusError}</span>`);
-                    } else {
-                        updateStatusText(statusText, '<span style="color: var(--accent-red);">⚠️ PLC Not Connected - Cannot read Start command</span>');
-                    }
-                    banner.style.borderLeft = '4px solid var(--accent-red)';
-                    return;
-                }
-                
-                // SIMPLE: Get Start command status
-                let tagsData = {};
-                try {
-                    const tagsResponse = await fetch(`${API_BASE}/api/plc/db123/read`);
-                    if (tagsResponse.ok) {
-                        tagsData = await tagsResponse.json();
-                    }
-                } catch (e) {
-                    // Just continue with empty data
-                }
-                
-                const startCommand = tagsData.tags?.start || false;
-                
-                if (startCommand) {
-                    // Start command is active
+                if (connected) {
                     indicator.classList.add('connected');
-                    updateStatusText(statusText, '<span style="color: var(--accent-green);">✓ Start Command ACTIVE - Vision processing enabled</span>');
-                    banner.style.borderLeft = '4px solid var(--accent-green)';
+                    updateStatusText(statusText, `<span style="color: var(--accent-green);">✓ Connected to ${data.ip || '192.168.7.2'}</span>`);
                 } else {
-                    // Start command is not active
                     indicator.classList.remove('connected');
-                    updateStatusText(statusText, '<span style="color: var(--primary-cyan);">⏸️ Awaiting Start command from PLC</span>');
-                    banner.style.borderLeft = '4px solid var(--primary-cyan)';
+                    const error = data.last_error || 'Not connected';
+                    updateStatusText(statusText, `<span style="color: var(--accent-red);">⚠️ Disconnected</span><br><span style="font-size: 10px; color: var(--text-muted);">${error}</span>`);
                 }
             } catch (error) {
-                console.error('[PLC Banner] Error updating PLC Start status banner:', error);
-                // Make sure banner is visible when showing error
-                if (banner) {
-                    banner.style.display = 'block';
-                    banner.style.borderLeft = '4px solid var(--accent-red)';
-                }
-                if (indicator) indicator.classList.remove('connected');
-                // Provide more helpful error messages
+                console.error('[PLC Connection] Error:', error);
+                indicator.classList.remove('connected');
                 let errorMsg = error.message || 'Unknown error';
                 if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
-                    errorMsg = 'Backend server not responding - check if app is running';
+                    errorMsg = 'Backend not responding';
                 }
-                if (statusText) {
-                    updateStatusText(statusText, `<span style="color: var(--accent-red);">⚠️ Error: ${errorMsg}</span>`);
-                } else {
-                    console.error('[PLC Banner] statusText element is null!');
-                }
+                updateStatusText(statusText, `<span style="color: var(--accent-red);">⚠️ Error</span><br><span style="font-size: 10px; color: var(--text-muted);">${errorMsg}</span>`);
             }
+        }
+
+        // DB40.0 Start Bit Status Functions
+        async function updateDb40StartBit() {
+            const indicator = document.getElementById('db40StartIndicator');
+            const statusText = document.getElementById('db40StartText');
+
+            if (!indicator || !statusText) {
+                console.error('[DB40 Start] Elements not found!');
+                return;
+            }
+
+            try {
+                // Get DB40.0 start bit
+                const response = await fetch(`${API_BASE}/api/plc/db40/start`, {
+                    signal: AbortSignal.timeout(5000)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (!data.success) {
+                    throw new Error(data.error || 'Failed to read start bit');
+                }
+
+                const startBit = data.start || false;
+
+                if (startBit) {
+                    indicator.classList.add('connected');
+                    updateStatusText(statusText, `<span style="color: var(--accent-green);">✓ ACTIVE (TRUE)</span><br><span style="font-size: 10px; color: var(--text-muted);">Vision processing enabled</span>`);
+                } else {
+                    indicator.classList.remove('connected');
+                    updateStatusText(statusText, `<span style="color: var(--primary-cyan);">⏸️ INACTIVE (FALSE)</span><br><span style="font-size: 10px; color: var(--text-muted);">Awaiting PLC start command</span>`);
+                }
+            } catch (error) {
+                console.error('[DB40 Start] Error:', error);
+                indicator.classList.remove('connected');
+                let errorMsg = error.message || 'Unknown error';
+                if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
+                    errorMsg = 'Backend not responding';
+                }
+                updateStatusText(statusText, `<span style="color: var(--accent-red);">⚠️ Error</span><br><span style="font-size: 10px; color: var(--text-muted);">${errorMsg}</span>`);
+            }
+        }
+
+        // PLC Start Status Banner Functions (legacy - redirects to new functions for compatibility)
+        async function updatePlcStartStatusBanner() {
+            // Old banner has been replaced with dual-status display
+            // This function now just calls the new status functions
+            await updatePlcConnectionStatus();
+            await updateDb40StartBit();
         }
     </script>
 </body>

@@ -2286,7 +2286,7 @@ def read_db123_tags():
         'object_number': 0,
         'defect_number': 0
     }
-    
+
     if plc_client is None:
         return jsonify({
             'success': False,
@@ -2295,16 +2295,16 @@ def read_db123_tags():
             'tags': default_tags,
             'plc_connected': False
         }), 503
-    
+
     try:
         # Get config
         config = load_config()
         db123_config = config.get('plc', {}).get('db123', {})
         db_number = db123_config.get('db_number', 123)
-        
+
         # Try to read tags (returns immediately with cached values if lock busy)
         tags = plc_client.read_vision_tags(db_number)
-        
+
         # Always return success - even if we got cached values
         return jsonify({
             'success': True,
@@ -2320,6 +2320,53 @@ def read_db123_tags():
             'error': str(e),
             'db_number': 123,
             'tags': default_tags,
+            'plc_connected': False
+        }), 500
+
+@app.route('/api/plc/db40/start', methods=['GET'])
+def read_db40_start_bit():
+    """Read vision start bit from PLC DB40.DBX0.0"""
+    if plc_client is None:
+        return jsonify({
+            'success': False,
+            'error': 'PLC client not initialized',
+            'start': False,
+            'plc_connected': False
+        }), 503
+
+    try:
+        # Get config to check if DB40 is enabled
+        config = load_config()
+        db40_config = config.get('plc', {}).get('db40', {})
+
+        if not db40_config.get('enabled', True):
+            return jsonify({
+                'success': False,
+                'error': 'DB40 reading is disabled in configuration',
+                'start': False,
+                'plc_connected': False
+            }), 503
+
+        # Read the start bit from DB40.0
+        start_value = plc_client.read_db40_start_bit()
+
+        # Handle None (lock busy) - return False as safe default
+        if start_value is None:
+            start_value = False
+
+        return jsonify({
+            'success': True,
+            'start': bool(start_value),
+            'plc_connected': plc_client.is_connected(),
+            'db_number': 40,
+            'address': 'DB40.DBX0.0'
+        })
+    except Exception as e:
+        logger.error(f"Error reading DB40.0 start bit: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'start': False,
             'plc_connected': False
         }), 500
 
