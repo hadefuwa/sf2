@@ -584,6 +584,9 @@ class PLCClient:
                     'defect_number': defect_number
                 }
                 
+                # Log what we read for debugging
+                logger.info(f"📡 Read vision tags from DB{db_number}: start={start_command}, connected={result['connected']}, busy={result['busy']}, completed={result['completed']}")
+                
                 # Update cache
                 self.cached_vision_tags = result.copy()
                 self.cached_tags_timestamp = time.time()
@@ -592,7 +595,7 @@ class PLCClient:
                 
             except Exception as e:
                 self.last_error = f"Error reading vision tags from DB{db_number}: {str(e)}"
-                logger.error(self.last_error)
+                logger.error(f"❌ {self.last_error}", exc_info=True)
                 # Return cached values on error
                 return self.cached_vision_tags.copy() if self.cached_vision_tags else default_tags
         finally:
@@ -735,21 +738,24 @@ class PLCClient:
             True if Start command is active, False otherwise
         """
         if not self.is_connected():
+            logger.warning("Cannot read start command - PLC not connected")
             return False
 
         try:
             # Use shorter timeout to avoid blocking too long
             if not self.plc_lock.acquire(timeout=0.1):
-                logger.debug("PLC lock busy in read_vision_start_command")
+                logger.warning("PLC lock busy in read_vision_start_command - returning False")
                 return False
             
             try:
                 bool_data = self.client.db_read(db_number, 40, 1)
-                return get_bool(bool_data, 0, 0)  # Bit 0 = Start
+                start_value = get_bool(bool_data, 0, 0)  # Bit 0 = Start
+                logger.info(f"📡 Read start command from DB{db_number}.DBX40.0 = {start_value}")
+                return start_value
             finally:
                 self.plc_lock.release()
         except Exception as e:
-            logger.debug(f"Error reading start command: {e}")
+            logger.error(f"❌ Error reading start command from DB{db_number}: {e}", exc_info=True)
             return False
     
     def write_vision_fault_bit(self, defects_found: bool, byte_offset: int = 1, bit_offset: int = 0) -> Dict[str, Any]:
