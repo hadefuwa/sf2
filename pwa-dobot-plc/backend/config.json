@@ -62,7 +62,7 @@
       "db_number": 40,
       "vision_tags": {
         "start": {
-          "byte": 0,
+          "byte": 40,
           "bit": 0
         }
       }
