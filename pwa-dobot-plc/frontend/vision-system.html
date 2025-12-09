@@ -1202,7 +1202,7 @@
             try {
                 const frame = document.getElementById('cameraFrame');
                 const response = await fetch(`${API_BASE}/api/camera/capture?t=${Date.now()}`, {
-                    signal: AbortSignal.timeout(5000)  // 5 second timeout
+                    signal: AbortSignal.timeout(10000)  // 10 second timeout (camera operations can be slow)
                 });
                 if (response.ok) {
                     const blob = await response.blob();
@@ -2256,7 +2256,7 @@
 
             try {
                 const configResponse = await fetch(`${API_BASE}/api/config`, {
-                    signal: AbortSignal.timeout(3000)  // 3 second timeout
+                    signal: AbortSignal.timeout(10000)  // 10 second timeout (PLC operations can be slow)
                 });
                 const config = await configResponse.json();
                 const db123Config = config.plc?.db123 || {};
@@ -2267,7 +2267,7 @@
                 let plcConnected = false;
                 try {
                     const plcStatusResponse = await fetch(`${API_BASE}/api/plc/status`, {
-                        signal: AbortSignal.timeout(3000)  // 3 second timeout
+                        signal: AbortSignal.timeout(10000)  // 10 second timeout (PLC operations can be slow)
                     });
                     const plcStatus = await plcStatusResponse.json();
                     plcConnected = plcStatus.connected || false;
@@ -2354,7 +2354,7 @@
 
         // PLC Tags Status Functions
         // Helper function for timeout (works in all browsers)
-        function fetchWithTimeout(url, options = {}, timeout = 3000) {
+        function fetchWithTimeout(url, options = {}, timeout = 10000) {
             return Promise.race([
                 fetch(url, options),
                 new Promise((_, reject) => 
@@ -2383,7 +2383,7 @@
             try {
                 // First, test if backend is responding
                 try {
-                    await fetchWithTimeout(`${API_BASE}/api/test`, {}, 1000);
+                    await fetchWithTimeout(`${API_BASE}/api/test`, {}, 5000);
                 } catch (testError) {
                     console.error('Backend not responding:', testError);
                     tagsDiv.innerHTML = `
@@ -2396,7 +2396,7 @@
                 }
 
                 // Backend is responding, try to read tags
-                const response = await fetchWithTimeout(`${API_BASE}/api/plc/db123/read`, {}, 3000);
+                const response = await fetchWithTimeout(`${API_BASE}/api/plc/db123/read`, {}, 10000);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -2521,7 +2521,7 @@
                 let config = {};
                 try {
                     const configResponse = await fetch(`${API_BASE}/api/config`, {
-                        signal: AbortSignal.timeout(3000)  // 3 second timeout
+                        signal: AbortSignal.timeout(10000)  // 10 second timeout (PLC operations can be slow)
                     });
                     if (!configResponse.ok) {
                         throw new Error(`Config fetch failed: HTTP ${configResponse.status}`);
@@ -2552,7 +2552,7 @@
                 let plcStatusError = null;
                 try {
                     const plcStatusResponse = await fetch(`${API_BASE}/api/plc/status`, {
-                        signal: AbortSignal.timeout(3000)  // 3 second timeout
+                        signal: AbortSignal.timeout(10000)  // 10 second timeout (PLC operations can be slow)
                     });
                     if (!plcStatusResponse.ok) {
                         throw new Error(`PLC status fetch failed: HTTP ${plcStatusResponse.status}`);

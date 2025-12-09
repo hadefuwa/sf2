@@ -1556,14 +1556,33 @@ def poll_loop():
                                 start_command = plc_client.read_vision_start_command(db_number)
                                 
                                 # Detect rising edge of Start command (False -> True)
-                                if start_command and not vision_handshake_last_start_state and not vision_handshake_processing:
-                                    # Start command just went high - trigger vision processing
-                                    logger.info("📸 Vision Start command received from PLC (rising edge) - triggering processing")
-                                    # Run in a separate thread to avoid blocking polling
-                                    threading.Thread(target=process_vision_handshake, daemon=True).start()
+                                if start_command and not vision_handshake_last_start_state:
+                                    # Start command just went high - ensure camera is initialized first
+                                    if camera_service is not None:
+                                        try:
+                                            # Check if camera needs to be initialized
+                                            if camera_service.camera is None or (camera_service.camera is not None and not camera_service.camera.isOpened()):
+                                                logger.info("📷 Initializing camera (Start command turned on)")
+                                                camera_service.initialize_camera()
+                                        except Exception as e:
+                                            logger.warning(f"Error initializing camera: {e}")
+                                    
+                                    # Now trigger vision processing (if not already processing)
+                                    if not vision_handshake_processing:
+                                        logger.info("📸 Vision Start command received from PLC (rising edge) - triggering processing")
+                                        # Run in a separate thread to avoid blocking polling
+                                        threading.Thread(target=process_vision_handshake, daemon=True).start()
                                 elif start_command and vision_handshake_last_start_state and not vision_handshake_processing:
                                     # Start command is still True but we haven't processed it yet
                                     # This can happen if Start was already True when app started
+                                    # Ensure camera is initialized first
+                                    if camera_service is not None:
+                                        try:
+                                            if camera_service.camera is None or (camera_service.camera is not None and not camera_service.camera.isOpened()):
+                                                logger.info("📷 Initializing camera (Start command was already active)")
+                                                camera_service.initialize_camera()
+                                        except Exception as e:
+                                            logger.warning(f"Error initializing camera: {e}")
                                     # Trigger processing once, then wait for next rising edge
                                     logger.info("📸 Vision Start command is active (was already True) - triggering processing")
                                     threading.Thread(target=process_vision_handshake, daemon=True).start()
@@ -1573,9 +1592,16 @@ def poll_loop():
                                 
                                 # Detect falling edge of Start command (True -> False)
                                 if not start_command and vision_handshake_last_start_state:
-                                    # Start command just went low - reset Completed flag
-                                    logger.info("🔄 Vision Start command released - resetting Completed flag")
+                                    # Start command just went low - reset Completed flag and release camera
+                                    logger.info("🔄 Vision Start command released - resetting Completed flag and releasing camera")
                                     write_vision_to_plc(0, 0, True, False, busy=False, completed=False)
+                                    # Release camera when start command is turned off
+                                    if camera_service is not None:
+                                        try:
+                                            camera_service.release_camera()
+                                            logger.info("📷 Camera released (Start command turned off)")
+                                        except Exception as e:
+                                            logger.warning(f"Error releasing camera: {e}")
                                 
                                 vision_handshake_last_start_state = start_command
                         except Exception as e:
