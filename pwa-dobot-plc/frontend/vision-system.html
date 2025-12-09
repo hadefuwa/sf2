@@ -1176,21 +1176,34 @@
             frame.style.display = 'block';
             const placeholder = document.getElementById('cameraPlaceholder');
             if (placeholder) placeholder.style.display = 'none';
-            addSerialLog('Camera snapshot mode started (1 second interval)', 'camera');
+            addSerialLog('Camera snapshot mode started (2 second interval - reduced to prevent resource exhaustion)', 'camera');
             updateCameraSnapshot();
+            // Increased from 1000ms to 2000ms to reduce request load
             streamInterval = setInterval(() => {
                 if (cameraConnected) {
                     updateCameraSnapshot();
                 } else {
                     stopStream();
                 }
-            }, 1000);
+            }, 2000);  // Changed from 1000 to 2000ms
         }
 
+        // Camera snapshot request throttling
+        let isFetchingCamera = false;
+
         async function updateCameraSnapshot() {
+            // Skip if previous fetch still in progress
+            if (isFetchingCamera) {
+                console.log('Camera fetch already in progress, skipping...');
+                return;
+            }
+
+            isFetchingCamera = true;
             try {
                 const frame = document.getElementById('cameraFrame');
-                const response = await fetch(`${API_BASE}/api/camera/capture?t=${Date.now()}`);
+                const response = await fetch(`${API_BASE}/api/camera/capture?t=${Date.now()}`, {
+                    signal: AbortSignal.timeout(5000)  // 5 second timeout
+                });
                 if (response.ok) {
                     const blob = await response.blob();
                     const url = URL.createObjectURL(blob);
@@ -1204,6 +1217,8 @@
                 }
             } catch (error) {
                 console.error('Error updating camera snapshot:', error);
+            } finally {
+                isFetchingCamera = false;  // Always release lock
             }
         }
 
@@ -1225,7 +1240,7 @@
             frame.style.display = 'block';
             const placeholder = document.getElementById('cameraPlaceholder');
             if (placeholder) placeholder.style.display = 'none';
-            addSerialLog('Starting camera snapshot mode (1 second interval)', 'camera');
+            addSerialLog('Starting camera snapshot mode (2 second interval - optimized)', 'camera');
             startStream();
         }
 
@@ -2276,14 +2291,36 @@
             }
         }
 
-        // Update status every 5 seconds
-        setInterval(updateDb123Status, 5000);
-        
-        // Update PLC tags every 2 seconds
-        setInterval(updatePlcTagsStatus, 2000);
-        
-        // Update PLC Start status banner every 2 seconds
-        setInterval(updatePlcStartStatusBanner, 2000);
+        // Request throttling: Track ongoing requests to prevent overlaps
+        let isUpdatingStatus = false;
+
+        // Coordinated status update - runs every 3 seconds, updates all status info sequentially
+        async function updateAllStatus() {
+            if (isUpdatingStatus) {
+                console.log('Status update already in progress, skipping...');
+                return; // Skip if previous update still running
+            }
+
+            isUpdatingStatus = true;
+            try {
+                // Update sequentially to avoid overloading browser connection pool
+                await updatePlcTagsStatus();
+                await new Promise(resolve => setTimeout(resolve, 100)); // 100ms delay between requests
+                await updatePlcStartStatusBanner();
+                await new Promise(resolve => setTimeout(resolve, 100));
+                await updateDb123Status();
+            } catch (error) {
+                console.error('Error in updateAllStatus:', error);
+            } finally {
+                isUpdatingStatus = false;
+            }
+        }
+
+        // Initial update
+        updateAllStatus();
+
+        // Update all status every 3 seconds (reduced from 2s to prevent resource exhaustion)
+        setInterval(updateAllStatus, 3000);
 
         // PLC Connection Functions
         async function connectToPLC() {
