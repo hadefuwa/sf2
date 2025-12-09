@@ -446,18 +446,45 @@ class PLCClient:
     def get_status(self) -> Dict[str, Any]:
         """Get current PLC connection status"""
         try:
-            # Use cached connection status to avoid blocking
-            connected = self.connected
-            # Only check actual connection if we think we're connected (quick check)
-            if connected and self.client is not None:
+            # Always check actual connection if client exists (even if we think we're disconnected)
+            # This allows us to detect when PLC becomes available
+            if self.client is not None:
                 try:
                     # Quick non-blocking check with timeout
                     connected = self.client.get_connected()
                     self.connected = connected
+                    
+                    # If we're not connected but client exists, try to reconnect (respecting rate limit)
+                    if not connected:
+                        current_time = time.time()
+                        # Only try to reconnect if enough time has passed since last attempt
+                        if (current_time - self.last_connection_attempt) >= self.connection_attempt_interval:
+                            # Update last attempt time to respect rate limiting
+                            self.last_connection_attempt = current_time
+                            # Try a quick connection attempt
+                            try:
+                                self.client.connect(self.ip, self.rack, self.slot)
+                                # Check if connection succeeded
+                                if self.client.get_connected():
+                                    self.connected = True
+                                    self.last_error = ""
+                                    connected = True
+                                    logger.info(f"✅ Reconnected to S7 PLC at {self.ip}")
+                                else:
+                                    self.connected = False
+                                    connected = False
+                            except Exception as connect_error:
+                                # Connection attempt failed, that's okay
+                                self.connected = False
+                                connected = False
+                                self.last_error = f"Connection error: {str(connect_error)}"
                 except Exception:
                     # If check fails, assume disconnected
                     self.connected = False
                     connected = False
+            else:
+                # No client available, use cached status
+                connected = self.connected
         except Exception as e:
             logger.debug(f"Error checking connection status: {e}")
             connected = self.connected  # Fall back to cached value
@@ -725,7 +752,7 @@ class PLCClient:
             logger.debug(f"Vision detection results written to DB{db_number}: {tags}")
         return success
 
-    def read_vision_start_command(self, db_number: int = 123) -> bool:
+    def read_vision_start_command(self, db_number: int = 123) -> Optional[bool]:
         """Read Start command from PLC (DB123.DBX40.0) - SIMPLE VERSION
         
         Just read the bit. No filtering, no history, no complexity.
@@ -735,7 +762,7 @@ class PLCClient:
             db_number: Data block number (default 123)
 
         Returns:
-            True if Start command is active, False otherwise
+            True if Start command is active, False if inactive, None if lock busy (can't read)
         """
         if not self.is_connected():
             logger.warning("Cannot read start command - PLC not connected")
@@ -744,8 +771,8 @@ class PLCClient:
         try:
             # Use shorter timeout to avoid blocking too long
             if not self.plc_lock.acquire(timeout=0.1):
-                logger.warning("PLC lock busy in read_vision_start_command - returning False")
-                return False
+                logger.debug("PLC lock busy in read_vision_start_command - returning None")
+                return None  # Return None to indicate lock busy, not a value change
             
             try:
                 bool_data = self.client.db_read(db_number, 40, 1)

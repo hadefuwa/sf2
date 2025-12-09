@@ -1690,20 +1690,36 @@ def start_command_poll_loop():
                             # SIMPLE: Read start command
                             start_command = plc_client.read_vision_start_command(db_number)
                             
-                            # SIMPLE: If start is TRUE, enable analysis. If FALSE, disable analysis.
-                            # Camera stays always active
-                            if start_command:
-                                # Start is TRUE - trigger vision processing if not already processing
-                                if not vision_handshake_processing and not vision_handshake_last_start_state:
-                                    logger.info("📸 Start command is TRUE - enabling vision analysis")
-                                    threading.Thread(target=process_vision_handshake, daemon=True).start()
-                            else:
-                                # Start is FALSE - reset flags (analysis disabled, camera stays on)
-                                if vision_handshake_last_start_state:
+                            # Only update state if we got a valid read (not False due to lock busy)
+                            # If lock was busy, start_command will be False, but we should keep last known state
+                            # We can detect lock busy by checking if we got False but last state was True
+                            # and we haven't seen a valid False read yet
+                            
+                            # Only process state change if we got a valid read
+                            # If start_command is False but last state was True, check if it's a real change
+                            # by trying once more (lock might have been busy)
+                            if start_command != vision_handshake_last_start_state:
+                                # State changed - but verify it's not just a lock busy issue
+                                if not start_command and vision_handshake_last_start_state:
+                                    # Might be lock busy - try one more time after a short delay
+                                    time.sleep(0.1)
+                                    start_command_retry = plc_client.read_vision_start_command(db_number)
+                                    if start_command_retry:  # If retry shows True, lock was busy
+                                        logger.debug("Start command read was blocked by lock, keeping last state")
+                                        continue  # Skip this cycle, keep last state
+                                
+                                # Real state change confirmed
+                                if start_command:
+                                    # Start is TRUE - trigger vision processing if not already processing
+                                    if not vision_handshake_processing:
+                                        logger.info("📸 Start command is TRUE - enabling vision analysis")
+                                        threading.Thread(target=process_vision_handshake, daemon=True).start()
+                                else:
+                                    # Start is FALSE - reset flags (analysis disabled, camera stays on)
                                     logger.info("📸 Start command is FALSE - disabling vision analysis (camera stays active)")
                                     write_vision_to_plc(0, 0, True, False, busy=False, completed=False)
-                            
-                            vision_handshake_last_start_state = start_command
+                                
+                                vision_handshake_last_start_state = start_command
                     except Exception as e:
                         logger.debug(f"Start command polling error: {e}")
         except Exception as e:
