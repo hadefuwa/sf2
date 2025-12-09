@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLC Tag Diagnostics</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #0a0a0a;
+            color: #00ff00;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #00ffff;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .status-panel {
+            background: #1a1a1a;
+            border: 2px solid #00ff00;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .status-row {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .status-label {
+            color: #ffff00;
+            font-weight: bold;
+        }
+
+        .status-value {
+            color: #00ff00;
+            font-size: 18px;
+        }
+
+        .status-value.active {
+            color: #00ff00;
+            font-weight: bold;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .status-value.inactive {
+            color: #ff0000;
+        }
+
+        .log-panel {
+            background: #000;
+            border: 2px solid #00ff00;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            margin-bottom: 4px;
+        }
+
+        .log-timestamp {
+            color: #666;
+        }
+
+        .log-true {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .log-false {
+            color: #ff0000;
+        }
+
+        .stats-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-box {
+            background: #1a1a1a;
+            border: 1px solid #00ff00;
+            padding: 15px;
+            text-align: center;
+            border-radius: 5px;
+        }
+
+        .stat-label {
+            color: #ffff00;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #00ffff;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        button {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 0 5px;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background: #00ffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 PLC TAG DIAGNOSTICS - DB123.DBX40.0</h1>
+
+        <div class="status-panel">
+            <div class="status-row">
+                <div class="status-label">PLC Connected:</div>
+                <div class="status-value" id="plcConnected">-</div>
+            </div>
+            <div class="status-row">
+                <div class="status-label">DB123.DBX40.0:</div>
+                <div class="status-value" id="startBitValue">-</div>
+            </div>
+            <div class="status-row">
+                <div class="status-label">Last Update:</div>
+                <div class="status-value" id="lastUpdate">-</div>
+            </div>
+            <div class="status-row">
+                <div class="status-label">Poll Interval:</div>
+                <div class="status-value" id="pollInterval">500ms</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button onclick="setInterval(250)">250ms</button>
+            <button onclick="setInterval(500)">500ms</button>
+            <button onclick="setInterval(1000)">1000ms</button>
+            <button onclick="setInterval(2000)">2000ms</button>
+            <button onclick="clearLog()">Clear Log</button>
+            <button onclick="togglePause()">Pause/Resume</button>
+        </div>
+
+        <div class="stats-panel">
+            <div class="stat-box">
+                <div class="stat-label">Total Reads</div>
+                <div class="stat-value" id="totalReads">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">TRUE Count</div>
+                <div class="stat-value" id="trueCount">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">FALSE Count</div>
+                <div class="stat-value" id="falseCount">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Errors</div>
+                <div class="stat-value" id="errorCount">0</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Uptime</div>
+                <div class="stat-value" id="uptime">00:00</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">TRUE %</div>
+                <div class="stat-value" id="truePercent">0%</div>
+            </div>
+        </div>
+
+        <div class="log-panel" id="logPanel">
+            <div class="log-entry">Waiting for data...</div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+        let pollIntervalMs = 500;
+        let pollTimer = null;
+        let paused = false;
+        let startTime = Date.now();
+
+        let stats = {
+            total: 0,
+            trueCount: 0,
+            falseCount: 0,
+            errors: 0
+        };
+
+        function addLog(message, isTrue = null) {
+            const logPanel = document.getElementById('logPanel');
+            const timestamp = new Date().toLocaleTimeString() + '.' + new Date().getMilliseconds().toString().padStart(3, '0');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+
+            let valueClass = '';
+            if (isTrue === true) valueClass = 'log-true';
+            else if (isTrue === false) valueClass = 'log-false';
+
+            entry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span> <span class="${valueClass}">${message}</span>`;
+
+            logPanel.insertBefore(entry, logPanel.firstChild);
+
+            // Keep only last 100 entries
+            while (logPanel.children.length > 100) {
+                logPanel.removeChild(logPanel.lastChild);
+            }
+        }
+
+        function updateStats() {
+            document.getElementById('totalReads').textContent = stats.total;
+            document.getElementById('trueCount').textContent = stats.trueCount;
+            document.getElementById('falseCount').textContent = stats.falseCount;
+            document.getElementById('errorCount').textContent = stats.errors;
+
+            const percent = stats.total > 0 ? ((stats.trueCount / stats.total) * 100).toFixed(1) : 0;
+            document.getElementById('truePercent').textContent = percent + '%';
+
+            // Update uptime
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('uptime').textContent =
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        async function pollStartBit() {
+            if (paused) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/plc/db40/start`, {
+                    signal: AbortSignal.timeout(5000)
+                });
+
+                const data = await response.json();
+
+                stats.total++;
+
+                if (data.success) {
+                    const startValue = data.start;
+
+                    if (startValue) {
+                        stats.trueCount++;
+                        addLog(`Start bit = TRUE`, true);
+                    } else {
+                        stats.falseCount++;
+                        addLog(`Start bit = FALSE`, false);
+                    }
+
+                    // Update UI
+                    const valueElement = document.getElementById('startBitValue');
+                    if (startValue) {
+                        valueElement.textContent = 'TRUE ✓';
+                        valueElement.className = 'status-value active';
+                    } else {
+                        valueElement.textContent = 'FALSE ✗';
+                        valueElement.className = 'status-value inactive';
+                    }
+
+                    document.getElementById('plcConnected').textContent = data.plc_connected ? 'YES' : 'NO';
+                    document.getElementById('plcConnected').className = data.plc_connected ? 'status-value active' : 'status-value inactive';
+
+                } else {
+                    stats.errors++;
+                    addLog(`ERROR: ${data.error || 'Unknown error'}`);
+                }
+
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+                updateStats();
+
+            } catch (error) {
+                stats.errors++;
+                addLog(`EXCEPTION: ${error.message}`);
+                updateStats();
+            }
+        }
+
+        function setInterval(ms) {
+            pollIntervalMs = ms;
+            document.getElementById('pollInterval').textContent = ms + 'ms';
+
+            if (pollTimer) {
+                clearInterval(pollTimer);
+            }
+
+            pollTimer = setInterval(pollStartBit, pollIntervalMs);
+            addLog(`Poll interval changed to ${ms}ms`);
+        }
+
+        function clearLog() {
+            document.getElementById('logPanel').innerHTML = '';
+            stats = { total: 0, trueCount: 0, falseCount: 0, errors: 0 };
+            startTime = Date.now();
+            updateStats();
+            addLog('Log cleared');
+        }
+
+        function togglePause() {
+            paused = !paused;
+            addLog(paused ? 'PAUSED' : 'RESUMED');
+        }
+
+        // Start polling
+        setInterval(500);
+
+        // Update uptime every second
+        setInterval(() => {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('uptime').textContent =
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }, 1000);
+    </script>
+</body>
+</html>
