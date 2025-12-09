@@ -692,6 +692,46 @@
                                 Reset Adjustments
                             </button>
                         </div>
+                        
+                        <!-- Camera Crop/Zoom Controls -->
+                        <div style="margin-top: 20px; padding: 16px; background: rgba(10, 0, 20, 0.6); border: 1px solid var(--border-color); border-radius: 8px;">
+                            <h5 style="color: var(--primary-cyan); font-size: 12px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">
+                                🔍 Camera Crop/Zoom
+                            </h5>
+                            <div style="margin-bottom: 12px;">
+                                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 11px; cursor: pointer;">
+                                    <input type="checkbox" id="cropEnabled" onchange="toggleCrop()" style="cursor: pointer;">
+                                    <span>Enable Crop/Zoom</span>
+                                </label>
+                            </div>
+                            <div id="cropControls" style="display: none; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <div>
+                                    <label style="display: block; color: var(--text-secondary); font-size: 10px; margin-bottom: 4px;">X Position (%)</label>
+                                    <input type="range" id="cropX" min="0" max="100" value="0" step="1" oninput="updateCropPreview()" style="width: 100%;">
+                                    <div style="text-align: center; font-size: 10px; color: var(--primary-cyan); margin-top: 4px;" id="cropXValue">0%</div>
+                                </div>
+                                <div>
+                                    <label style="display: block; color: var(--text-secondary); font-size: 10px; margin-bottom: 4px;">Y Position (%)</label>
+                                    <input type="range" id="cropY" min="0" max="100" value="0" step="1" oninput="updateCropPreview()" style="width: 100%;">
+                                    <div style="text-align: center; font-size: 10px; color: var(--primary-cyan); margin-top: 4px;" id="cropYValue">0%</div>
+                                </div>
+                                <div>
+                                    <label style="display: block; color: var(--text-secondary); font-size: 10px; margin-bottom: 4px;">Width (%)</label>
+                                    <input type="range" id="cropWidth" min="1" max="100" value="100" step="1" oninput="updateCropPreview()" style="width: 100%;">
+                                    <div style="text-align: center; font-size: 10px; color: var(--primary-cyan); margin-top: 4px;" id="cropWidthValue">100%</div>
+                                </div>
+                                <div>
+                                    <label style="display: block; color: var(--text-secondary); font-size: 10px; margin-bottom: 4px;">Height (%)</label>
+                                    <input type="range" id="cropHeight" min="1" max="100" value="100" step="1" oninput="updateCropPreview()" style="width: 100%;">
+                                    <div style="text-align: center; font-size: 10px; color: var(--primary-cyan); margin-top: 4px;" id="cropHeightValue">100%</div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 12px;">
+                                <button class="btn btn-primary" onclick="saveCropSettings()" style="font-size: 10px; padding: 6px 12px; width: 100%;">
+                                    💾 Save Crop Settings
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Analyzed Image Viewer -->
