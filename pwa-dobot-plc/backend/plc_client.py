@@ -687,8 +687,8 @@ class PLCClient:
             logger.debug("Cannot read Start command - PLC not connected")
             return False
         
-        max_retries = 3
-        retry_delay = 0.2  # 200ms delay between retries
+        max_retries = 5  # Increased retries for "Job pending" errors
+        retry_delay = 0.3  # 300ms delay between retries (increased)
         
         for attempt in range(max_retries):
             try:
@@ -702,6 +702,12 @@ class PLCClient:
                     logger.debug(f"Job pending while reading Start command, retrying ({attempt + 1}/{max_retries})...")
                     time.sleep(retry_delay)
                     continue
+                elif 'Job pending' in error_str and attempt == max_retries - 1:
+                    # After all retries exhausted, log warning but return last known good value
+                    # For now, we'll return False to be safe, but log it as a warning
+                    logger.warning(f"Job pending error persists after {max_retries} retries - returning False (may be incorrect)")
+                    self.last_error = f"Job pending error after {max_retries} retries"
+                    return False
                 else:
                     logger.warning(f"Error reading Start command from DB{db_number}.DBX40.0: {error_str}")
                     if attempt == max_retries - 1:

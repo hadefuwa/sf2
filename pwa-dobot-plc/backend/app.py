@@ -1750,9 +1750,14 @@ def vision_analyze():
         db123_config = config.get('plc', {}).get('db123', {})
         if db123_config.get('enabled', False):
             if plc_client is None or not plc_client.is_connected():
+                logger.warning("Vision analyze blocked - PLC not connected")
                 return jsonify({'error': 'PLC not connected - cannot check Start command'}), 503
             
             db_number = db123_config.get('db_number', 123)
+            
+            # Add small delay before reading to avoid conflicts with other PLC operations
+            time.sleep(0.05)  # 50ms delay
+            
             start_command = plc_client.read_vision_start_command(db_number)
             
             logger.info(f"Vision analyze check: Start command = {start_command} (DB{db_number}.DBX40.0)")
@@ -1927,9 +1932,14 @@ def vision_detect():
         db123_config = config.get('plc', {}).get('db123', {})
         if db123_config.get('enabled', False):
             if plc_client is None or not plc_client.is_connected():
+                logger.warning("Vision detect blocked - PLC not connected")
                 return jsonify({'error': 'PLC not connected - cannot check Start command'}), 503
             
             db_number = db123_config.get('db_number', 123)
+            
+            # Add small delay before reading to avoid conflicts with other PLC operations
+            time.sleep(0.05)  # 50ms delay
+            
             start_command = plc_client.read_vision_start_command(db_number)
             
             logger.info(f"Vision detect check: Start command = {start_command} (DB{db_number}.DBX40.0)")
