@@ -2435,17 +2435,28 @@
                 
                 // Get PLC connection status
                 let plcConnected = false;
+                let plcStatusError = null;
                 try {
                     const plcStatusResponse = await fetch(`${API_BASE}/api/plc/status`);
                     const plcStatus = await plcStatusResponse.json();
                     plcConnected = plcStatus.connected || false;
                 } catch (e) {
                     plcConnected = false;
+                    // Check if it's a backend connection error
+                    let errorMsg = e.message || String(e);
+                    if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
+                        plcStatusError = 'Backend server not responding - check if app is running';
+                    }
                 }
                 
                 if (!plcConnected) {
                     indicator.classList.remove('connected');
-                    statusText.innerHTML = '<span style="color: var(--accent-red);">⚠️ PLC Not Connected - Cannot read Start command</span>';
+                    // Show better error message if backend is not responding
+                    if (plcStatusError) {
+                        statusText.innerHTML = `<span style="color: var(--accent-red);">⚠️ ${plcStatusError}</span>`;
+                    } else {
+                        statusText.innerHTML = '<span style="color: var(--accent-red);">⚠️ PLC Not Connected - Cannot read Start command</span>';
+                    }
                     banner.style.borderLeft = '4px solid var(--accent-red)';
                     return;
                 }
@@ -2475,6 +2486,8 @@
                 }
             } catch (error) {
                 console.error('Error updating PLC Start status banner:', error);
+                // Make sure banner is visible when showing error
+                banner.style.display = 'block';
                 indicator.classList.remove('connected');
                 // Provide more helpful error messages
                 let errorMsg = error.message || 'Unknown error';
