@@ -2727,7 +2727,8 @@ if __name__ == '__main__':
 
     # Start lightweight polling for start command (camera control only)
     # This is separate from the main polling loop to avoid lock contention
-    # NOTE: Removed start_command_polling_thread - now handled by unified poll_loop()
+    # Start unified PLC polling loop (auto-start on app launch)
+    start_polling_thread()
 
     # Start server
     port = int(os.getenv('PORT', 8080))
