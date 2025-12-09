@@ -413,10 +413,17 @@ class PLCClient:
                 return None
 
             # Thread-safe: Only one Snap7 operation at a time
-            with self.plc_lock:
+            # Use timeout to prevent deadlock with polling thread
+            if not self.plc_lock.acquire(timeout=2.0):
+                logger.warning(f"read_db_int: Failed to acquire PLC lock within 2 seconds for DB{db_number}.DBW{offset}")
+                return None
+
+            try:
                 time.sleep(0.02)  # 20ms delay to avoid flooding
                 data = self.client.db_read(db_number, offset, 2)
                 return get_int(data, 0)
+            finally:
+                self.plc_lock.release()
         except Exception as e:
             self.last_error = f"Error reading DB{db_number}.DBW{offset}: {str(e)}"
             logger.error(self.last_error)
@@ -472,10 +479,27 @@ class PLCClient:
                 }
 
             # Thread-safe: Only one Snap7 operation at a time
-            with self.plc_lock:
+            # Use timeout to prevent deadlock with polling thread
+            if not self.plc_lock.acquire(timeout=2.0):
+                logger.warning("read_vision_tags: Failed to acquire PLC lock within 2 seconds - returning default values")
+                return {
+                    'start': False,
+                    'connected': False,
+                    'busy': False,
+                    'completed': False,
+                    'object_detected': False,
+                    'object_ok': False,
+                    'defect_detected': False,
+                    'object_number': 0,
+                    'defect_number': 0
+                }
+
+            try:
                 time.sleep(0.02)  # 20ms delay to avoid flooding
                 # Read byte 40 (contains all bool flags)
                 bool_data = self.client.db_read(db_number, 40, 1)
+            finally:
+                self.plc_lock.release()
             
             # Read INT values separately (outside lock to avoid holding it too long)
             # These use their own locks internally
