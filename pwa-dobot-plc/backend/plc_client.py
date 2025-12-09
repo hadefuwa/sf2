@@ -675,46 +675,88 @@ class PLCClient:
             return {'written': False, 'reason': 'write_error', 'error': str(e)}
     
     def read_vision_start_command(self, db_number: int = 123) -> bool:
-        """Read Start command from PLC (DB123.DBX40.0)
+        """Read Start command from PLC (DB123.DBX40.0) with stability filtering
+        
+        Uses debouncing to prevent flickering from transient read errors.
+        Requires multiple consistent reads before changing state.
         
         Args:
             db_number: Data block number (default 123)
         
         Returns:
-            True if Start command is active, False otherwise
+            True if Start command is active, False otherwise (filtered/stabilized value)
         """
         if not self.is_connected():
             logger.debug("Cannot read Start command - PLC not connected")
-            return False
+            # Return last stable value if available, otherwise False
+            return self.start_command_stable_value if self.start_command_stable_value is not None else False
         
         max_retries = 5  # Increased retries for "Job pending" errors
         retry_delay = 0.3  # 300ms delay between retries (increased)
+        read_success = False
+        start_value = None
         
         for attempt in range(max_retries):
             try:
                 bool_data = self.client.db_read(db_number, 40, 1)
                 start_value = get_bool(bool_data, 0, 0)  # Bit 0 = Start
-                logger.debug(f"Start command read from DB{db_number}.DBX40.0: {start_value}")
-                return start_value
+                read_success = True
+                break
             except Exception as e:
                 error_str = str(e)
                 if 'Job pending' in error_str and attempt < max_retries - 1:
                     logger.debug(f"Job pending while reading Start command, retrying ({attempt + 1}/{max_retries})...")
                     time.sleep(retry_delay)
                     continue
-                elif 'Job pending' in error_str and attempt == max_retries - 1:
-                    # After all retries exhausted, log warning but return last known good value
-                    # For now, we'll return False to be safe, but log it as a warning
-                    logger.warning(f"Job pending error persists after {max_retries} retries - returning False (may be incorrect)")
-                    self.last_error = f"Job pending error after {max_retries} retries"
-                    return False
                 else:
-                    logger.warning(f"Error reading Start command from DB{db_number}.DBX40.0: {error_str}")
+                    # Read failed - log but don't add to history
                     if attempt == max_retries - 1:
+                        logger.warning(f"Error reading Start command from DB{db_number}.DBX40.0: {error_str}")
                         self.last_error = f"Error reading Start command: {error_str}"
-                    return False
         
-        return False
+        # If read failed, return last stable value (prevents false state changes)
+        if not read_success:
+            if self.start_command_stable_value is not None:
+                logger.debug(f"Start command read failed, using last stable value: {self.start_command_stable_value}")
+                return self.start_command_stable_value
+            else:
+                logger.debug("Start command read failed, no stable value available, returning False")
+                return False
+        
+        # Add successful read to history
+        self.start_command_history.append(start_value)
+        
+        # Keep history size limited
+        if len(self.start_command_history) > self.start_command_history_size:
+            self.start_command_history.pop(0)
+        
+        # Check if we have enough history for stability check
+        if len(self.start_command_history) < self.start_command_stability_threshold:
+            # Not enough history yet - use current value but don't update stable value
+            if self.start_command_stable_value is None:
+                self.start_command_stable_value = start_value
+                self.start_command_stable_count = 1
+            return self.start_command_stable_value if self.start_command_stable_value is not None else start_value
+        
+        # Check if current value matches stable value
+        if start_value == self.start_command_stable_value:
+            # Value is stable - increment counter
+            self.start_command_stable_count += 1
+        else:
+            # Value changed - check if it's consistent in recent history
+            recent_values = self.start_command_history[-self.start_command_stability_threshold:]
+            if all(v == start_value for v in recent_values):
+                # New value is consistent - update stable value
+                logger.info(f"Start command state changed: {self.start_command_stable_value} -> {start_value} (confirmed after {len(recent_values)} reads)")
+                self.start_command_stable_value = start_value
+                self.start_command_stable_count = len(recent_values)
+            else:
+                # Value is inconsistent - keep stable value
+                logger.debug(f"Start command read inconsistent: {start_value} (keeping stable value: {self.start_command_stable_value})")
+                start_value = self.start_command_stable_value
+                self.start_command_stable_count = 0
+        
+        return self.start_command_stable_value
     
     def write_vision_fault_bit(self, defects_found: bool, byte_offset: int = 1, bit_offset: int = 0) -> Dict[str, Any]:
         """Write vision fault status to PLC memory bit

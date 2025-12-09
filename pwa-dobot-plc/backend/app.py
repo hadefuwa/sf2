@@ -1538,6 +1538,7 @@ def poll_loop():
                             db123_config = config.get('plc', {}).get('db123', {})
                             if db123_config.get('enabled', False):
                                 db_number = db123_config.get('db_number', 123)
+                                # Read with stability filtering (debounced)
                                 start_command = plc_client.read_vision_start_command(db_number)
                                 
                                 # Detect rising edge of Start command (False -> True)
