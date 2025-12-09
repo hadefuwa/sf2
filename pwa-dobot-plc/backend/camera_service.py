@@ -65,6 +65,12 @@ class CameraService:
         self.yolo_disabled_until = 0  # Timestamp when YOLO can be re-enabled after crashes
         self.max_crashes = 2  # Disable YOLO after 2 consecutive crashes (more aggressive)
         self.disable_duration = 60  # Disable for 60 seconds after crashes (longer cooldown)
+        # Crop/zoom settings
+        self.crop_enabled = False
+        self.crop_x = 0  # Top-left X (as percentage 0-100)
+        self.crop_y = 0  # Top-left Y (as percentage 0-100)
+        self.crop_width = 100  # Width (as percentage 0-100)
+        self.crop_height = 100  # Height (as percentage 0-100)
         
     def initialize_camera(self) -> bool:
         """Initialize and open camera"""
@@ -134,7 +140,7 @@ class CameraService:
                 logger.info("Background subtractor reset")
     
     def read_frame(self) -> Optional[np.ndarray]:
-        """Read a frame from camera"""
+        """Read a frame from camera and apply crop if enabled"""
         try:
             with self.lock:
                 if self.camera is None:
@@ -147,6 +153,9 @@ class CameraService:
                 
                 ret, frame = self.camera.read()
                 if ret and frame is not None:
+                    # Apply crop if enabled
+                    if self.crop_enabled:
+                        frame = self._apply_crop(frame)
                     self.last_frame = frame
                     self.frame_time = time.time()
                     return frame
@@ -155,6 +164,64 @@ class CameraService:
         except Exception as e:
             logger.warning(f"Error reading camera frame: {e}")
             return None
+    
+    def _apply_crop(self, frame: np.ndarray) -> np.ndarray:
+        """Apply crop/zoom to frame based on crop settings"""
+        if frame is None or frame.size == 0:
+            return frame
+        
+        try:
+            frame_height, frame_width = frame.shape[:2]
+            
+            # Calculate crop region in pixels
+            x_px = int(frame_width * self.crop_x / 100)
+            y_px = int(frame_height * self.crop_y / 100)
+            width_px = int(frame_width * self.crop_width / 100)
+            height_px = int(frame_height * self.crop_height / 100)
+            
+            # Ensure crop region is within frame bounds
+            x_px = max(0, min(x_px, frame_width - 1))
+            y_px = max(0, min(y_px, frame_height - 1))
+            width_px = max(1, min(width_px, frame_width - x_px))
+            height_px = max(1, min(height_px, frame_height - y_px))
+            
+            # Crop the frame
+            cropped = frame[y_px:y_px + height_px, x_px:x_px + width_px]
+            
+            return cropped
+        except Exception as e:
+            logger.warning(f"Error applying crop: {e}")
+            return frame
+    
+    def set_crop(self, enabled: bool, x: float = 0, y: float = 0, width: float = 100, height: float = 100):
+        """
+        Set crop/zoom region for camera feed
+        
+        Args:
+            enabled: Enable/disable crop
+            x: Top-left X position as percentage (0-100)
+            y: Top-left Y position as percentage (0-100)
+            width: Crop width as percentage (0-100)
+            height: Crop height as percentage (0-100)
+        """
+        with self.lock:
+            self.crop_enabled = enabled
+            self.crop_x = max(0, min(100, x))
+            self.crop_y = max(0, min(100, y))
+            self.crop_width = max(1, min(100, width))
+            self.crop_height = max(1, min(100, height))
+            logger.info(f"Crop settings updated: enabled={enabled}, x={self.crop_x}%, y={self.crop_y}%, width={self.crop_width}%, height={self.crop_height}%")
+    
+    def get_crop(self) -> Dict:
+        """Get current crop settings"""
+        with self.lock:
+            return {
+                'enabled': self.crop_enabled,
+                'x': self.crop_x,
+                'y': self.crop_y,
+                'width': self.crop_width,
+                'height': self.crop_height
+            }
     
     def get_frame_jpeg(self, quality: int = 85, use_cache: bool = True, max_cache_age: float = 0.5) -> Optional[bytes]:
         """

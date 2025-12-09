@@ -649,6 +649,16 @@ def init_clients():
         width=camera_config.get('width', 640),
         height=camera_config.get('height', 480)
     )
+    # Load crop settings if available
+    crop_config = camera_config.get('crop', {})
+    if crop_config:
+        camera_service.set_crop(
+            enabled=crop_config.get('enabled', False),
+            x=crop_config.get('x', 0),
+            y=crop_config.get('y', 0),
+            width=crop_config.get('width', 100),
+            height=crop_config.get('height', 100)
+        )
     # Initialize camera (but don't fail if camera not available)
     try:
         camera_service.initialize_camera()
@@ -1695,6 +1705,53 @@ def camera_capture():
         )
     except Exception as e:
         logger.error(f"Error capturing frame: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/camera/crop', methods=['GET'])
+def get_camera_crop():
+    """Get current camera crop settings"""
+    if camera_service is None:
+        return jsonify({'error': 'Camera service not initialized'}), 503
+    
+    try:
+        crop_settings = camera_service.get_crop()
+        return jsonify(crop_settings)
+    except Exception as e:
+        logger.error(f"Error getting crop settings: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/camera/crop', methods=['POST'])
+def set_camera_crop():
+    """Set camera crop settings"""
+    if camera_service is None:
+        return jsonify({'error': 'Camera service not initialized'}), 503
+    
+    try:
+        data = request.json or {}
+        enabled = data.get('enabled', False)
+        x = data.get('x', 0)
+        y = data.get('y', 0)
+        width = data.get('width', 100)
+        height = data.get('height', 100)
+        
+        camera_service.set_crop(enabled, x, y, width, height)
+        
+        # Save to config
+        config = load_config()
+        if 'camera' not in config:
+            config['camera'] = {}
+        config['camera']['crop'] = {
+            'enabled': enabled,
+            'x': x,
+            'y': y,
+            'width': width,
+            'height': height
+        }
+        save_config(config)
+        
+        return jsonify({'success': True, 'crop': camera_service.get_crop()})
+    except Exception as e:
+        logger.error(f"Error setting crop: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/vision/detect-objects', methods=['POST'])

@@ -957,6 +957,7 @@
             loadDb123Config();
             updatePlcTagsStatus();
             updatePlcStartStatusBanner();
+            loadCropSettings();
             topLevelObjectDetectionEnabled = true;
             objectDetectionEnabled = true;
             topLevelDefectDetectionEnabled = true;
@@ -1835,6 +1836,82 @@
             }
         }
 
+        // Camera Crop/Zoom Functions
+        async function loadCropSettings() {
+            try {
+                const response = await fetch(`${API_BASE}/api/camera/crop`);
+                if (response.ok) {
+                    const crop = await response.json();
+                    document.getElementById('cropEnabled').checked = crop.enabled;
+                    document.getElementById('cropX').value = crop.x;
+                    document.getElementById('cropY').value = crop.y;
+                    document.getElementById('cropWidth').value = crop.width;
+                    document.getElementById('cropHeight').value = crop.height;
+                    
+                    toggleCrop();
+                    updateCropPreview();
+                }
+            } catch (error) {
+                console.error('Error loading crop settings:', error);
+            }
+        }
+        
+        function toggleCrop() {
+            const enabled = document.getElementById('cropEnabled').checked;
+            const controls = document.getElementById('cropControls');
+            controls.style.display = enabled ? 'grid' : 'none';
+            if (!enabled) {
+                // Reset to full frame when disabled
+                document.getElementById('cropX').value = 0;
+                document.getElementById('cropY').value = 0;
+                document.getElementById('cropWidth').value = 100;
+                document.getElementById('cropHeight').value = 100;
+                updateCropPreview();
+            }
+        }
+        
+        function updateCropPreview() {
+            const x = document.getElementById('cropX').value;
+            const y = document.getElementById('cropY').value;
+            const width = document.getElementById('cropWidth').value;
+            const height = document.getElementById('cropHeight').value;
+            
+            document.getElementById('cropXValue').textContent = x + '%';
+            document.getElementById('cropYValue').textContent = y + '%';
+            document.getElementById('cropWidthValue').textContent = width + '%';
+            document.getElementById('cropHeightValue').textContent = height + '%';
+        }
+        
+        async function saveCropSettings() {
+            try {
+                const enabled = document.getElementById('cropEnabled').checked;
+                const x = parseFloat(document.getElementById('cropX').value);
+                const y = parseFloat(document.getElementById('cropY').value);
+                const width = parseFloat(document.getElementById('cropWidth').value);
+                const height = parseFloat(document.getElementById('cropHeight').value);
+                
+                const response = await fetch(`${API_BASE}/api/camera/crop`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled, x, y, width, height })
+                });
+                
+                if (response.ok) {
+                    addSerialLog('✅ Crop settings saved successfully', 'success');
+                    // Force refresh camera feed
+                    if (cameraConnected) {
+                        updateCameraSnapshot();
+                    }
+                } else {
+                    const error = await response.json();
+                    addSerialLog(`❌ Error saving crop: ${error.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error saving crop settings:', error);
+                addSerialLog(`❌ Error saving crop: ${error.message}`, 'error');
+            }
+        }
+        
         function openCameraSettings() {
             const adjustments = document.getElementById('imageAdjustments');
             if (adjustments.style.display === 'none') {
