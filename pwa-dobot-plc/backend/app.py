@@ -1632,9 +1632,9 @@ def poll_loop():
             except Exception as e:
                 logger.debug(f"DB123 read error: {e}")
 
-            # Read DB4 Robot tags (byte 4-32 = 29 bytes)
+            # Read DB4 Robot tags (byte 4-33 = 30 bytes to include DBW32)
             try:
-                db4_data = plc_client.client.db_read(4, 4, 29)
+                db4_data = plc_client.client.db_read(4, 4, 30)
                 plc_cache['db4']['connected'] = snap7.util.get_bool(db4_data, 0, 0)       # DB4.DBX4.0
                 plc_cache['db4']['busy'] = snap7.util.get_bool(db4_data, 0, 1)            # DB4.DBX4.1
                 plc_cache['db4']['cycle_complete'] = snap7.util.get_bool(db4_data, 0, 2)  # DB4.DBX4.2
@@ -1645,7 +1645,7 @@ def poll_loop():
                 plc_cache['db4']['current_y'] = snap7.util.get_real(db4_data, 18)         # DB4.DBD22
                 plc_cache['db4']['current_z'] = snap7.util.get_real(db4_data, 22)         # DB4.DBD26
                 plc_cache['db4']['status_code'] = snap7.util.get_int(db4_data, 26)        # DB4.DBW30
-                plc_cache['db4']['error_code'] = snap7.util.get_int(db4_data, 27)         # DB4.DBW32 (FIXED: was 28)
+                plc_cache['db4']['error_code'] = snap7.util.get_int(db4_data, 28)         # DB4.DBW32
             except Exception as e:
                 logger.debug(f"DB4 read error: {e}")
 
