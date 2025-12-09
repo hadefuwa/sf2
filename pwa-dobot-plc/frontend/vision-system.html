@@ -1004,6 +1004,31 @@
     </div>
 
     <script>
+        // Global error handler for unhandled promise rejections
+        window.addEventListener('unhandledrejection', function(event) {
+            // Extract meaningful error message
+            let errorMsg = 'Unhandled promise rejection';
+            const error = event.reason;
+            
+            if (error instanceof Error) {
+                errorMsg = error.message || error.name || 'Unknown error';
+            } else if (typeof error === 'string') {
+                errorMsg = error;
+            } else if (error?.message) {
+                errorMsg = error.message;
+            }
+            
+            // Suppress timeout/abort errors as they're expected when backend is slow
+            if (!errorMsg.includes('timeout') && !errorMsg.includes('aborted') && !errorMsg.includes('AbortError')) {
+                console.error('Unhandled promise rejection:', errorMsg, error);
+            }
+            
+            // Prevent default browser error logging for expected errors
+            if (errorMsg.includes('timeout') || errorMsg.includes('aborted')) {
+                event.preventDefault();
+            }
+        });
+        
         const API_BASE = window.location.origin;
         console.log('Vision System v1.1 - API_BASE:', API_BASE);
         let cameraConnected = false;
@@ -1216,7 +1241,20 @@
                     if (placeholder) placeholder.style.display = 'none';
                 }
             } catch (error) {
-                console.error('Error updating camera snapshot:', error);
+                // Extract meaningful error message
+                let errorMsg = 'Unknown error';
+                if (error instanceof Error) {
+                    errorMsg = error.message || error.name || 'Unknown error';
+                } else if (typeof error === 'string') {
+                    errorMsg = error;
+                } else if (error?.message) {
+                    errorMsg = error.message;
+                }
+                
+                // Don't log timeout/abort errors as they're expected when backend is slow
+                if (!errorMsg.includes('timeout') && !errorMsg.includes('aborted') && !errorMsg.includes('AbortError')) {
+                    console.error('Error updating camera snapshot:', errorMsg, error);
+                }
             } finally {
                 isFetchingCamera = false;  // Always release lock
             }
@@ -2314,7 +2352,20 @@
                 await new Promise(resolve => setTimeout(resolve, 100));
                 await updateDb123Status();
             } catch (error) {
-                console.error('Error in updateAllStatus:', error);
+                // Extract meaningful error message
+                let errorMsg = 'Unknown error';
+                if (error instanceof Error) {
+                    errorMsg = error.message || error.name || 'Unknown error';
+                } else if (typeof error === 'string') {
+                    errorMsg = error;
+                } else if (error?.message) {
+                    errorMsg = error.message;
+                }
+                
+                // Only log if it's not a timeout (timeouts are expected when backend is slow)
+                if (!errorMsg.includes('timeout') && !errorMsg.includes('aborted')) {
+                    console.error('Error in updateAllStatus:', errorMsg, error);
+                }
             } finally {
                 isUpdatingStatus = false;
             }
@@ -2356,9 +2407,15 @@
         // Helper function for timeout (works in all browsers)
         function fetchWithTimeout(url, options = {}, timeout = 10000) {
             return Promise.race([
-                fetch(url, options),
+                fetch(url, options).catch(error => {
+                    // Wrap fetch errors with more context
+                    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                        throw new Error(`Network error: Cannot reach ${url}. Check if backend is running.`);
+                    }
+                    throw error;
+                }),
                 new Promise((_, reject) => 
-                    setTimeout(() => reject(new Error('Request timeout')), timeout)
+                    setTimeout(() => reject(new Error(`Request timeout after ${timeout}ms: ${url}`)), timeout)
                 )
             ]);
         }
@@ -2385,7 +2442,21 @@
                 try {
                     await fetchWithTimeout(`${API_BASE}/api/test`, {}, 5000);
                 } catch (testError) {
-                    console.error('Backend not responding:', testError);
+                    // Extract meaningful error message
+                    let errorMsg = 'Connection failed';
+                    if (testError instanceof Error) {
+                        errorMsg = testError.message || testError.name || 'Connection failed';
+                    } else if (typeof testError === 'string') {
+                        errorMsg = testError;
+                    } else if (testError?.message) {
+                        errorMsg = testError.message;
+                    }
+                    
+                    // Only log if it's not a timeout (timeouts are expected when backend is slow)
+                    if (!errorMsg.includes('timeout') && !errorMsg.includes('aborted')) {
+                        console.error('Backend not responding:', errorMsg);
+                    }
+                    
                     tagsDiv.innerHTML = `
                         <div style="color: var(--accent-red); text-align: center; padding: 12px; grid-column: 1 / -1;">
                             Backend server not responding<br>
