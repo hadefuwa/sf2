@@ -1367,7 +1367,13 @@
                 
                 if (detectResponse.status === 403) {
                     // Start command not active - backend rejected the request
-                    const errorData = await detectResponse.json();
+                    const errorText = await detectResponse.text();
+                    let errorData;
+                    try {
+                        errorData = JSON.parse(errorText);
+                    } catch (e) {
+                        errorData = { message: errorText };
+                    }
                     addSerialLog(`⏸️ ${errorData.message || 'PLC Start command not active'}`, 'warning');
                     return;
                 }
