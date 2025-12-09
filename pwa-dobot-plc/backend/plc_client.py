@@ -44,7 +44,10 @@ class PLCClient:
         self.start_command_stable_value = None  # Last stable value
         self.start_command_stable_count = 0  # Count of consecutive stable reads
         self.start_command_history_size = 5  # Number of reads to track
-        self.start_command_stability_threshold = 3  # Required consecutive reads for state change
+        self.start_command_stability_threshold = 5  # Required consecutive reads for state change (increased for stability)
+        
+        # Thread safety: Snap7 client is NOT thread-safe - all operations must be serialized
+        self.plc_lock = threading.Lock()
         
         # Only create snap7 client if library is available
         if snap7_available:
@@ -183,15 +186,18 @@ class PLCClient:
             return False
 
     def read_db_bool(self, db_number: int, byte_offset: int, bit_offset: int) -> Optional[bool]:
-        """Read BOOL value from data block"""
+        """Read BOOL value from data block (thread-safe)"""
         if not snap7_available or self.client is None:
             return None
         try:
             if not self.is_connected():
                 return None
 
-            data = self.client.db_read(db_number, byte_offset, 1)
-            return get_bool(data, 0, bit_offset)
+            # Thread-safe: Only one Snap7 operation at a time
+            with self.plc_lock:
+                time.sleep(0.02)  # 20ms delay to avoid flooding
+                data = self.client.db_read(db_number, byte_offset, 1)
+                return get_bool(data, 0, bit_offset)
         except Exception as e:
             self.last_error = f"Error reading DB{db_number}.DBX{byte_offset}.{bit_offset}: {str(e)}"
             logger.error(self.last_error)
@@ -398,15 +404,18 @@ class PLCClient:
     # DB123 Vision System Tags Methods
     
     def read_db_int(self, db_number: int, offset: int) -> Optional[int]:
-        """Read INT (16-bit signed integer) value from data block"""
+        """Read INT (16-bit signed integer) value from data block (thread-safe)"""
         if not snap7_available or self.client is None:
             return None
         try:
             if not self.is_connected():
                 return None
 
-            data = self.client.db_read(db_number, offset, 2)
-            return get_int(data, 0)
+            # Thread-safe: Only one Snap7 operation at a time
+            with self.plc_lock:
+                time.sleep(0.02)  # 20ms delay to avoid flooding
+                data = self.client.db_read(db_number, offset, 2)
+                return get_int(data, 0)
         except Exception as e:
             self.last_error = f"Error reading DB{db_number}.DBW{offset}: {str(e)}"
             logger.error(self.last_error)
@@ -515,16 +524,24 @@ class PLCClient:
             return False
         
         max_retries = 3
-        retry_delay = 0.2  # 200ms delay between retries
+        retry_delay = 0.3  # 300ms delay between retries (increased)
         
-        for attempt in range(max_retries):
-            try:
-                if not self.is_connected():
-                    return False
-
-                # Read current byte 40 to preserve other bits (with retry)
+        # Thread-safe: Only one Snap7 operation at a time
+        with self.plc_lock:
+            for attempt in range(max_retries):
                 try:
-                    current_byte = bytearray(self.client.db_read(db_number, 40, 1))
+                    if not self.is_connected():
+                        return False
+
+                    # Add delay before read to avoid flooding PLC
+                    if attempt > 0:
+                        time.sleep(retry_delay)
+                    else:
+                        time.sleep(0.05)  # 50ms delay even on first attempt
+
+                    # Read current byte 40 to preserve other bits (with retry)
+                    try:
+                        current_byte = bytearray(self.client.db_read(db_number, 40, 1))
                 except Exception as read_error:
                     error_str = str(read_error)
                     if 'Job pending' in error_str and attempt < max_retries - 1:
@@ -682,10 +699,11 @@ class PLCClient:
             return {'written': False, 'reason': 'write_error', 'error': str(e)}
     
     def read_vision_start_command(self, db_number: int = 123) -> bool:
-        """Read Start command from PLC (DB123.DBX40.0) with stability filtering
+        """Read Start command from PLC (DB123.DBX40.0) with stability filtering and thread safety
         
         Uses debouncing to prevent flickering from transient read errors.
         Requires multiple consistent reads before changing state.
+        Thread-safe: Uses lock to prevent concurrent Snap7 calls.
         
         Args:
             db_number: Data block number (default 123)
@@ -698,72 +716,77 @@ class PLCClient:
             # Return last stable value if available, otherwise False
             return self.start_command_stable_value if self.start_command_stable_value is not None else False
         
-        max_retries = 5  # Increased retries for "Job pending" errors
-        retry_delay = 0.3  # 300ms delay between retries (increased)
-        read_success = False
-        start_value = None
-        
-        for attempt in range(max_retries):
-            try:
-                bool_data = self.client.db_read(db_number, 40, 1)
-                start_value = get_bool(bool_data, 0, 0)  # Bit 0 = Start
-                read_success = True
-                break
-            except Exception as e:
-                error_str = str(e)
-                if 'Job pending' in error_str and attempt < max_retries - 1:
-                    logger.debug(f"Job pending while reading Start command, retrying ({attempt + 1}/{max_retries})...")
-                    time.sleep(retry_delay)
-                    continue
+        # Thread-safe: Only one Snap7 operation at a time
+        with self.plc_lock:
+            max_retries = 3  # Reduced retries to avoid flooding
+            retry_delay = 0.5  # 500ms delay between retries (increased)
+            read_success = False
+            start_value = None
+            
+            for attempt in range(max_retries):
+                try:
+                    # Add delay before read to avoid flooding PLC
+                    if attempt > 0:
+                        time.sleep(retry_delay)
+                    
+                    bool_data = self.client.db_read(db_number, 40, 1)
+                    start_value = get_bool(bool_data, 0, 0)  # Bit 0 = Start
+                    read_success = True
+                    break
+                except Exception as e:
+                    error_str = str(e)
+                    if 'Job pending' in error_str and attempt < max_retries - 1:
+                        logger.debug(f"Job pending while reading Start command, retrying ({attempt + 1}/{max_retries})...")
+                        continue
+                    else:
+                        # Read failed - log but don't add to history
+                        if attempt == max_retries - 1:
+                            logger.warning(f"Error reading Start command from DB{db_number}.DBX40.0: {error_str}")
+                            self.last_error = f"Error reading Start command: {error_str}"
+            
+            # If read failed, return last stable value (prevents false state changes)
+            if not read_success:
+                if self.start_command_stable_value is not None:
+                    logger.debug(f"Start command read failed, using last stable value: {self.start_command_stable_value}")
+                    return self.start_command_stable_value
                 else:
-                    # Read failed - log but don't add to history
-                    if attempt == max_retries - 1:
-                        logger.warning(f"Error reading Start command from DB{db_number}.DBX40.0: {error_str}")
-                        self.last_error = f"Error reading Start command: {error_str}"
-        
-        # If read failed, return last stable value (prevents false state changes)
-        if not read_success:
-            if self.start_command_stable_value is not None:
-                logger.debug(f"Start command read failed, using last stable value: {self.start_command_stable_value}")
-                return self.start_command_stable_value
+                    logger.debug("Start command read failed, no stable value available, returning False")
+                    return False
+            
+            # Add successful read to history
+            self.start_command_history.append(start_value)
+            
+            # Keep history size limited
+            if len(self.start_command_history) > self.start_command_history_size:
+                self.start_command_history.pop(0)
+            
+            # Check if we have enough history for stability check
+            if len(self.start_command_history) < self.start_command_stability_threshold:
+                # Not enough history yet - use current value but don't update stable value
+                if self.start_command_stable_value is None:
+                    self.start_command_stable_value = start_value
+                    self.start_command_stable_count = 1
+                return self.start_command_stable_value if self.start_command_stable_value is not None else start_value
+            
+            # Check if current value matches stable value
+            if start_value == self.start_command_stable_value:
+                # Value is stable - increment counter
+                self.start_command_stable_count += 1
             else:
-                logger.debug("Start command read failed, no stable value available, returning False")
-                return False
-        
-        # Add successful read to history
-        self.start_command_history.append(start_value)
-        
-        # Keep history size limited
-        if len(self.start_command_history) > self.start_command_history_size:
-            self.start_command_history.pop(0)
-        
-        # Check if we have enough history for stability check
-        if len(self.start_command_history) < self.start_command_stability_threshold:
-            # Not enough history yet - use current value but don't update stable value
-            if self.start_command_stable_value is None:
-                self.start_command_stable_value = start_value
-                self.start_command_stable_count = 1
-            return self.start_command_stable_value if self.start_command_stable_value is not None else start_value
-        
-        # Check if current value matches stable value
-        if start_value == self.start_command_stable_value:
-            # Value is stable - increment counter
-            self.start_command_stable_count += 1
-        else:
-            # Value changed - check if it's consistent in recent history
-            recent_values = self.start_command_history[-self.start_command_stability_threshold:]
-            if all(v == start_value for v in recent_values):
-                # New value is consistent - update stable value
-                logger.info(f"Start command state changed: {self.start_command_stable_value} -> {start_value} (confirmed after {len(recent_values)} reads)")
-                self.start_command_stable_value = start_value
-                self.start_command_stable_count = len(recent_values)
-            else:
-                # Value is inconsistent - keep stable value
-                logger.debug(f"Start command read inconsistent: {start_value} (keeping stable value: {self.start_command_stable_value})")
-                start_value = self.start_command_stable_value
-                self.start_command_stable_count = 0
-        
-        return self.start_command_stable_value
+                # Value changed - check if it's consistent in recent history
+                recent_values = self.start_command_history[-self.start_command_stability_threshold:]
+                if all(v == start_value for v in recent_values):
+                    # New value is consistent - update stable value
+                    logger.info(f"Start command state changed: {self.start_command_stable_value} -> {start_value} (confirmed after {len(recent_values)} reads)")
+                    self.start_command_stable_value = start_value
+                    self.start_command_stable_count = len(recent_values)
+                else:
+                    # Value is inconsistent - keep stable value
+                    logger.debug(f"Start command read inconsistent: {start_value} (keeping stable value: {self.start_command_stable_value})")
+                    start_value = self.start_command_stable_value
+                    self.start_command_stable_count = 0
+            
+            return self.start_command_stable_value
     
     def write_vision_fault_bit(self, defects_found: bool, byte_offset: int = 1, bit_offset: int = 0) -> Dict[str, Any]:
         """Write vision fault status to PLC memory bit

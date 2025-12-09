@@ -1612,7 +1612,9 @@ def poll_loop():
         except Exception as e:
             logger.error(f"Polling error: {e}")
 
-        time.sleep(poll_interval)
+        # Add delay to prevent flooding the PLC (minimum 50ms between cycles)
+        # This gives the S7-1200 time to process requests
+        time.sleep(max(poll_interval, 0.05))  # At least 50ms between polling cycles
 
     logger.info("Polling thread stopped")
 
@@ -1887,9 +1889,8 @@ def vision_analyze():
             
             db_number = db123_config.get('db_number', 123)
             
-            # Add small delay before reading to avoid conflicts with other PLC operations
-            time.sleep(0.05)  # 50ms delay
-            
+            # Read Start command (thread-safe, with stability filtering)
+            # No delay needed here - the lock in read_vision_start_command handles serialization
             start_command = plc_client.read_vision_start_command(db_number)
             
             logger.info(f"Vision analyze check: Start command = {start_command} (DB{db_number}.DBX40.0)")
@@ -2069,9 +2070,8 @@ def vision_detect():
             
             db_number = db123_config.get('db_number', 123)
             
-            # Add small delay before reading to avoid conflicts with other PLC operations
-            time.sleep(0.05)  # 50ms delay
-            
+            # Read Start command (thread-safe, with stability filtering)
+            # No delay needed here - the lock in read_vision_start_command handles serialization
             start_command = plc_client.read_vision_start_command(db_number)
             
             logger.info(f"Vision detect check: Start command = {start_command} (DB{db_number}.DBX40.0)")
