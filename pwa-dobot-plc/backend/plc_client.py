@@ -567,8 +567,32 @@ class PLCClient:
                 defect_number = get_int(all_data, 4) if len(all_data) >= 6 else 0
                 
                 # Build result
+                # Use stability-filtered start command for consistency with polling loop
+                # This ensures the frontend sees the same value that triggers vision processing
+                start_command = get_bool(bool_data, 0, 0)  # Raw read
+                # Update the stability filter with this read (but don't wait for confirmation)
+                # The stability filter will handle debouncing internally
+                self.start_command_history.append(start_command)
+                if len(self.start_command_history) > 3:
+                    self.start_command_history.pop(0)
+                
+                # Use stability-filtered value if available, otherwise use current read
+                if self.start_command_stable_value is not None:
+                    # Check if we should update stable value (1 read for faster response)
+                    if len(self.start_command_history) >= 1:
+                        last_read = self.start_command_history[-1]
+                        if last_read != self.start_command_stable_value:
+                            # State change detected - update immediately
+                            logger.info(f"Start command state changed in read_vision_tags: {self.start_command_stable_value} -> {last_read}")
+                            self.start_command_stable_value = last_read
+                    # Use stable value for consistency
+                    start_command = self.start_command_stable_value
+                else:
+                    # First read - initialize stable value
+                    self.start_command_stable_value = start_command
+                
                 result = {
-                    'start': get_bool(bool_data, 0, 0),          # 40.0
+                    'start': start_command,  # Use stability-filtered value
                     'connected': get_bool(bool_data, 0, 1),     # 40.1
                     'busy': get_bool(bool_data, 0, 2),          # 40.2
                     'completed': get_bool(bool_data, 0, 3),     # 40.3
@@ -765,13 +789,14 @@ class PLCClient:
                 self.start_command_stable_value = start_value
                 return start_value
 
-            # Simple debouncing: require 2 consecutive matching reads to change state
-            if len(self.start_command_history) >= 2:
-                last_two = self.start_command_history[-2:]
-                if last_two[0] == last_two[1] and last_two[1] != self.start_command_stable_value:
-                    # State change confirmed by 2 consecutive reads
-                    logger.info(f"Start command state changed: {self.start_command_stable_value} -> {last_two[1]}")
-                    self.start_command_stable_value = last_two[1]
+            # Simple debouncing: require 1 matching read to change state (reduced from 2 for faster response)
+            # This prevents flickering while still allowing quick state changes
+            if len(self.start_command_history) >= 1:
+                last_read = self.start_command_history[-1]
+                if last_read != self.start_command_stable_value:
+                    # State change detected - update immediately for responsive UI
+                    logger.info(f"Start command state changed: {self.start_command_stable_value} -> {last_read}")
+                    self.start_command_stable_value = last_read
 
             return self.start_command_stable_value
 
