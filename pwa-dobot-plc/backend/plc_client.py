@@ -836,16 +836,16 @@ class PLCClient:
             return False
 
     def read_db40_start_bit(self) -> Optional[bool]:
-        """Read Start bit from PLC DB40.DBX40.0 specifically for vision system
+        """Read Start bit from PLC DB123.DBX40.0 specifically for vision system
 
-        This is a dedicated method to read the vision start command from DB40.40.0
-        (the Camera_UDT starts at DB40.0, and Start bit is at byte 40)
+        The Camera_UDT is in DB123 starting at byte 40.
+        Start bit is at DB123.DBX40.0
 
         Returns:
             True if Start command is active, False if inactive, None if lock busy (can't read)
         """
         if not self.is_connected():
-            logger.warning("Cannot read DB40.40.0 start bit - PLC not connected")
+            logger.warning("Cannot read DB123.40.0 start bit - PLC not connected")
             return False
 
         try:
@@ -856,14 +856,16 @@ class PLCClient:
 
             try:
                 time.sleep(0.02)  # 20ms delay to avoid flooding
-                bool_data = self.client.db_read(40, 40, 1)  # Read from byte 40, not byte 0
-                start_value = get_bool(bool_data, 0, 0)  # DB40.DBX40.0
-                logger.info(f"📡 Read vision start bit from DB40.DBX40.0 = {start_value}")
+                # Read from DB123, byte 40 (where Camera_UDT starts)
+                bool_data = self.client.db_read(123, 40, 1)
+                byte_value = bool_data[0]  # Get the actual byte value
+                start_value = get_bool(bool_data, 0, 0)  # DB123.DBX40.0
+                logger.info(f"📡 Read vision start bit from DB123.DBX40.0: byte={byte_value:#04x} ({bin(byte_value)}), bit0={start_value}")
                 return start_value
             finally:
                 self.plc_lock.release()
         except Exception as e:
-            logger.error(f"❌ Error reading DB40.40.0 start bit: {e}", exc_info=True)
+            logger.error(f"❌ Error reading DB123.40.0 start bit: {e}", exc_info=True)
             return False
     
     def write_vision_fault_bit(self, defects_found: bool, byte_offset: int = 1, bit_offset: int = 0) -> Dict[str, Any]:

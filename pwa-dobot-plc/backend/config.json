@@ -58,14 +58,8 @@
       }
     },
     "db40": {
-      "enabled": true,
-      "db_number": 40,
-      "vision_tags": {
-        "start": {
-          "byte": 40,
-          "bit": 0
-        }
-      }
+      "enabled": false,
+      "comment": "Camera_UDT is actually in DB123 starting at byte 40, not in a separate DB40"
     },
     "db123": {
       "enabled": true,

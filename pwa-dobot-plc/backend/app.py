@@ -2358,8 +2358,8 @@ def read_db40_start_bit():
             'success': True,
             'start': bool(start_value),
             'plc_connected': plc_client.is_connected(),
-            'db_number': 40,
-            'address': 'DB40.DBX40.0'
+            'db_number': 123,
+            'address': 'DB123.DBX40.0'
         })
     except Exception as e:
         logger.error(f"Error reading DB40.0 start bit: {e}")
