@@ -545,12 +545,14 @@ class PLCClient:
         if not self.is_connected():
             return self.cached_vision_tags.copy() if self.cached_vision_tags else default_tags
         
-        # Try to get lock immediately (non-blocking) - if busy, return cached values
+        # Try to get lock with short timeout - if busy, return cached values
         lock_acquired = False
         try:
-            lock_acquired = self.plc_lock.acquire(blocking=False)
+            # Wait up to 100ms for lock - this is fast enough for UI but allows fresh reads
+            lock_acquired = self.plc_lock.acquire(timeout=0.1)
             if not lock_acquired:
-                # Lock is busy, return cached values immediately
+                # Lock is busy, return cached values (but log it for debugging)
+                logger.debug("PLC lock busy in read_vision_tags, returning cached values")
                 return self.cached_vision_tags.copy() if self.cached_vision_tags else default_tags
             
             # We have the lock, try to read
@@ -736,7 +738,9 @@ class PLCClient:
             return False
 
         try:
-            if not self.plc_lock.acquire(timeout=1.0):
+            # Use shorter timeout to avoid blocking too long
+            if not self.plc_lock.acquire(timeout=0.1):
+                logger.debug("PLC lock busy in read_vision_start_command")
                 return False
             
             try:
@@ -744,7 +748,8 @@ class PLCClient:
                 return get_bool(bool_data, 0, 0)  # Bit 0 = Start
             finally:
                 self.plc_lock.release()
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Error reading start command: {e}")
             return False
     
     def write_vision_fault_bit(self, defects_found: bool, byte_offset: int = 1, bit_offset: int = 0) -> Dict[str, Any]:
