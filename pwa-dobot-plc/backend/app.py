@@ -301,44 +301,106 @@ def delete_old_counter_images(counter_number: int):
     except Exception as e:
         logger.error(f"Error deleting old counter images: {e}", exc_info=True)
 
-def find_most_central_counter(detected_objects: List[Dict], frame_shape: tuple) -> Optional[Dict]:
+def find_most_central_counter(detected_objects: List[Dict], frame_shape: tuple, 
+                              selection_method: str = 'most_central') -> Optional[Dict]:
     """
-    Find the counter that is closest to the center of the image
+    Find a single counter from multiple detected objects based on selection method
     
     Args:
         detected_objects: List of detected counter objects
         frame_shape: Tuple of (height, width) of the frame
+        selection_method: Method to select counter - 'most_central', 'largest', 'smallest', 
+                         'leftmost', 'rightmost', 'topmost', 'bottommost'
     
     Returns:
-        The most central counter object, or None if no objects detected
+        The selected counter object, or None if no objects detected
     """
     if not detected_objects:
         return None
     
-    # Calculate image center
+    if len(detected_objects) == 1:
+        return detected_objects[0]
+    
     frame_height, frame_width = frame_shape[:2]
     image_center_x = frame_width // 2
     image_center_y = frame_height // 2
     
     best_counter = None
-    min_distance = float('inf')
     
-    for obj in detected_objects:
-        # Get counter center coordinates
-        obj_center = obj.get('center')
-        if obj_center:
-            center_x, center_y = obj_center
-        else:
-            # Calculate center from bounding box if center not available
-            center_x = obj.get('x', 0) + obj.get('width', 0) // 2
-            center_y = obj.get('y', 0) + obj.get('height', 0) // 2
-        
-        # Calculate distance from image center
-        distance = ((center_x - image_center_x) ** 2 + (center_y - image_center_y) ** 2) ** 0.5
-        
-        if distance < min_distance:
-            min_distance = distance
-            best_counter = obj
+    if selection_method == 'most_central':
+        # Find counter closest to image center
+        min_distance = float('inf')
+        for obj in detected_objects:
+            obj_center = obj.get('center')
+            if obj_center:
+                center_x, center_y = obj_center
+            else:
+                center_x = obj.get('x', 0) + obj.get('width', 0) // 2
+                center_y = obj.get('y', 0) + obj.get('height', 0) // 2
+            
+            distance = ((center_x - image_center_x) ** 2 + (center_y - image_center_y) ** 2) ** 0.5
+            if distance < min_distance:
+                min_distance = distance
+                best_counter = obj
+    
+    elif selection_method == 'largest':
+        # Find counter with largest area
+        max_area = 0
+        for obj in detected_objects:
+            area = obj.get('area', 0)
+            if area > max_area:
+                max_area = area
+                best_counter = obj
+    
+    elif selection_method == 'smallest':
+        # Find counter with smallest area
+        min_area = float('inf')
+        for obj in detected_objects:
+            area = obj.get('area', 0)
+            if area < min_area:
+                min_area = area
+                best_counter = obj
+    
+    elif selection_method == 'leftmost':
+        # Find counter with leftmost X position
+        min_x = float('inf')
+        for obj in detected_objects:
+            x = obj.get('x', 0)
+            if x < min_x:
+                min_x = x
+                best_counter = obj
+    
+    elif selection_method == 'rightmost':
+        # Find counter with rightmost X position
+        max_x = -1
+        for obj in detected_objects:
+            x = obj.get('x', 0) + obj.get('width', 0)
+            if x > max_x:
+                max_x = x
+                best_counter = obj
+    
+    elif selection_method == 'topmost':
+        # Find counter with topmost Y position
+        min_y = float('inf')
+        for obj in detected_objects:
+            y = obj.get('y', 0)
+            if y < min_y:
+                min_y = y
+                best_counter = obj
+    
+    elif selection_method == 'bottommost':
+        # Find counter with bottommost Y position
+        max_y = -1
+        for obj in detected_objects:
+            y = obj.get('y', 0) + obj.get('height', 0)
+            if y > max_y:
+                max_y = y
+                best_counter = obj
+    
+    else:
+        # Default to most_central if unknown method
+        logger.warning(f"Unknown selection method: {selection_method}, using 'most_central'")
+        return find_most_central_counter(detected_objects, frame_shape, 'most_central')
     
     return best_counter
 
@@ -361,7 +423,10 @@ def find_matching_counter(obj: Dict, existing_counters: Dict[int, Dict]) -> int:
     obj_x, obj_y = obj_center
     
     # Position matching threshold (pixels) - counters within this distance are considered the same
-    POSITION_THRESHOLD = 100  # 100 pixels tolerance
+    # Load from config if available
+    config = load_config()
+    vision_config = config.get('vision', {})
+    POSITION_THRESHOLD = vision_config.get('position_matching_threshold', 100)  # Default 100 pixels tolerance
     
     best_match = None
     best_distance = float('inf')
@@ -1369,8 +1434,17 @@ def process_vision_handshake():
         
         detected_objects = object_results.get('objects', [])
         
-        # Find the most central counter (only process 1 counter)
-        central_counter = find_most_central_counter(detected_objects, frame.shape)
+        # Find the selected counter (only process 1 counter)
+        config = load_config()
+        vision_config = config.get('vision', {})
+        single_counter_enabled = vision_config.get('single_counter_enabled', True)
+        selection_method = vision_config.get('counter_selection_method', 'most_central')
+        
+        if single_counter_enabled:
+            central_counter = find_most_central_counter(detected_objects, frame.shape, selection_method)
+        else:
+            # Process all counters (use first one for now, but could be extended)
+            central_counter = detected_objects[0] if detected_objects else None
         
         if central_counter:
             # Only process the most central counter

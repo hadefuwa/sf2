@@ -869,6 +869,43 @@
                                 </button>
                             </div>
                         </div>
+                        
+                        <!-- Single Counter Detection Settings -->
+                        <div style="margin-top: 20px; padding: 16px; background: rgba(10, 0, 20, 0.6); border: 1px solid var(--border-color); border-radius: 8px;">
+                            <h5 style="color: var(--primary-cyan); font-size: 12px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">
+                                🎯 Single Counter Detection
+                            </h5>
+                            <div style="margin-bottom: 12px;">
+                                <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 11px; cursor: pointer;">
+                                    <input type="checkbox" id="singleCounterEnabled" onchange="toggleSingleCounterSettings()" style="cursor: pointer;">
+                                    <span>Enable Single Counter Mode (process only 1 counter when multiple detected)</span>
+                                </label>
+                            </div>
+                            <div id="singleCounterControls" style="display: none;">
+                                <div style="margin-bottom: 12px;">
+                                    <label style="display: block; color: var(--text-secondary); font-size: 10px; margin-bottom: 6px;">Selection Method</label>
+                                    <select id="counterSelectionMethod" style="width: 100%; padding: 6px; background: var(--darker-bg); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 11px; border-radius: 4px;">
+                                        <option value="most_central">Most Central (closest to center)</option>
+                                        <option value="largest">Largest (biggest area)</option>
+                                        <option value="smallest">Smallest (smallest area)</option>
+                                        <option value="leftmost">Leftmost</option>
+                                        <option value="rightmost">Rightmost</option>
+                                        <option value="topmost">Topmost</option>
+                                        <option value="bottommost">Bottommost</option>
+                                    </select>
+                                </div>
+                                <div style="margin-bottom: 12px;">
+                                    <label style="display: block; color: var(--text-secondary); font-size: 10px; margin-bottom: 4px;">Position Matching Threshold (pixels)</label>
+                                    <input type="number" id="positionThreshold" min="10" max="500" value="100" step="10" style="width: 100%; padding: 6px; background: var(--darker-bg); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 11px; border-radius: 4px;">
+                                    <div style="font-size: 9px; color: var(--text-muted); margin-top: 4px;">Distance threshold for matching counters to existing positions</div>
+                                </div>
+                            </div>
+                            <div style="margin-top: 12px;">
+                                <button class="btn btn-primary" onclick="saveSingleCounterSettings()" style="font-size: 10px; padding: 6px 12px; width: 100%;">
+                                    💾 Save Settings
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Hidden inputs for method -->
@@ -1949,6 +1986,61 @@
             } catch (error) {
                 console.error('Error saving crop settings:', error);
                 addSerialLog(`❌ Error saving crop: ${error.message}`, 'error');
+            }
+        }
+        
+        // Single Counter Detection Settings Functions
+        async function loadSingleCounterSettings() {
+            try {
+                const response = await fetch(`${API_BASE}/api/config`);
+                if (response.ok) {
+                    const config = await response.json();
+                    const visionConfig = config.vision || {};
+                    
+                    document.getElementById('singleCounterEnabled').checked = visionConfig.single_counter_enabled !== false; // Default true
+                    document.getElementById('counterSelectionMethod').value = visionConfig.counter_selection_method || 'most_central';
+                    document.getElementById('positionThreshold').value = visionConfig.position_matching_threshold || 100;
+                    
+                    toggleSingleCounterSettings();
+                }
+            } catch (error) {
+                console.error('Error loading single counter settings:', error);
+            }
+        }
+        
+        function toggleSingleCounterSettings() {
+            const enabled = document.getElementById('singleCounterEnabled').checked;
+            const controls = document.getElementById('singleCounterControls');
+            controls.style.display = enabled ? 'block' : 'none';
+        }
+        
+        async function saveSingleCounterSettings() {
+            try {
+                const enabled = document.getElementById('singleCounterEnabled').checked;
+                const method = document.getElementById('counterSelectionMethod').value;
+                const threshold = parseInt(document.getElementById('positionThreshold').value);
+                
+                const response = await fetch(`${API_BASE}/api/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        vision: {
+                            single_counter_enabled: enabled,
+                            counter_selection_method: method,
+                            position_matching_threshold: threshold
+                        }
+                    })
+                });
+                
+                if (response.ok) {
+                    addSerialLog('✅ Single counter settings saved successfully', 'success');
+                } else {
+                    const error = await response.json();
+                    addSerialLog(`❌ Error saving settings: ${error.error || 'Unknown error'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Error saving single counter settings:', error);
+                addSerialLog(`❌ Error saving settings: ${error.message}`, 'error');
             }
         }
         
