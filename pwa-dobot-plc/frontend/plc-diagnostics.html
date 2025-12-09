@@ -166,10 +166,10 @@
         </div>
 
         <div class="controls">
-            <button onclick="setInterval(250)">250ms</button>
-            <button onclick="setInterval(500)">500ms</button>
-            <button onclick="setInterval(1000)">1000ms</button>
-            <button onclick="setInterval(2000)">2000ms</button>
+            <button onclick="setPollInterval(250)">250ms</button>
+            <button onclick="setPollInterval(500)">500ms</button>
+            <button onclick="setPollInterval(1000)">1000ms</button>
+            <button onclick="setPollInterval(2000)">2000ms</button>
             <button onclick="clearLog()">Clear Log</button>
             <button onclick="togglePause()">Pause/Resume</button>
         </div>
@@ -308,7 +308,7 @@
             }
         }
 
-        function setInterval(ms) {
+        function setPollInterval(ms) {
             pollIntervalMs = ms;
             document.getElementById('pollInterval').textContent = ms + 'ms';
 
@@ -334,7 +334,7 @@
         }
 
         // Start polling
-        setInterval(500);
+        setPollInterval(500);
 
         // Update uptime every second
         setInterval(() => {
