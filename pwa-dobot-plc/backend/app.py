@@ -157,6 +157,10 @@ poll_interval = 0.1  # 100ms
 vision_handshake_processing = False
 vision_handshake_last_start_state = False
 
+# Cached start bit state (updated by start_command_poll_loop to avoid lock contention)
+cached_start_bit_state = False
+cached_start_bit_timestamp = 0.0
+
 def call_vision_service(frame: np.ndarray, params: Dict) -> Dict:
     """
     Call the vision service for YOLO detection
@@ -1673,8 +1677,9 @@ def poll_loop():
 def start_command_poll_loop():
     """Lightweight polling loop that checks start command and enables/disables vision analysis
     Camera stays always active - only analysis is controlled by start command
+    Also updates cached_start_bit_state for lock-free API access
     """
-    global vision_handshake_last_start_state, vision_handshake_processing
+    global vision_handshake_last_start_state, vision_handshake_processing, cached_start_bit_state, cached_start_bit_timestamp
     
     while True:
         try:
@@ -1689,7 +1694,12 @@ def start_command_poll_loop():
                             
                             # SIMPLE: Read start command
                             start_command = plc_client.read_vision_start_command(db_number)
-                            
+
+                            # Update cached state if we got a valid read (not None from lock busy)
+                            if start_command is not None:
+                                cached_start_bit_state = start_command
+                                cached_start_bit_timestamp = time.time()
+
                             # Only update state if we got a valid read (not False due to lock busy)
                             # If lock was busy, start_command will be False, but we should keep last known state
                             # We can detect lock busy by checking if we got False but last state was True
@@ -2325,7 +2335,13 @@ def read_db123_tags():
 
 @app.route('/api/plc/db40/start', methods=['GET'])
 def read_db40_start_bit():
-    """Read vision start bit from PLC DB123.DBX40.0 (Camera_UDT in DB123)"""
+    """Read vision start bit from PLC DB123.DBX40.0 (Camera_UDT in DB123)
+
+    LOCK-FREE: Returns cached value updated by start_command_poll_loop
+    This eliminates lock contention with other PLC operations
+    """
+    global cached_start_bit_state, cached_start_bit_timestamp
+
     if plc_client is None:
         return jsonify({
             'success': False,
@@ -2335,19 +2351,18 @@ def read_db40_start_bit():
         }), 503
 
     try:
-        # Read the start bit from DB123.40.0 (Camera_UDT in DB123)
-        start_value = plc_client.read_db40_start_bit()
-
-        # Handle None (lock busy) - return False as safe default
-        if start_value is None:
-            start_value = False
+        # Return cached value from start_command_poll_loop (no lock contention)
+        # This is updated every 500ms by the polling loop
+        cache_age = time.time() - cached_start_bit_timestamp if cached_start_bit_timestamp > 0 else 999
 
         return jsonify({
             'success': True,
-            'start': bool(start_value),
+            'start': bool(cached_start_bit_state),
             'plc_connected': plc_client.is_connected(),
             'db_number': 123,
-            'address': 'DB123.DBX40.0'
+            'address': 'DB123.DBX40.0',
+            'cache_age_ms': int(cache_age * 1000),
+            'cached': True  # Indicates this is a cached value
         })
     except Exception as e:
         logger.error(f"Error reading DB123.40.0 start bit: {e}")
