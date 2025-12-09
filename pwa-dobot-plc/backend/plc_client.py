@@ -215,6 +215,9 @@ class PLCClient:
             # Thread-safe: Only one Snap7 operation at a time
             with self.plc_lock:
                 time.sleep(0.02)  # 20ms delay to avoid flooding
+            # Thread-safe: Only one Snap7 operation at a time
+            with self.plc_lock:
+                time.sleep(0.02)  # 20ms delay to avoid flooding
                 # Read-modify-write for bit operations
                 data = bytearray(self.client.db_read(db_number, byte_offset, 1))
                 set_bool(data, 0, bit_offset, value)
@@ -433,11 +436,14 @@ class PLCClient:
             if not self.is_connected():
                 return False
 
-            data = bytearray(2)
-            # snap7 uses set_int to write a 16-bit signed integer
-            set_int(data, 0, value)
-            self.client.db_write(db_number, offset, data)
-            return True
+            # Thread-safe: Only one Snap7 operation at a time
+            with self.plc_lock:
+                time.sleep(0.02)  # 20ms delay to avoid flooding
+                data = bytearray(2)
+                # snap7 uses set_int to write a 16-bit signed integer
+                set_int(data, 0, value)
+                self.client.db_write(db_number, offset, data)
+                return True
         except Exception as e:
             self.last_error = f"Error writing DB{db_number}.DBW{offset}: {str(e)}"
             logger.error(self.last_error)
