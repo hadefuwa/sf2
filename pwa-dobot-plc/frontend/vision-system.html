@@ -629,9 +629,7 @@
             <div id="plcStartStatusBanner" class="content" style="margin-bottom: 24px; padding: 16px 24px;">
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span class="status-indicator" id="plcStartIndicator"></span>
-                    <span id="plcStartStatusText" style="color: var(--text-secondary); font-size: 13px; font-weight: 600;">
-                        Loading PLC status...
-                    </span>
+                    <span id="plcStartStatusText" style="color: var(--text-secondary); font-size: 13px; font-weight: 600;">Loading PLC status...</span>
                 </div>
             </div>
 
@@ -1007,6 +1005,7 @@
 
     <script>
         const API_BASE = window.location.origin;
+        console.log('Vision System v1.1 - API_BASE:', API_BASE);
         let cameraConnected = false;
         let streamInterval = null;
         let autoAnalyzeInterval = null;
@@ -2319,19 +2318,22 @@
             
             try {
                 const response = await fetch(`${API_BASE}/api/plc/db123/read`);
-                if (!response.ok) {
-                    // Don't throw error - just show status
-                    tagsDiv.innerHTML = `<div style="color: var(--text-muted); text-align: center; padding: 12px; grid-column: 1 / -1;">Unable to read PLC tags (HTTP ${response.status})</div>`;
-                    return;
-                }
-                
                 const data = await response.json();
+                
+                // Check for error in response (even if HTTP status is OK)
                 if (data.error) {
                     tagsDiv.innerHTML = `
                         <div style="color: var(--accent-red); text-align: center; padding: 12px; grid-column: 1 / -1;">
                             Error: ${data.error}
                         </div>
                     `;
+                    return;
+                }
+                
+                // If response not OK, show error message
+                if (!response.ok) {
+                    const errorMsg = data.error || `HTTP ${response.status}`;
+                    tagsDiv.innerHTML = `<div style="color: var(--accent-red); text-align: center; padding: 12px; grid-column: 1 / -1;">Unable to read PLC tags: ${errorMsg}</div>`;
                     return;
                 }
                 
@@ -2412,17 +2414,56 @@
             await updatePlcTagsStatus();
         }
 
+        // Helper function to safely update status text
+        function updateStatusText(element, html) {
+            if (!element) return;
+            try {
+                element.innerHTML = html;
+            } catch (e) {
+                console.error('Error updating status text:', e);
+                element.textContent = html.replace(/<[^>]*>/g, ''); // Strip HTML as fallback
+            }
+        }
+
         // PLC Start Status Banner Functions
         async function updatePlcStartStatusBanner() {
+            console.log('[PLC Banner] Starting update...', new Date().toISOString());
             const banner = document.getElementById('plcStartStatusBanner');
             const indicator = document.getElementById('plcStartIndicator');
             const statusText = document.getElementById('plcStartStatusText');
             
-            if (!banner || !indicator || !statusText) return;
+            if (!banner || !indicator || !statusText) {
+                console.error('[PLC Banner] Elements not found!', {banner: !!banner, indicator: !!indicator, statusText: !!statusText});
+                return;
+            }
+            
+            // Immediately update status to show we're checking (replaces "Loading PLC status...")
+            updateStatusText(statusText, '<span style="color: var(--text-secondary);">Checking PLC status...</span>');
             
             try {
-                const configResponse = await fetch(`${API_BASE}/api/config`);
-                const config = await configResponse.json();
+                // Always show banner initially (will be hidden if DB123 disabled)
+                banner.style.display = 'block';
+                
+                // Get config first
+                let config = {};
+                try {
+                    const configResponse = await fetch(`${API_BASE}/api/config`);
+                    if (!configResponse.ok) {
+                        throw new Error(`Config fetch failed: HTTP ${configResponse.status}`);
+                    }
+                    config = await configResponse.json();
+                } catch (configError) {
+                    console.error('Error fetching config:', configError);
+                    indicator.classList.remove('connected');
+                    let errorMsg = configError.message || 'Failed to load configuration';
+                    if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
+                        errorMsg = 'Backend server not responding - check if app is running';
+                    }
+                    updateStatusText(statusText, `<span style="color: var(--accent-red);">⚠️ ${errorMsg}</span>`);
+                    banner.style.borderLeft = '4px solid var(--accent-red)';
+                    return;
+                }
+                
                 const db123Config = config.plc?.db123 || {};
                 
                 if (!db123Config.enabled) {
@@ -2431,21 +2472,25 @@
                     return;
                 }
                 
-                banner.style.display = 'block';
-                
                 // Get PLC connection status
                 let plcConnected = false;
                 let plcStatusError = null;
                 try {
                     const plcStatusResponse = await fetch(`${API_BASE}/api/plc/status`);
+                    if (!plcStatusResponse.ok) {
+                        throw new Error(`PLC status fetch failed: HTTP ${plcStatusResponse.status}`);
+                    }
                     const plcStatus = await plcStatusResponse.json();
                     plcConnected = plcStatus.connected || false;
                 } catch (e) {
+                    console.error('Error fetching PLC status:', e);
                     plcConnected = false;
                     // Check if it's a backend connection error
                     let errorMsg = e.message || String(e);
                     if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
                         plcStatusError = 'Backend server not responding - check if app is running';
+                    } else {
+                        plcStatusError = `PLC status error: ${errorMsg}`;
                     }
                 }
                 
@@ -2453,49 +2498,74 @@
                     indicator.classList.remove('connected');
                     // Show better error message if backend is not responding
                     if (plcStatusError) {
-                        statusText.innerHTML = `<span style="color: var(--accent-red);">⚠️ ${plcStatusError}</span>`;
+                        updateStatusText(statusText, `<span style="color: var(--accent-red);">⚠️ ${plcStatusError}</span>`);
                     } else {
-                        statusText.innerHTML = '<span style="color: var(--accent-red);">⚠️ PLC Not Connected - Cannot read Start command</span>';
+                        updateStatusText(statusText, '<span style="color: var(--accent-red);">⚠️ PLC Not Connected - Cannot read Start command</span>');
                     }
                     banner.style.borderLeft = '4px solid var(--accent-red)';
                     return;
                 }
                 
                 // Get Start command status
-                const tagsResponse = await fetch(`${API_BASE}/api/plc/db123/read`);
-                if (!tagsResponse.ok) {
+                let tagsData = {};
+                try {
+                    const tagsResponse = await fetch(`${API_BASE}/api/plc/db123/read`);
+                    if (!tagsResponse.ok) {
+                        throw new Error(`Tags fetch failed: HTTP ${tagsResponse.status}`);
+                    }
+                    tagsData = await tagsResponse.json();
+                } catch (tagsError) {
+                    console.error('Error fetching PLC tags:', tagsError);
                     indicator.classList.remove('connected');
-                    statusText.innerHTML = '<span style="color: var(--accent-orange);">⚠️ Cannot read Start command from PLC</span>';
+                    let errorMsg = tagsError.message || 'Cannot read Start command from PLC';
+                    if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
+                        errorMsg = 'Backend server not responding - check if app is running';
+                    }
+                    updateStatusText(statusText, `<span style="color: var(--accent-orange);">⚠️ ${errorMsg}</span>`);
                     banner.style.borderLeft = '4px solid var(--accent-orange)';
                     return;
                 }
                 
-                const tagsData = await tagsResponse.json();
+                // Check for error in response
+                if (tagsData.error) {
+                    indicator.classList.remove('connected');
+                    const errorMsg = tagsData.error || 'Cannot read Start command from PLC';
+                    updateStatusText(statusText, `<span style="color: var(--accent-orange);">⚠️ ${errorMsg}</span>`);
+                    banner.style.borderLeft = '4px solid var(--accent-orange)';
+                    return;
+                }
+                
                 const startCommand = tagsData.tags?.start || false;
                 
                 if (startCommand) {
                     // Start command is active
                     indicator.classList.add('connected');
-                    statusText.innerHTML = '<span style="color: var(--accent-green);">✓ Start Command ACTIVE - Vision processing enabled</span>';
+                    updateStatusText(statusText, '<span style="color: var(--accent-green);">✓ Start Command ACTIVE - Vision processing enabled</span>');
                     banner.style.borderLeft = '4px solid var(--accent-green)';
                 } else {
                     // Start command is not active
                     indicator.classList.remove('connected');
-                    statusText.innerHTML = '<span style="color: var(--primary-cyan);">⏸️ Awaiting Start command from PLC</span>';
+                    updateStatusText(statusText, '<span style="color: var(--primary-cyan);">⏸️ Awaiting Start command from PLC</span>');
                     banner.style.borderLeft = '4px solid var(--primary-cyan)';
                 }
             } catch (error) {
-                console.error('Error updating PLC Start status banner:', error);
+                console.error('[PLC Banner] Error updating PLC Start status banner:', error);
                 // Make sure banner is visible when showing error
-                banner.style.display = 'block';
-                indicator.classList.remove('connected');
+                if (banner) {
+                    banner.style.display = 'block';
+                    banner.style.borderLeft = '4px solid var(--accent-red)';
+                }
+                if (indicator) indicator.classList.remove('connected');
                 // Provide more helpful error messages
                 let errorMsg = error.message || 'Unknown error';
                 if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
                     errorMsg = 'Backend server not responding - check if app is running';
                 }
-                statusText.innerHTML = `<span style="color: var(--accent-red);">⚠️ Error: ${errorMsg}</span>`;
-                banner.style.borderLeft = '4px solid var(--accent-red)';
+                if (statusText) {
+                    updateStatusText(statusText, `<span style="color: var(--accent-red);">⚠️ Error: ${errorMsg}</span>`);
+                } else {
+                    console.error('[PLC Banner] statusText element is null!');
+                }
             }
         }
     </script>

@@ -806,9 +806,14 @@ def get_all_data():
 @app.route('/api/plc/status', methods=['GET'])
 def plc_status():
     """Get PLC connection status"""
-    if plc_client is None:
-        return jsonify({'connected': False, 'ip': 'unknown', 'last_error': 'PLC client not initialized'})
-    return jsonify(plc_client.get_status())
+    try:
+        if plc_client is None:
+            return jsonify({'connected': False, 'ip': 'unknown', 'last_error': 'PLC client not initialized'})
+        status = plc_client.get_status()
+        return jsonify(status)
+    except Exception as e:
+        logger.error(f"Error in plc_status endpoint: {e}")
+        return jsonify({'connected': False, 'ip': 'unknown', 'last_error': str(e)}), 500
 
 @app.route('/api/plc/connect', methods=['POST'])
 def plc_connect():
@@ -2199,6 +2204,24 @@ def read_db123_tags():
         return jsonify({'error': 'PLC client not initialized'}), 503
     
     try:
+        # Check if PLC is connected first
+        if not plc_client.is_connected():
+            return jsonify({
+                'error': 'PLC not connected',
+                'plc_connected': False,
+                'tags': {
+                    'start': False,
+                    'connected': False,
+                    'busy': False,
+                    'completed': False,
+                    'object_detected': False,
+                    'object_ok': False,
+                    'defect_detected': False,
+                    'object_number': 0,
+                    'defect_number': 0
+                }
+            }), 503
+        
         config = load_config()
         db123_config = config.get('plc', {}).get('db123', {})
         db_number = db123_config.get('db_number', 123)
@@ -2212,7 +2235,21 @@ def read_db123_tags():
         })
     except Exception as e:
         logger.error(f"Error reading DB123 tags: {e}")
-        return jsonify({'error': str(e)}), 500
+        return jsonify({
+            'error': str(e),
+            'plc_connected': False,
+            'tags': {
+                'start': False,
+                'connected': False,
+                'busy': False,
+                'completed': False,
+                'object_detected': False,
+                'object_ok': False,
+                'defect_detected': False,
+                'object_number': 0,
+                'defect_number': 0
+            }
+        }), 500
 
 @app.route('/api/counter-images', methods=['GET'])
 def list_counter_images():
