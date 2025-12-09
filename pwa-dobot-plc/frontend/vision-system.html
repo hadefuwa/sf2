@@ -2359,7 +2359,7 @@
 
             try {
                 const response = await fetch(`${API_BASE}/api/plc/db123/read`, {
-                    signal: AbortSignal.timeout(3000)  // 3 second timeout
+                    signal: AbortSignal.timeout(5000)  // 5 second timeout (increased for lock contention)
                 });
                 const data = await response.json();
                 
