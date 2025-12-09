@@ -496,16 +496,20 @@ class PLCClient:
 
             try:
                 time.sleep(0.02)  # 20ms delay to avoid flooding
-                # Read byte 40 (contains all bool flags)
-                bool_data = self.client.db_read(db_number, 40, 1)
+                # Read all data in ONE operation: byte 40 (1 byte) + 2 bytes gap + INT values (4 bytes)
+                # Total: 1 byte (bool flags) + 1 byte padding + 2 bytes (object_number) + 2 bytes (defect_number) = 6 bytes
+                # But byte 41 is padding, so we read from 40 to 45 (6 bytes total)
+                all_data = self.client.db_read(db_number, 40, 6)
+
+                # Extract bool flags from byte 0
+                bool_data = all_data[0:1]
+
+                # Extract INT values from bytes 2-3 (object_number at offset 42) and 4-5 (defect_number at offset 44)
+                object_number = get_int(all_data, 2) if len(all_data) >= 4 else 0
+                defect_number = get_int(all_data, 4) if len(all_data) >= 6 else 0
             finally:
                 self.plc_lock.release()
-            
-            # Read INT values separately (outside lock to avoid holding it too long)
-            # These use their own locks internally
-            object_number = self.read_db_int(db_number, 42)
-            defect_number = self.read_db_int(db_number, 44)
-            
+
             return {
                 'start': get_bool(bool_data, 0, 0),          # 40.0
                 'connected': get_bool(bool_data, 0, 1),     # 40.1
@@ -514,8 +518,8 @@ class PLCClient:
                 'object_detected': get_bool(bool_data, 0, 4),  # 40.4 (was 40.3)
                 'object_ok': get_bool(bool_data, 0, 5),     # 40.5 (was 40.4)
                 'defect_detected': get_bool(bool_data, 0, 6),  # 40.6 (was 40.5)
-                'object_number': object_number if object_number is not None else 0,
-                'defect_number': defect_number if defect_number is not None else 0
+                'object_number': object_number,
+                'defect_number': defect_number
             }
         except Exception as e:
             self.last_error = f"Error reading vision tags from DB{db_number}: {str(e)}"
