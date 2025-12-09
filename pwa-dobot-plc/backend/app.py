@@ -17,7 +17,7 @@ import cv2
 import numpy as np
 import requests
 import base64
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from datetime import datetime
 import snap7.util
 from plc_client import PLCClient
@@ -189,9 +189,136 @@ plc_cache = {
 poll_thread = None
 poll_running = False
 
+# PLC Write Queue - all writes go through polling loop
+# Format: {'db': 123, 'offset': 40, 'data': bytearray}
+plc_write_queue = []
+plc_write_lock = threading.Lock()
+
+# ==================================================
+# READ-ONLY TAG PROTECTION
+# ==================================================
+# Define tags that are read-only (PLC controlled, not writable by this app)
+# 
+# HOW TO ADD READ-ONLY TAGS:
+# Format: (db_number, offset, bit_offset)
+# - If bit_offset is None, the entire byte/word at that offset is read-only
+# - If bit_offset is specified (0-7), only that specific bit is read-only
+#
+# Examples:
+#   (123, 40, 0)     - DB123.DBX40.0 (bit 0 of byte 40) is read-only
+#   (123, 40, None)   - Entire byte 40 in DB123 is read-only
+#   (4, 4, 1)        - DB4.DBX4.1 (bit 1 of byte 4) is read-only
+#
+READ_ONLY_TAGS = [
+    (123, 40, 0),  # DB123.DBX40.0 - Start bit (PLC controlled, read-only)
+    # Add more read-only tags here as needed:
+    # (123, 40, 1),  # Example: Another read-only bit
+    # (4, 4, None),  # Example: Entire byte 4 in DB4 is read-only
+]
+
+def get_read_only_tags() -> List[Dict[str, Any]]:
+    """Get a list of all read-only tags in a readable format
+    
+    Returns:
+        List of dictionaries with 'db', 'offset', 'bit', and 'description' keys
+    """
+    result = []
+    for db_number, offset, bit_offset in READ_ONLY_TAGS:
+        if bit_offset is None:
+            tag_name = f"DB{db_number}.DBB{offset} (entire byte)"
+        else:
+            tag_name = f"DB{db_number}.DBX{offset}.{bit_offset}"
+        
+        result.append({
+            'db': db_number,
+            'offset': offset,
+            'bit': bit_offset,
+            'tag': tag_name,
+            'description': 'Read-only (PLC controlled)'
+        })
+    return result
+
+def is_tag_read_only(db_number: int, offset: int, bit_offset: Optional[int] = None) -> bool:
+    """Check if a tag is read-only
+    
+    Args:
+        db_number: Data block number
+        offset: Byte offset
+        bit_offset: Bit offset (None means check entire byte/word)
+    
+    Returns:
+        True if the tag is read-only, False otherwise
+    """
+    for read_only_db, read_only_offset, read_only_bit in READ_ONLY_TAGS:
+        # Check if DB and offset match
+        if db_number == read_only_db and offset == read_only_offset:
+            # If bit_offset is None in read-only list, entire byte is read-only
+            if read_only_bit is None:
+                return True
+            # If bit_offset matches, this specific bit is read-only
+            if bit_offset == read_only_bit:
+                return True
+            # If we're writing a byte that contains a read-only bit, we need to preserve it
+            # (This is handled separately in the write execution)
+    return False
+
+def check_write_permission(db_number: int, offset: int, data_length: int = 1) -> tuple[bool, str]:
+    """Check if a write operation is allowed
+    
+    Args:
+        db_number: Data block number
+        offset: Byte offset
+        data_length: Length of data being written (in bytes)
+    
+    Returns:
+        Tuple of (is_allowed, reason_message)
+    """
+    # Check each byte in the write range
+    for byte_offset in range(offset, offset + data_length):
+        # Check if entire byte is read-only
+        if is_tag_read_only(db_number, byte_offset, None):
+            return False, f"DB{db_number}.{byte_offset} is read-only (entire byte)"
+        
+        # Check individual bits (for byte 40, we check bit 0 specifically)
+        if db_number == 123 and byte_offset == 40:
+            if is_tag_read_only(db_number, byte_offset, 0):
+                # Bit 0 is read-only, but we allow the write if we preserve it
+                # (This is handled in write execution)
+                pass
+    
+    return True, "Write allowed"
+
 # Vision handshaking state
 vision_handshake_processing = False
 vision_handshake_last_start_state = False
+
+def queue_plc_write(db_number: int, offset: int, data: bytearray):
+    """Queue a PLC write operation to be executed in the next polling cycle
+
+    This prevents write/read conflicts by ensuring all writes happen AFTER reads
+    in the unified polling loop.
+    
+    Automatically validates read-only tags and logs warnings if attempting to write
+    to read-only tags.
+    """
+    global plc_write_queue, plc_write_lock
+
+    # Check if this write is to a read-only tag
+    is_allowed, reason = check_write_permission(db_number, offset, len(data))
+    
+    if not is_allowed:
+        logger.warning(f"⚠️ Attempted to write to read-only tag: DB{db_number}.{offset} - {reason}")
+        logger.warning(f"⚠️ Write operation blocked to protect read-only tag")
+        return False
+    
+    with plc_write_lock:
+        plc_write_queue.append({
+            'db': db_number,
+            'offset': offset,
+            'data': data
+        })
+        logger.debug(f"Queued PLC write: DB{db_number}.{offset} ({len(data)} bytes)")
+    return True
 
 def call_vision_service(frame: np.ndarray, params: Dict) -> Dict:
     """
@@ -673,8 +800,8 @@ def write_vision_to_plc(object_count: int, defect_count: int, object_ok: bool, d
                        busy: bool = False, completed: bool = False):
     """Write vision detection results to PLC DB123 tags
     
-    This is a wrapper function that uses the unified PLC client methods.
-    All S7 communication is handled in plc_client.py.
+    This function queues writes to be executed AFTER reads in the polling loop,
+    preventing write/read conflicts.
     
     Args:
         object_count: Number of objects detected
@@ -697,18 +824,39 @@ def write_vision_to_plc(object_count: int, defect_count: int, object_ok: bool, d
         
         db_number = db123_config.get('db_number', 123)
         
-        # Use unified PLC client method for all S7 communication
-        return plc_client.write_vision_detection_results(
-            object_count=object_count,
-            defect_count=defect_count,
-            object_ok=object_ok,
-            defect_detected=defect_detected,
-            busy=busy,
-            completed=completed,
-            db_number=db_number
-        )
+        # Get cached start bit to preserve it (read-only, PLC controlled)
+        # This value was read in the last polling cycle
+        cached_start_bit = plc_cache['db123']['start']
+        
+        # Prepare byte 40 with all bool flags
+        # Preserve the start bit (40.0) - it's read-only, PLC controlled
+        byte40_data = bytearray(1)
+        snap7.util.set_bool(byte40_data, 0, 0, cached_start_bit)  # Start (preserve)
+        snap7.util.set_bool(byte40_data, 0, 1, True)              # Connected = True
+        snap7.util.set_bool(byte40_data, 0, 2, busy)              # Busy
+        snap7.util.set_bool(byte40_data, 0, 3, completed)         # Completed
+        snap7.util.set_bool(byte40_data, 0, 4, object_count > 0)  # Object_Detected
+        snap7.util.set_bool(byte40_data, 0, 5, object_ok)         # Object_OK
+        snap7.util.set_bool(byte40_data, 0, 6, defect_detected)   # Defect_Detected
+        
+        # Prepare object_number INT (2 bytes at offset 42)
+        object_number_data = bytearray(2)
+        snap7.util.set_int(object_number_data, 0, object_count)
+        
+        # Prepare defect_number INT (2 bytes at offset 44)
+        defect_number_data = bytearray(2)
+        snap7.util.set_int(defect_number_data, 0, defect_count)
+        
+        # Queue all three writes - they will execute AFTER the next read in polling loop
+        queue_plc_write(db_number, 40, byte40_data)      # Bool flags
+        queue_plc_write(db_number, 42, object_number_data)  # Object_Number
+        queue_plc_write(db_number, 44, defect_number_data)   # Defect_Number
+        
+        logger.debug(f"Queued vision writes: busy={busy}, completed={completed}, objects={object_count}, defects={defect_count}")
+        return True
+        
     except Exception as e:
-        logger.error(f"Error writing vision tags to PLC: {e}")
+        logger.error(f"Error queuing vision tags to PLC: {e}")
         return False
 
 def init_clients():
@@ -1653,6 +1801,46 @@ def poll_loop():
             plc_cache['last_update'] = time.time()
 
             # ==================================================
+            # EXECUTE QUEUED WRITES (after reads to avoid conflicts)
+            # ==================================================
+            with plc_write_lock:
+                writes_to_process = plc_write_queue.copy()
+                plc_write_queue.clear()
+
+            for write_op in writes_to_process:
+                try:
+                    # Final check: verify this write is not to a read-only tag
+                    is_allowed, reason = check_write_permission(write_op['db'], write_op['offset'], len(write_op['data']))
+                    if not is_allowed:
+                        logger.error(f"❌ BLOCKED write to read-only tag: DB{write_op['db']}.{write_op['offset']} - {reason}")
+                        continue  # Skip this write
+                    
+                    # Special handling for byte 40 writes: preserve the start bit (40.0)
+                    # The start bit is read-only (PLC controlled), so we must preserve it
+                    if write_op['db'] == 123 and write_op['offset'] == 40 and len(write_op['data']) == 1:
+                        # Check if start bit (bit 0) is read-only
+                        if is_tag_read_only(123, 40, 0):
+                            # Read current byte 40 to get the latest start bit value
+                            # We just read it above, but read again to be safe (it's fast)
+                            try:
+                                current_byte40 = plc_client.client.db_read(123, 40, 1)
+                                current_start_bit = snap7.util.get_bool(current_byte40, 0, 0)
+                                # Preserve the read-only start bit in our write data
+                                snap7.util.set_bool(write_op['data'], 0, 0, current_start_bit)
+                                logger.debug(f"✍️ Preserved read-only start bit ({current_start_bit}) in byte 40 write")
+                            except Exception as read_error:
+                                # If read fails, use cached value as fallback
+                                cached_start = plc_cache['db123']['start']
+                                snap7.util.set_bool(write_op['data'], 0, 0, cached_start)
+                                logger.debug(f"✍️ Used cached start bit ({cached_start}) in byte 40 write (read failed)")
+                    
+                    # Execute the write
+                    plc_client.client.db_write(write_op['db'], write_op['offset'], write_op['data'])
+                    logger.debug(f"✍️ Executed PLC write: DB{write_op['db']}.{write_op['offset']}")
+                except Exception as e:
+                    logger.error(f"PLC write error DB{write_op['db']}.{write_op['offset']}: {e}")
+
+            # ==================================================
             # VISION HANDSHAKING (using cached start bit)
             # ==================================================
             start_bit = plc_cache['db123']['start']
@@ -1668,9 +1856,31 @@ def poll_loop():
                         logger.info("📸 Start bit TRUE - triggering vision processing")
                         threading.Thread(target=process_vision_handshake, daemon=True).start()
                 else:
-                    # Start is FALSE - reset
+                    # Start is FALSE - reset (queue write instead of direct write)
                     logger.info("📸 Start bit FALSE - resetting vision")
-                    write_vision_to_plc(0, 0, True, False, busy=False, completed=False)
+                    # Queue the reset writes for next cycle (preserving start bit)
+                    # Use the cached start bit to preserve it
+                    reset_byte40 = bytearray(1)
+                    snap7.util.set_bool(reset_byte40, 0, 0, start_bit)  # Preserve start bit (FALSE in this case)
+                    snap7.util.set_bool(reset_byte40, 0, 1, True)       # Connected = True
+                    snap7.util.set_bool(reset_byte40, 0, 2, False)     # Busy = False
+                    snap7.util.set_bool(reset_byte40, 0, 3, False)     # Complete = False
+                    snap7.util.set_bool(reset_byte40, 0, 4, False)     # Object_Detected = False
+                    snap7.util.set_bool(reset_byte40, 0, 5, True)      # Object_OK = True (default)
+                    snap7.util.set_bool(reset_byte40, 0, 6, False)      # Defect_Detected = False
+                    
+                    # Queue separate writes for byte 40, 42, and 44
+                    queue_plc_write(123, 40, reset_byte40)
+                    
+                    # Reset object_number to 0
+                    object_number_reset = bytearray(2)
+                    snap7.util.set_int(object_number_reset, 0, 0)
+                    queue_plc_write(123, 42, object_number_reset)
+                    
+                    # Reset defect_number to 0
+                    defect_number_reset = bytearray(2)
+                    snap7.util.set_int(defect_number_reset, 0, 0)
+                    queue_plc_write(123, 44, defect_number_reset)
 
         except Exception as e:
             logger.error(f"Polling error: {e}")
