@@ -41,11 +41,8 @@ class PLCClient:
         self.client = None
         
         # Start command stability tracking (prevents flickering from read errors)
-        self.start_command_history = []  # History of recent reads
+        self.start_command_history = []  # History of recent reads (max 3)
         self.start_command_stable_value = None  # Last stable value
-        self.start_command_stable_count = 0  # Count of consecutive stable reads
-        self.start_command_history_size = 5  # Number of reads to track
-        self.start_command_stability_threshold = 5  # Required consecutive reads for state change (increased for stability)
         
         # Thread safety: Snap7 client is NOT thread-safe - all operations must be serialized
         self.plc_lock = threading.Lock()
@@ -215,9 +212,6 @@ class PLCClient:
             # Thread-safe: Only one Snap7 operation at a time
             with self.plc_lock:
                 time.sleep(0.02)  # 20ms delay to avoid flooding
-            # Thread-safe: Only one Snap7 operation at a time
-            with self.plc_lock:
-                time.sleep(0.02)  # 20ms delay to avoid flooding
                 # Read-modify-write for bit operations
                 data = bytearray(self.client.db_read(db_number, byte_offset, 1))
                 set_bool(data, 0, bit_offset, value)
@@ -324,60 +318,43 @@ class PLCClient:
             return False
 
     def read_control_bits(self) -> Dict[str, bool]:
-        """Read all control bits from M0.0 - M0.7 in one operation with retry logic"""
+        """Read all control bits from M0.0 - M0.7 in one operation"""
         if not snap7_available or self.client is None:
             return {
                 'start': False, 'stop': False, 'home': False, 'estop': False,
                 'suction': False, 'ready': False, 'busy': False, 'error': False
             }
-        
-        max_retries = 3
-        retry_delay = 0.2  # 200ms delay between retries
-        
-        for attempt in range(max_retries):
-            try:
-                if not self.is_connected():
-                    return {
-                        'start': False, 'stop': False, 'home': False, 'estop': False,
-                        'suction': False, 'ready': False, 'busy': False, 'error': False
-                    }
 
-                # Read entire byte M0 at once (contains all 8 bits)
-                data = self.client.mb_read(0, 1)
-                byte_value = data[0]
-
-                # Extract individual bits from the byte
+        try:
+            if not self.is_connected():
                 return {
-                    'start': bool((byte_value >> 0) & 1),
-                    'stop': bool((byte_value >> 1) & 1),
-                    'home': bool((byte_value >> 2) & 1),
-                    'estop': bool((byte_value >> 3) & 1),
-                    'suction': bool((byte_value >> 4) & 1),
-                    'ready': bool((byte_value >> 5) & 1),
-                    'busy': bool((byte_value >> 6) & 1),
-                    'error': bool((byte_value >> 7) & 1)
+                    'start': False, 'stop': False, 'home': False, 'estop': False,
+                    'suction': False, 'ready': False, 'busy': False, 'error': False
                 }
-            except Exception as e:
-                error_str = str(e)
-                if 'Job pending' in error_str and attempt < max_retries - 1:
-                    logger.debug(f"Job pending reading control bits, retrying ({attempt + 1}/{max_retries})...")
-                    time.sleep(retry_delay)
-                    continue
-                else:
-                    self.last_error = f"Error reading control bits: {error_str}"
-                    if attempt == max_retries - 1:
-                        logger.error(self.last_error)
-                    else:
-                        logger.debug(self.last_error)
-                    return {
-                        'start': False, 'stop': False, 'home': False, 'estop': False,
-                        'suction': False, 'ready': False, 'busy': False, 'error': False
-                    }
-        
-        return {
-            'start': False, 'stop': False, 'home': False, 'estop': False,
-            'suction': False, 'ready': False, 'busy': False, 'error': False
-        }
+
+            # Read entire byte M0 at once (contains all 8 bits)
+            data = self.client.mb_read(0, 1)
+            byte_value = data[0]
+
+            # Extract individual bits from the byte
+            return {
+                'start': bool((byte_value >> 0) & 1),
+                'stop': bool((byte_value >> 1) & 1),
+                'home': bool((byte_value >> 2) & 1),
+                'estop': bool((byte_value >> 3) & 1),
+                'suction': bool((byte_value >> 4) & 1),
+                'ready': bool((byte_value >> 5) & 1),
+                'busy': bool((byte_value >> 6) & 1),
+                'error': bool((byte_value >> 7) & 1)
+            }
+        except Exception as e:
+            error_str = str(e)
+            self.last_error = f"Error reading control bits: {error_str}"
+            logger.debug(self.last_error)
+            return {
+                'start': False, 'stop': False, 'home': False, 'estop': False,
+                'suction': False, 'ready': False, 'busy': False, 'error': False
+            }
 
     def write_control_bit(self, bit_name: str, value: bool) -> bool:
         """Write a single control bit"""
@@ -400,8 +377,25 @@ class PLCClient:
 
     def get_status(self) -> Dict[str, Any]:
         """Get current PLC connection status"""
+        try:
+            # Use cached connection status to avoid blocking
+            connected = self.connected
+            # Only check actual connection if we think we're connected (quick check)
+            if connected and self.client is not None:
+                try:
+                    # Quick non-blocking check with timeout
+                    connected = self.client.get_connected()
+                    self.connected = connected
+                except Exception:
+                    # If check fails, assume disconnected
+                    self.connected = False
+                    connected = False
+        except Exception as e:
+            logger.debug(f"Error checking connection status: {e}")
+            connected = self.connected  # Fall back to cached value
+        
         return {
-            'connected': self.is_connected(),
+            'connected': connected,
             'ip': self.ip,
             'rack': self.rack,
             'slot': self.slot,
@@ -450,7 +444,7 @@ class PLCClient:
             return False
 
     def read_vision_tags(self, db_number: int = 123) -> Dict[str, Any]:
-        """Read all vision system tags from DB123"""
+        """Read all vision system tags from DB123 (thread-safe)"""
         if not snap7_available or self.client is None:
             return {
                 'start': False,
@@ -477,10 +471,14 @@ class PLCClient:
                     'defect_number': 0
                 }
 
-            # Read byte 40 (contains all bool flags)
-            bool_data = self.client.db_read(db_number, 40, 1)
+            # Thread-safe: Only one Snap7 operation at a time
+            with self.plc_lock:
+                time.sleep(0.02)  # 20ms delay to avoid flooding
+                # Read byte 40 (contains all bool flags)
+                bool_data = self.client.db_read(db_number, 40, 1)
             
-            # Read INT values at offsets 42 and 44
+            # Read INT values separately (outside lock to avoid holding it too long)
+            # These use their own locks internally
             object_number = self.read_db_int(db_number, 42)
             defect_number = self.read_db_int(db_number, 44)
             
@@ -532,101 +530,52 @@ class PLCClient:
         """
         if not snap7_available or self.client is None:
             return False
-        
-        max_retries = 3
-        retry_delay = 0.3  # 300ms delay between retries (increased)
-        
+
         # Thread-safe: Only one Snap7 operation at a time
         with self.plc_lock:
-            for attempt in range(max_retries):
-                try:
-                    if not self.is_connected():
-                        return False
+            try:
+                if not self.is_connected():
+                    return False
 
-                    # Add delay before read to avoid flooding PLC
-                    if attempt > 0:
-                        time.sleep(retry_delay)
-                    else:
-                        time.sleep(0.05)  # 50ms delay even on first attempt
+                # Small delay to avoid flooding PLC
+                time.sleep(0.02)  # 20ms delay
 
-                    # Read current byte 40 to preserve other bits (with retry)
-                    try:
-                        current_byte = bytearray(self.client.db_read(db_number, 40, 1))
-                    except Exception as read_error:
-                        error_str = str(read_error)
-                        if 'Job pending' in error_str and attempt < max_retries - 1:
-                            time.sleep(retry_delay)
-                            continue
-                        raise
-                    
-                    # Set individual bits (updated addresses with Completed at 40.3)
-                    # NOTE: 'start' bit (40.0) is READ-ONLY - only PLC can write to it
-                    # We preserve the existing Start bit value by not modifying it
-                    if 'connected' in tags:
-                        set_bool(current_byte, 0, 1, bool(tags['connected']))  # 40.1
-                    if 'busy' in tags:
-                        set_bool(current_byte, 0, 2, bool(tags['busy']))  # 40.2
-                    if 'completed' in tags:
-                        set_bool(current_byte, 0, 3, bool(tags['completed']))  # 40.3 (NEW)
-                    if 'object_detected' in tags:
-                        set_bool(current_byte, 0, 4, bool(tags['object_detected']))  # 40.4 (was 40.3)
-                    if 'object_ok' in tags:
-                        set_bool(current_byte, 0, 5, bool(tags['object_ok']))  # 40.5 (was 40.4)
-                    if 'defect_detected' in tags:
-                        set_bool(current_byte, 0, 6, bool(tags['defect_detected']))  # 40.6 (was 40.5)
-                    
-                    # Write byte 40 with all bool flags (with retry)
-                    try:
-                        self.client.db_write(db_number, 40, current_byte)
-                        time.sleep(0.1)  # Small delay between writes
-                    except Exception as write_error:
-                        error_str = str(write_error)
-                        if 'Job pending' in error_str and attempt < max_retries - 1:
-                            time.sleep(retry_delay)
-                            continue
-                        raise
-                    
-                    # Write INT values with delays
-                    if 'object_number' in tags:
-                        try:
-                            self.write_db_int(db_number, 42, int(tags['object_number']))
-                            time.sleep(0.1)  # Delay between writes
-                        except Exception as int_error:
-                            error_str = str(int_error)
-                            if 'Job pending' in error_str and attempt < max_retries - 1:
-                                time.sleep(retry_delay)
-                                continue
-                            # Log but don't fail on INT write errors
-                            logger.debug(f"Error writing object_number: {int_error}")
-                    
-                    if 'defect_number' in tags:
-                        try:
-                            self.write_db_int(db_number, 44, int(tags['defect_number']))
-                        except Exception as int_error:
-                            error_str = str(int_error)
-                            if 'Job pending' in error_str and attempt < max_retries - 1:
-                                time.sleep(retry_delay)
-                                continue
-                            # Log but don't fail on INT write errors
-                            logger.debug(f"Error writing defect_number: {int_error}")
-                    
-                    return True
-                    
-                except Exception as e:
-                    error_str = str(e)
-                    if 'Job pending' in error_str and attempt < max_retries - 1:
-                        logger.debug(f"Job pending, retrying ({attempt + 1}/{max_retries})...")
-                        time.sleep(retry_delay)
-                        continue
-                    else:
-                        self.last_error = f"Error writing vision tags to DB{db_number}: {error_str}"
-                        if attempt == max_retries - 1:
-                            logger.error(self.last_error)
-                        else:
-                            logger.debug(self.last_error)
-                        return False
-            
-            return False
+                # Read current byte 40 to preserve other bits (especially Start bit)
+                current_byte = bytearray(self.client.db_read(db_number, 40, 1))
+
+                # Set individual bits (updated addresses with Completed at 40.3)
+                # NOTE: 'start' bit (40.0) is READ-ONLY - only PLC can write to it
+                # We preserve the existing Start bit value by not modifying it
+                if 'connected' in tags:
+                    set_bool(current_byte, 0, 1, bool(tags['connected']))  # 40.1
+                if 'busy' in tags:
+                    set_bool(current_byte, 0, 2, bool(tags['busy']))  # 40.2
+                if 'completed' in tags:
+                    set_bool(current_byte, 0, 3, bool(tags['completed']))  # 40.3 (NEW)
+                if 'object_detected' in tags:
+                    set_bool(current_byte, 0, 4, bool(tags['object_detected']))  # 40.4 (was 40.3)
+                if 'object_ok' in tags:
+                    set_bool(current_byte, 0, 5, bool(tags['object_ok']))  # 40.5 (was 40.4)
+                if 'defect_detected' in tags:
+                    set_bool(current_byte, 0, 6, bool(tags['defect_detected']))  # 40.6 (was 40.5)
+
+                # Write byte 40 with all bool flags
+                self.client.db_write(db_number, 40, current_byte)
+
+                # Write INT values (these use internal locks, so no additional delay needed)
+                if 'object_number' in tags:
+                    self.write_db_int(db_number, 42, int(tags['object_number']))
+
+                if 'defect_number' in tags:
+                    self.write_db_int(db_number, 44, int(tags['defect_number']))
+
+                return True
+
+            except Exception as e:
+                error_str = str(e)
+                self.last_error = f"Error writing vision tags to DB{db_number}: {error_str}"
+                logger.debug(self.last_error)
+                return False
 
     # ==================================================
     # High-level Vision System Methods
@@ -681,122 +630,59 @@ class PLCClient:
         if success:
             logger.debug(f"Vision detection results written to DB{db_number}: {tags}")
         return success
-    
-    def write_vision_fault_bit(self, defects_found: bool, byte_offset: int = 1, bit_offset: int = 0) -> Dict[str, Any]:
-        """Write vision fault status to PLC memory bit
-        
-        Args:
-            defects_found: True if defects found, False if no defects
-            byte_offset: M memory byte offset (default 1)
-            bit_offset: M memory bit offset (default 0)
-        
-        Returns:
-            Dictionary with write status and details
-        """
-        if not self.is_connected():
-            return {'written': False, 'reason': 'plc_not_connected'}
-        
-        try:
-            success = self.write_m_bit(byte_offset, bit_offset, defects_found)
-            if success:
-                logger.info(f"Vision fault bit M{byte_offset}.{bit_offset} set to {defects_found}")
-                return {'written': True, 'address': f'M{byte_offset}.{bit_offset}', 'value': defects_found}
-            else:
-                logger.debug(f"Failed to write vision fault bit M{byte_offset}.{bit_offset}")
-                return {'written': False, 'reason': 'write_failed', 'address': f'M{byte_offset}.{bit_offset}'}
-        except Exception as e:
-            logger.debug(f"Error writing vision fault bit: {e}")
-            return {'written': False, 'reason': 'write_error', 'error': str(e)}
-    
+
     def read_vision_start_command(self, db_number: int = 123) -> bool:
-        """Read Start command from PLC (DB123.DBX40.0) with stability filtering and thread safety
-        
-        Uses debouncing to prevent flickering from transient read errors.
-        Requires multiple consistent reads before changing state.
-        Thread-safe: Uses lock to prevent concurrent Snap7 calls.
-        
+        """Read Start command from PLC (DB123.DBX40.0) with basic stability filtering
+
+        Simplified version with minimal retries to prevent "Job pending" errors.
+        Uses simple debouncing: requires 2 consecutive matching reads to change state.
+
         Args:
             db_number: Data block number (default 123)
-        
+
         Returns:
-            True if Start command is active, False otherwise (filtered/stabilized value)
+            True if Start command is active, False otherwise (filtered value)
         """
         if not self.is_connected():
             logger.debug("Cannot read Start command - PLC not connected")
             # Return last stable value if available, otherwise False
             return self.start_command_stable_value if self.start_command_stable_value is not None else False
-        
+
         # Thread-safe: Only one Snap7 operation at a time
         with self.plc_lock:
-            max_retries = 3  # Reduced retries to avoid flooding
-            retry_delay = 0.5  # 500ms delay between retries (increased)
-            read_success = False
-            start_value = None
-            
-            for attempt in range(max_retries):
-                try:
-                    # Add delay before read to avoid flooding PLC
-                    if attempt > 0:
-                        time.sleep(retry_delay)
-                    
-                    bool_data = self.client.db_read(db_number, 40, 1)
-                    start_value = get_bool(bool_data, 0, 0)  # Bit 0 = Start
-                    read_success = True
-                    break
-                except Exception as e:
-                    error_str = str(e)
-                    if 'Job pending' in error_str and attempt < max_retries - 1:
-                        logger.debug(f"Job pending while reading Start command, retrying ({attempt + 1}/{max_retries})...")
-                        continue
-                    else:
-                        # Read failed - log but don't add to history
-                        if attempt == max_retries - 1:
-                            logger.warning(f"Error reading Start command from DB{db_number}.DBX40.0: {error_str}")
-                            self.last_error = f"Error reading Start command: {error_str}"
-            
-            # If read failed, return last stable value (prevents false state changes)
-            if not read_success:
-                if self.start_command_stable_value is not None:
-                    logger.debug(f"Start command read failed, using last stable value: {self.start_command_stable_value}")
-                    return self.start_command_stable_value
-                else:
-                    logger.debug("Start command read failed, no stable value available, returning False")
-                    return False
-            
-            # Add successful read to history
-            self.start_command_history.append(start_value)
-            
-            # Keep history size limited
-            if len(self.start_command_history) > self.start_command_history_size:
-                self.start_command_history.pop(0)
-            
-            # Check if we have enough history for stability check
-            if len(self.start_command_history) < self.start_command_stability_threshold:
-                # Not enough history yet - use current value but don't update stable value
+            try:
+                # Single read with small delay to avoid flooding
+                time.sleep(0.02)  # 20ms delay
+                bool_data = self.client.db_read(db_number, 40, 1)
+                start_value = get_bool(bool_data, 0, 0)  # Bit 0 = Start
+
+                # Add to history for stability check
+                self.start_command_history.append(start_value)
+
+                # Keep history size limited to 3 readings
+                if len(self.start_command_history) > 3:
+                    self.start_command_history.pop(0)
+
+                # Initialize stable value on first read
                 if self.start_command_stable_value is None:
                     self.start_command_stable_value = start_value
-                    self.start_command_stable_count = 1
-                return self.start_command_stable_value if self.start_command_stable_value is not None else start_value
-            
-            # Check if current value matches stable value
-            if start_value == self.start_command_stable_value:
-                # Value is stable - increment counter
-                self.start_command_stable_count += 1
-            else:
-                # Value changed - check if it's consistent in recent history
-                recent_values = self.start_command_history[-self.start_command_stability_threshold:]
-                if all(v == start_value for v in recent_values):
-                    # New value is consistent - update stable value
-                    logger.info(f"Start command state changed: {self.start_command_stable_value} -> {start_value} (confirmed after {len(recent_values)} reads)")
-                    self.start_command_stable_value = start_value
-                    self.start_command_stable_count = len(recent_values)
-                else:
-                    # Value is inconsistent - keep stable value
-                    logger.debug(f"Start command read inconsistent: {start_value} (keeping stable value: {self.start_command_stable_value})")
-                    start_value = self.start_command_stable_value
-                    self.start_command_stable_count = 0
-            
-            return self.start_command_stable_value
+                    return start_value
+
+                # Simple debouncing: require 2 consecutive matching reads to change state
+                if len(self.start_command_history) >= 2:
+                    last_two = self.start_command_history[-2:]
+                    if last_two[0] == last_two[1] and last_two[1] != self.start_command_stable_value:
+                        # State change confirmed by 2 consecutive reads
+                        logger.info(f"Start command state changed: {self.start_command_stable_value} -> {last_two[1]}")
+                        self.start_command_stable_value = last_two[1]
+
+                return self.start_command_stable_value
+
+            except Exception as e:
+                error_str = str(e)
+                logger.debug(f"Error reading Start command: {error_str}")
+                # Return last stable value on error (prevents false triggers)
+                return self.start_command_stable_value if self.start_command_stable_value is not None else False
     
     def write_vision_fault_bit(self, defects_found: bool, byte_offset: int = 1, bit_offset: int = 0) -> Dict[str, Any]:
         """Write vision fault status to PLC memory bit
