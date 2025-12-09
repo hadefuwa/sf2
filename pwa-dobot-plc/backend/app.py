@@ -724,12 +724,40 @@ def init_clients():
             width=crop_config.get('width', 100),
             height=crop_config.get('height', 100)
         )
-    # Initialize camera (but don't fail if camera not available)
+    # Initialize camera and keep it always active
     try:
-        camera_service.initialize_camera()
-        logger.info("Camera service initialized")
+        success = camera_service.initialize_camera()
+        if success:
+            logger.info("📷 Camera initialized and will stay always active")
+        else:
+            logger.warning("📷 Camera initialization failed - will retry automatically")
+            # Retry in background
+            def retry_camera_init():
+                while True:
+                    time.sleep(5)  # Retry every 5 seconds
+                    if camera_service is not None:
+                        try:
+                            if camera_service.camera is None or (camera_service.camera is not None and not camera_service.camera.isOpened()):
+                                success = camera_service.initialize_camera()
+                                if success:
+                                    logger.info("📷 Camera initialized successfully (retry)")
+                                    break
+                        except Exception:
+                            pass
+            threading.Thread(target=retry_camera_init, daemon=True).start()
     except Exception as e:
         logger.warning(f"Camera initialization failed (may not be connected): {e}")
+        # Retry in background
+        def retry_camera_init():
+            while True:
+                time.sleep(5)
+                if camera_service is not None:
+                    try:
+                        if camera_service.camera is None or (camera_service.camera is not None and not camera_service.camera.isOpened()):
+                            camera_service.initialize_camera()
+                    except Exception:
+                        pass
+        threading.Thread(target=retry_camera_init, daemon=True).start()
 
     # YOLO model is now loaded in the separate vision-service process
     # No need to load it here - all YOLO calls go through vision service
@@ -1643,8 +1671,8 @@ def poll_loop():
 # ==================================================
 
 def start_command_poll_loop():
-    """Lightweight polling loop that ONLY checks start command and controls camera
-    This runs separately to avoid lock contention with HTTP requests
+    """Lightweight polling loop that checks start command and enables/disables vision analysis
+    Camera stays always active - only analysis is controlled by start command
     """
     global vision_handshake_last_start_state, vision_handshake_processing
     
@@ -1662,36 +1690,17 @@ def start_command_poll_loop():
                             # SIMPLE: Read start command
                             start_command = plc_client.read_vision_start_command(db_number)
                             
-                            # SIMPLE: If start is TRUE, camera on. If FALSE, camera off.
+                            # SIMPLE: If start is TRUE, enable analysis. If FALSE, disable analysis.
+                            # Camera stays always active
                             if start_command:
-                                # Start is TRUE - make sure camera is on
-                                if camera_service is not None:
-                                    if camera_service.camera is None or (camera_service.camera is not None and not camera_service.camera.isOpened()):
-                                        try:
-                                            success = camera_service.initialize_camera()
-                                            if success:
-                                                logger.info("📷 Camera turned ON (Start command is TRUE)")
-                                            else:
-                                                logger.warning("📷 Camera initialization failed - camera may not be available")
-                                        except Exception as e:
-                                            logger.warning(f"Error initializing camera: {e}")
-                                
-                                # Trigger vision processing if not already processing
+                                # Start is TRUE - trigger vision processing if not already processing
                                 if not vision_handshake_processing and not vision_handshake_last_start_state:
-                                    logger.info("📸 Start command is TRUE - triggering vision processing")
+                                    logger.info("📸 Start command is TRUE - enabling vision analysis")
                                     threading.Thread(target=process_vision_handshake, daemon=True).start()
                             else:
-                                # Start is FALSE - turn off camera
-                                if camera_service is not None:
-                                    if camera_service.camera is not None and camera_service.camera.isOpened():
-                                        try:
-                                            camera_service.release_camera()
-                                            logger.info("📷 Camera turned OFF (Start command is FALSE)")
-                                        except Exception as e:
-                                            logger.warning(f"Error releasing camera: {e}")
-                                
-                                # Reset flags when start goes from TRUE to FALSE
+                                # Start is FALSE - reset flags (analysis disabled, camera stays on)
                                 if vision_handshake_last_start_state:
+                                    logger.info("📸 Start command is FALSE - disabling vision analysis (camera stays active)")
                                     write_vision_to_plc(0, 0, True, False, busy=False, completed=False)
                             
                             vision_handshake_last_start_state = start_command
