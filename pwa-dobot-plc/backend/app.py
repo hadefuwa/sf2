@@ -1865,10 +1865,15 @@ def camera_capture():
         return jsonify({'error': 'Camera service not initialized'}), 503
     
     try:
+        # SIMPLE: Check if camera is actually opened before trying to capture
+        with camera_service.lock:
+            if camera_service.camera is None or not camera_service.camera.isOpened():
+                return jsonify({'error': 'Camera not opened'}), 503
+        
         # Use cached frame if less than 0.5 seconds old (optimization for 1-second snapshot updates)
         frame_bytes = camera_service.get_frame_jpeg(quality=85, use_cache=True, max_cache_age=0.5)
         if frame_bytes is None:
-            return jsonify({'error': 'Failed to capture frame'}), 500
+            return jsonify({'error': 'Failed to capture frame - camera may still be warming up'}), 500
         
         return Response(
             frame_bytes,

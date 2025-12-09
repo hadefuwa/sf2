@@ -567,20 +567,11 @@ class PLCClient:
                 defect_number = get_int(all_data, 4) if len(all_data) >= 6 else 0
                 
                 # Build result
-                # Use stability-filtered start command for consistency with polling loop
-                # This ensures the frontend sees the same value that triggers vision processing
-                start_command = get_bool(bool_data, 0, 0)  # Raw read
-                # Update the stability filter with this read (but don't wait for confirmation)
-                # The stability filter will handle debouncing internally
-                self.start_command_history.append(start_command)
-                if len(self.start_command_history) > 3:
-                    self.start_command_history.pop(0)
-                
                 # SIMPLE: Just read the start bit directly, no filtering
                 start_command = get_bool(bool_data, 0, 0)
                 
                 result = {
-                    'start': start_command,  # Use stability-filtered value
+                    'start': start_command,
                     'connected': get_bool(bool_data, 0, 1),     # 40.1
                     'busy': get_bool(bool_data, 0, 2),          # 40.2
                     'completed': get_bool(bool_data, 0, 3),     # 40.3
