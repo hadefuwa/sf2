@@ -552,81 +552,81 @@ class PLCClient:
                     # Read current byte 40 to preserve other bits (with retry)
                     try:
                         current_byte = bytearray(self.client.db_read(db_number, 40, 1))
-                except Exception as read_error:
-                    error_str = str(read_error)
-                    if 'Job pending' in error_str and attempt < max_retries - 1:
-                        time.sleep(retry_delay)
-                        continue
-                    raise
-                
-                # Set individual bits (updated addresses with Completed at 40.3)
-                # NOTE: 'start' bit (40.0) is READ-ONLY - only PLC can write to it
-                # We preserve the existing Start bit value by not modifying it
-                if 'connected' in tags:
-                    set_bool(current_byte, 0, 1, bool(tags['connected']))  # 40.1
-                if 'busy' in tags:
-                    set_bool(current_byte, 0, 2, bool(tags['busy']))  # 40.2
-                if 'completed' in tags:
-                    set_bool(current_byte, 0, 3, bool(tags['completed']))  # 40.3 (NEW)
-                if 'object_detected' in tags:
-                    set_bool(current_byte, 0, 4, bool(tags['object_detected']))  # 40.4 (was 40.3)
-                if 'object_ok' in tags:
-                    set_bool(current_byte, 0, 5, bool(tags['object_ok']))  # 40.5 (was 40.4)
-                if 'defect_detected' in tags:
-                    set_bool(current_byte, 0, 6, bool(tags['defect_detected']))  # 40.6 (was 40.5)
-                
-                # Write byte 40 with all bool flags (with retry)
-                try:
-                    self.client.db_write(db_number, 40, current_byte)
-                    time.sleep(0.1)  # Small delay between writes
-                except Exception as write_error:
-                    error_str = str(write_error)
-                    if 'Job pending' in error_str and attempt < max_retries - 1:
-                        time.sleep(retry_delay)
-                        continue
-                    raise
-                
-                # Write INT values with delays
-                if 'object_number' in tags:
-                    try:
-                        self.write_db_int(db_number, 42, int(tags['object_number']))
-                        time.sleep(0.1)  # Delay between writes
-                    except Exception as int_error:
-                        error_str = str(int_error)
+                    except Exception as read_error:
+                        error_str = str(read_error)
                         if 'Job pending' in error_str and attempt < max_retries - 1:
                             time.sleep(retry_delay)
                             continue
-                        # Log but don't fail on INT write errors
-                        logger.debug(f"Error writing object_number: {int_error}")
-                
-                if 'defect_number' in tags:
+                        raise
+                    
+                    # Set individual bits (updated addresses with Completed at 40.3)
+                    # NOTE: 'start' bit (40.0) is READ-ONLY - only PLC can write to it
+                    # We preserve the existing Start bit value by not modifying it
+                    if 'connected' in tags:
+                        set_bool(current_byte, 0, 1, bool(tags['connected']))  # 40.1
+                    if 'busy' in tags:
+                        set_bool(current_byte, 0, 2, bool(tags['busy']))  # 40.2
+                    if 'completed' in tags:
+                        set_bool(current_byte, 0, 3, bool(tags['completed']))  # 40.3 (NEW)
+                    if 'object_detected' in tags:
+                        set_bool(current_byte, 0, 4, bool(tags['object_detected']))  # 40.4 (was 40.3)
+                    if 'object_ok' in tags:
+                        set_bool(current_byte, 0, 5, bool(tags['object_ok']))  # 40.5 (was 40.4)
+                    if 'defect_detected' in tags:
+                        set_bool(current_byte, 0, 6, bool(tags['defect_detected']))  # 40.6 (was 40.5)
+                    
+                    # Write byte 40 with all bool flags (with retry)
                     try:
-                        self.write_db_int(db_number, 44, int(tags['defect_number']))
-                    except Exception as int_error:
-                        error_str = str(int_error)
+                        self.client.db_write(db_number, 40, current_byte)
+                        time.sleep(0.1)  # Small delay between writes
+                    except Exception as write_error:
+                        error_str = str(write_error)
                         if 'Job pending' in error_str and attempt < max_retries - 1:
                             time.sleep(retry_delay)
                             continue
-                        # Log but don't fail on INT write errors
-                        logger.debug(f"Error writing defect_number: {int_error}")
-                
-                return True
-                
-            except Exception as e:
-                error_str = str(e)
-                if 'Job pending' in error_str and attempt < max_retries - 1:
-                    logger.debug(f"Job pending, retrying ({attempt + 1}/{max_retries})...")
-                    time.sleep(retry_delay)
-                    continue
-                else:
-                    self.last_error = f"Error writing vision tags to DB{db_number}: {error_str}"
-                    if attempt == max_retries - 1:
-                        logger.error(self.last_error)
+                        raise
+                    
+                    # Write INT values with delays
+                    if 'object_number' in tags:
+                        try:
+                            self.write_db_int(db_number, 42, int(tags['object_number']))
+                            time.sleep(0.1)  # Delay between writes
+                        except Exception as int_error:
+                            error_str = str(int_error)
+                            if 'Job pending' in error_str and attempt < max_retries - 1:
+                                time.sleep(retry_delay)
+                                continue
+                            # Log but don't fail on INT write errors
+                            logger.debug(f"Error writing object_number: {int_error}")
+                    
+                    if 'defect_number' in tags:
+                        try:
+                            self.write_db_int(db_number, 44, int(tags['defect_number']))
+                        except Exception as int_error:
+                            error_str = str(int_error)
+                            if 'Job pending' in error_str and attempt < max_retries - 1:
+                                time.sleep(retry_delay)
+                                continue
+                            # Log but don't fail on INT write errors
+                            logger.debug(f"Error writing defect_number: {int_error}")
+                    
+                    return True
+                    
+                except Exception as e:
+                    error_str = str(e)
+                    if 'Job pending' in error_str and attempt < max_retries - 1:
+                        logger.debug(f"Job pending, retrying ({attempt + 1}/{max_retries})...")
+                        time.sleep(retry_delay)
+                        continue
                     else:
-                        logger.debug(self.last_error)
-                    return False
-        
-        return False
+                        self.last_error = f"Error writing vision tags to DB{db_number}: {error_str}"
+                        if attempt == max_retries - 1:
+                            logger.error(self.last_error)
+                        else:
+                            logger.debug(self.last_error)
+                        return False
+            
+            return False
 
     # ==================================================
     # High-level Vision System Methods
