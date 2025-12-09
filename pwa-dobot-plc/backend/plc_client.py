@@ -39,6 +39,13 @@ class PLCClient:
         self.last_error = ""
         self.client = None
         
+        # Start command stability tracking (prevents flickering from read errors)
+        self.start_command_history = []  # History of recent reads
+        self.start_command_stable_value = None  # Last stable value
+        self.start_command_stable_count = 0  # Count of consecutive stable reads
+        self.start_command_history_size = 5  # Number of reads to track
+        self.start_command_stability_threshold = 3  # Required consecutive reads for state change
+        
         # Only create snap7 client if library is available
         if snap7_available:
             try:
