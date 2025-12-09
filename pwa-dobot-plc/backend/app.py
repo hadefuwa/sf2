@@ -1697,8 +1697,13 @@ def start_command_poll_loop():
 
                             # Update cached state if we got a valid read (not None from lock busy)
                             if start_command is not None:
+                                old_cache = cached_start_bit_state
                                 cached_start_bit_state = start_command
                                 cached_start_bit_timestamp = time.time()
+                                if old_cache != start_command:
+                                    logger.info(f"🔄 Cached start bit updated: {old_cache} -> {start_command}")
+                            else:
+                                logger.debug("🔒 PLC lock busy, cache not updated")
 
                             # Only update state if we got a valid read (not False due to lock busy)
                             # If lock was busy, start_command will be False, but we should keep last known state
