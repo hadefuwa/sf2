@@ -1639,6 +1639,68 @@ def poll_loop():
     logger.info("Polling thread stopped")
 
 # ==================================================
+# Start Command Polling Loop (Lightweight - Camera Control Only)
+# ==================================================
+
+def start_command_poll_loop():
+    """Lightweight polling loop that ONLY checks start command and controls camera
+    This runs separately to avoid lock contention with HTTP requests
+    """
+    global vision_handshake_last_start_state, vision_handshake_processing
+    
+    while True:
+        try:
+            # Only check if PLC is connected and DB123 is enabled
+            if plc_client and hasattr(plc_client, 'client') and plc_client.client is not None:
+                if plc_client.is_connected():
+                    try:
+                        config = load_config()
+                        db123_config = config.get('plc', {}).get('db123', {})
+                        if db123_config.get('enabled', False):
+                            db_number = db123_config.get('db_number', 123)
+                            
+                            # SIMPLE: Read start command
+                            start_command = plc_client.read_vision_start_command(db_number)
+                            
+                            # SIMPLE: If start is TRUE, camera on. If FALSE, camera off.
+                            if start_command:
+                                # Start is TRUE - make sure camera is on
+                                if camera_service is not None:
+                                    if camera_service.camera is None or (camera_service.camera is not None and not camera_service.camera.isOpened()):
+                                        try:
+                                            camera_service.initialize_camera()
+                                            logger.info("📷 Camera turned ON (Start command is TRUE)")
+                                        except Exception as e:
+                                            logger.warning(f"Error initializing camera: {e}")
+                                
+                                # Trigger vision processing if not already processing
+                                if not vision_handshake_processing and not vision_handshake_last_start_state:
+                                    logger.info("📸 Start command is TRUE - triggering vision processing")
+                                    threading.Thread(target=process_vision_handshake, daemon=True).start()
+                            else:
+                                # Start is FALSE - turn off camera
+                                if camera_service is not None:
+                                    if camera_service.camera is not None and camera_service.camera.isOpened():
+                                        try:
+                                            camera_service.release_camera()
+                                            logger.info("📷 Camera turned OFF (Start command is FALSE)")
+                                        except Exception as e:
+                                            logger.warning(f"Error releasing camera: {e}")
+                                
+                                # Reset flags when start goes from TRUE to FALSE
+                                if vision_handshake_last_start_state:
+                                    write_vision_to_plc(0, 0, True, False, busy=False, completed=False)
+                            
+                            vision_handshake_last_start_state = start_command
+                    except Exception as e:
+                        logger.debug(f"Start command polling error: {e}")
+        except Exception as e:
+            logger.debug(f"Start command polling loop error: {e}")
+        
+        # Poll every 500ms (2 times per second) - fast enough to be responsive
+        time.sleep(0.5)
+
+# ==================================================
 # Camera & Vision System Endpoints
 # ==================================================
 
@@ -2639,10 +2701,11 @@ if __name__ == '__main__':
         logger.error(f"❌ Dobot connection failed: {dobot_client.last_error}")
         logger.error("💡 Check the debug logs above for detailed troubleshooting steps")
 
-    # Start polling
-    # DISABLED: Polling thread causes lock contention with HTTP requests
-    # Browser already polls via HTTP every 3 seconds, no need for background thread
-    # start_polling_thread()
+    # Start lightweight polling for start command (camera control only)
+    # This is separate from the main polling loop to avoid lock contention
+    start_command_polling_thread = threading.Thread(target=start_command_poll_loop, daemon=True)
+    start_command_polling_thread.start()
+    logger.info("Start command polling thread started")
 
     # Start server
     port = int(os.getenv('PORT', 8080))
