@@ -4,6 +4,7 @@ Handles S7 protocol communication with Siemens S7-1200/1500 PLCs
 """
 
 import time
+import threading
 import logging
 from typing import Dict, Any, Optional
 
@@ -204,18 +205,21 @@ class PLCClient:
             return None
 
     def write_db_bool(self, db_number: int, byte_offset: int, bit_offset: int, value: bool) -> bool:
-        """Write BOOL value to data block"""
+        """Write BOOL value to data block (thread-safe)"""
         if not snap7_available or self.client is None:
             return False
         try:
             if not self.is_connected():
                 return False
 
-            # Read-modify-write for bit operations
-            data = bytearray(self.client.db_read(db_number, byte_offset, 1))
-            set_bool(data, 0, bit_offset, value)
-            self.client.db_write(db_number, byte_offset, data)
-            return True
+            # Thread-safe: Only one Snap7 operation at a time
+            with self.plc_lock:
+                time.sleep(0.02)  # 20ms delay to avoid flooding
+                # Read-modify-write for bit operations
+                data = bytearray(self.client.db_read(db_number, byte_offset, 1))
+                set_bool(data, 0, bit_offset, value)
+                self.client.db_write(db_number, byte_offset, data)
+                return True
         except Exception as e:
             self.last_error = f"Error writing DB{db_number}.DBX{byte_offset}.{bit_offset}: {str(e)}"
             logger.error(self.last_error)
