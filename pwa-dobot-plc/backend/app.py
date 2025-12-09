@@ -1616,38 +1616,39 @@ def poll_loop():
 
             # ==================================================
             # READ ALL PLC TAGS IN ONE BATCH (minimize lock time)
+            # ALL TAGS ARE IN DB123 - Single unified read
             # ==================================================
 
-            # Read DB123 Vision tags (byte 40-56 = 16 bytes)
             try:
-                db123_data = plc_client.client.db_read(123, 40, 16)
-                plc_cache['db123']['start'] = snap7.util.get_bool(db123_data, 0, 0)    # DB123.DBX40.0
-                plc_cache['db123']['busy'] = snap7.util.get_bool(db123_data, 0, 1)     # DB123.DBX40.1
-                plc_cache['db123']['complete'] = snap7.util.get_bool(db123_data, 0, 2) # DB123.DBX40.2
-                plc_cache['db123']['fault'] = snap7.util.get_bool(db123_data, 0, 3)    # DB123.DBX40.3
-                plc_cache['db123']['x_pos'] = snap7.util.get_real(db123_data, 2)       # DB123.DBD42
-                plc_cache['db123']['y_pos'] = snap7.util.get_real(db123_data, 6)       # DB123.DBD46
-                plc_cache['db123']['z_pos'] = snap7.util.get_real(db123_data, 10)      # DB123.DBD50
-                plc_cache['db123']['counter'] = snap7.util.get_int(db123_data, 14)     # DB123.DBW54
-            except Exception as e:
-                logger.debug(f"DB123 read error: {e}")
+                # Read ALL tags from DB123 in ONE operation (bytes 0-46 = 47 bytes)
+                # This includes: System, Robot, Conveyors, Gantry, Camera, Objects
+                all_data = plc_client.client.db_read(123, 0, 47)
 
-            # Read DB4 Robot tags (byte 4-33 = 30 bytes to include DBW32)
-            try:
-                db4_data = plc_client.client.db_read(4, 4, 30)
-                plc_cache['db4']['connected'] = snap7.util.get_bool(db4_data, 0, 0)       # DB4.DBX4.0
-                plc_cache['db4']['busy'] = snap7.util.get_bool(db4_data, 0, 1)            # DB4.DBX4.1
-                plc_cache['db4']['cycle_complete'] = snap7.util.get_bool(db4_data, 0, 2)  # DB4.DBX4.2
-                plc_cache['db4']['target_x'] = snap7.util.get_real(db4_data, 2)           # DB4.DBD6
-                plc_cache['db4']['target_y'] = snap7.util.get_real(db4_data, 6)           # DB4.DBD10
-                plc_cache['db4']['target_z'] = snap7.util.get_real(db4_data, 10)          # DB4.DBD14
-                plc_cache['db4']['current_x'] = snap7.util.get_real(db4_data, 14)         # DB4.DBD18
-                plc_cache['db4']['current_y'] = snap7.util.get_real(db4_data, 18)         # DB4.DBD22
-                plc_cache['db4']['current_z'] = snap7.util.get_real(db4_data, 22)         # DB4.DBD26
-                plc_cache['db4']['status_code'] = snap7.util.get_int(db4_data, 26)        # DB4.DBW30
-                plc_cache['db4']['error_code'] = snap7.util.get_int(db4_data, 28)         # DB4.DBW32
+                # Camera tags (byte 40-46)
+                plc_cache['db123']['start'] = snap7.util.get_bool(all_data, 40, 0)         # DB123.DBX40.0
+                plc_cache['db123']['busy'] = snap7.util.get_bool(all_data, 40, 2)          # DB123.DBX40.2
+                plc_cache['db123']['complete'] = snap7.util.get_bool(all_data, 40, 3)      # DB123.DBX40.3
+                plc_cache['db123']['fault'] = snap7.util.get_bool(all_data, 40, 6)         # DB123.DBX40.6 (Defect_Detected)
+                plc_cache['db123']['x_pos'] = 0.0  # Not in your layout
+                plc_cache['db123']['y_pos'] = 0.0  # Not in your layout
+                plc_cache['db123']['z_pos'] = 0.0  # Not in your layout
+                plc_cache['db123']['counter'] = snap7.util.get_int(all_data, 42)           # DB123.DBW42 (Object_Number)
+
+                # Robot tags (byte 4-32) - map to db4 cache for compatibility
+                plc_cache['db4']['connected'] = snap7.util.get_bool(all_data, 4, 0)        # DB123.DBX4.0
+                plc_cache['db4']['busy'] = snap7.util.get_bool(all_data, 4, 1)             # DB123.DBX4.1
+                plc_cache['db4']['cycle_complete'] = snap7.util.get_bool(all_data, 4, 2)   # DB123.DBX4.2
+                plc_cache['db4']['target_x'] = snap7.util.get_real(all_data, 6)            # DB123.DBD6
+                plc_cache['db4']['target_y'] = snap7.util.get_real(all_data, 10)           # DB123.DBD10
+                plc_cache['db4']['target_z'] = snap7.util.get_real(all_data, 14)           # DB123.DBD14
+                plc_cache['db4']['current_x'] = snap7.util.get_real(all_data, 18)          # DB123.DBD18
+                plc_cache['db4']['current_y'] = snap7.util.get_real(all_data, 22)          # DB123.DBD22
+                plc_cache['db4']['current_z'] = snap7.util.get_real(all_data, 26)          # DB123.DBD26
+                plc_cache['db4']['status_code'] = snap7.util.get_int(all_data, 30)         # DB123.DBW30
+                plc_cache['db4']['error_code'] = snap7.util.get_int(all_data, 32)          # DB123.DBW32
+
             except Exception as e:
-                logger.debug(f"DB4 read error: {e}")
+                logger.error(f"DB123 read error: {e}")
 
             plc_cache['last_update'] = time.time()
 
