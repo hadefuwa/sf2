@@ -2438,50 +2438,10 @@
             };
 
             try {
-                // First, test if backend is responding
-                try {
-                    await fetchWithTimeout(`${API_BASE}/api/test`, {}, 5000);
-                } catch (testError) {
-                    // Extract meaningful error message
-                    let errorMsg = 'Connection failed';
-                    if (testError instanceof Error) {
-                        errorMsg = testError.message || testError.name || 'Connection failed';
-                    } else if (typeof testError === 'string') {
-                        errorMsg = testError;
-                    } else if (testError?.message) {
-                        errorMsg = testError.message;
-                    }
-                    
-                    // Only log if it's not a timeout (timeouts are expected when backend is slow)
-                    if (!errorMsg.includes('timeout') && !errorMsg.includes('aborted')) {
-                        console.error('Backend not responding:', errorMsg);
-                    }
-                    
-                    tagsDiv.innerHTML = `
-                        <div style="color: var(--accent-red); text-align: center; padding: 12px; grid-column: 1 / -1;">
-                            Backend server not responding<br>
-                            <small>Check if the backend is running on ${API_BASE}</small>
-                        </div>
-                    `;
-                    return;
-                }
-
-                // Backend is responding, try to read tags
-                const response = await fetchWithTimeout(`${API_BASE}/api/plc/db123/read`, {}, 10000);
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                
-                // Always show tags even if there was an error (backend returns defaults)
+                // SIMPLE: Just read tags, no timeouts, no complex error handling
+                const response = await fetch(`${API_BASE}/api/plc/db123/read`);
+                const data = response.ok ? await response.json() : { tags: defaultTags };
                 const tags = data.tags || defaultTags;
-                
-                // Show error message if there was an error, but still display tags
-                if (data.error) {
-                    console.warn('PLC read error (showing cached/default values):', data.error);
-                }
                 
                 // Helper function to format boolean values
                 const formatBool = (value) => {
@@ -2618,28 +2578,16 @@
                     return;
                 }
 
-                // Get PLC connection status
+                // SIMPLE: Get PLC connection status
                 let plcConnected = false;
-                let plcStatusError = null;
                 try {
-                    const plcStatusResponse = await fetch(`${API_BASE}/api/plc/status`, {
-                        signal: AbortSignal.timeout(10000)  // 10 second timeout (PLC operations can be slow)
-                    });
-                    if (!plcStatusResponse.ok) {
-                        throw new Error(`PLC status fetch failed: HTTP ${plcStatusResponse.status}`);
+                    const plcStatusResponse = await fetch(`${API_BASE}/api/plc/status`);
+                    if (plcStatusResponse.ok) {
+                        const plcStatus = await plcStatusResponse.json();
+                        plcConnected = plcStatus.connected || false;
                     }
-                    const plcStatus = await plcStatusResponse.json();
-                    plcConnected = plcStatus.connected || false;
                 } catch (e) {
-                    console.error('Error fetching PLC status:', e);
                     plcConnected = false;
-                    // Check if it's a backend connection error
-                    let errorMsg = e.message || String(e);
-                    if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
-                        plcStatusError = 'Backend server not responding - check if app is running';
-                    } else {
-                        plcStatusError = `PLC status error: ${errorMsg}`;
-                    }
                 }
                 
                 if (!plcConnected) {
@@ -2654,33 +2602,15 @@
                     return;
                 }
                 
-                // Get Start command status
+                // SIMPLE: Get Start command status
                 let tagsData = {};
                 try {
                     const tagsResponse = await fetch(`${API_BASE}/api/plc/db123/read`);
-                    if (!tagsResponse.ok) {
-                        throw new Error(`Tags fetch failed: HTTP ${tagsResponse.status}`);
+                    if (tagsResponse.ok) {
+                        tagsData = await tagsResponse.json();
                     }
-                    tagsData = await tagsResponse.json();
-                } catch (tagsError) {
-                    console.error('Error fetching PLC tags:', tagsError);
-                    indicator.classList.remove('connected');
-                    let errorMsg = tagsError.message || 'Cannot read Start command from PLC';
-                    if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
-                        errorMsg = 'Backend server not responding - check if app is running';
-                    }
-                    updateStatusText(statusText, `<span style="color: var(--accent-orange);">⚠️ ${errorMsg}</span>`);
-                    banner.style.borderLeft = '4px solid var(--accent-orange)';
-                    return;
-                }
-                
-                // Check for error in response
-                if (tagsData.error) {
-                    indicator.classList.remove('connected');
-                    const errorMsg = tagsData.error || 'Cannot read Start command from PLC';
-                    updateStatusText(statusText, `<span style="color: var(--accent-orange);">⚠️ ${errorMsg}</span>`);
-                    banner.style.borderLeft = '4px solid var(--accent-orange)';
-                    return;
+                } catch (e) {
+                    // Just continue with empty data
                 }
                 
                 const startCommand = tagsData.tags?.start || false;

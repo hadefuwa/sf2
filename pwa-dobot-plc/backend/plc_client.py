@@ -576,20 +576,8 @@ class PLCClient:
                 if len(self.start_command_history) > 3:
                     self.start_command_history.pop(0)
                 
-                # Use stability-filtered value if available, otherwise use current read
-                if self.start_command_stable_value is not None:
-                    # Check if we should update stable value (1 read for faster response)
-                    if len(self.start_command_history) >= 1:
-                        last_read = self.start_command_history[-1]
-                        if last_read != self.start_command_stable_value:
-                            # State change detected - update immediately
-                            logger.info(f"Start command state changed in read_vision_tags: {self.start_command_stable_value} -> {last_read}")
-                            self.start_command_stable_value = last_read
-                    # Use stable value for consistency
-                    start_command = self.start_command_stable_value
-                else:
-                    # First read - initialize stable value
-                    self.start_command_stable_value = start_command
+                # SIMPLE: Just read the start bit directly, no filtering
+                start_command = get_bool(bool_data, 0, 0)
                 
                 result = {
                     'start': start_command,  # Use stability-filtered value
@@ -742,75 +730,31 @@ class PLCClient:
         return success
 
     def read_vision_start_command(self, db_number: int = 123) -> bool:
-        """Read Start command from PLC (DB123.DBX40.0) with basic stability filtering
-
-        Simplified version with minimal retries to prevent "Job pending" errors.
-        Uses simple debouncing: requires 2 consecutive matching reads to change state.
+        """Read Start command from PLC (DB123.DBX40.0) - SIMPLE VERSION
+        
+        Just read the bit. No filtering, no history, no complexity.
+        If start is TRUE, camera runs. If FALSE, camera stops.
 
         Args:
             db_number: Data block number (default 123)
 
         Returns:
-            True if Start command is active, False otherwise (filtered value)
+            True if Start command is active, False otherwise
         """
         if not self.is_connected():
-            logger.debug("Cannot read Start command - PLC not connected")
-            # Return last stable value if available, otherwise False
-            return self.start_command_stable_value if self.start_command_stable_value is not None else False
+            return False
 
-        # Thread-safe: Only one Snap7 operation at a time
-        # Minimize lock hold time - only protect the actual PLC read
         try:
-            # Acquire lock with timeout to prevent deadlock
-            if not self.plc_lock.acquire(timeout=3.0):
-                logger.warning("read_vision_start_command: Failed to acquire PLC lock within 3 seconds")
-                # Return last stable value if available, otherwise False
-                return self.start_command_stable_value if self.start_command_stable_value is not None else False
+            if not self.plc_lock.acquire(timeout=1.0):
+                return False
             
             try:
-                # Single read with small delay to avoid flooding
-                time.sleep(0.02)  # 20ms delay
                 bool_data = self.client.db_read(db_number, 40, 1)
-                start_value = get_bool(bool_data, 0, 0)  # Bit 0 = Start
+                return get_bool(bool_data, 0, 0)  # Bit 0 = Start
             finally:
-                # Release lock immediately after PLC read - don't hold it during history processing
                 self.plc_lock.release()
-
-            # Process history outside the lock to minimize lock hold time
-            # Add to history for stability check
-            self.start_command_history.append(start_value)
-
-            # Keep history size limited to 3 readings
-            if len(self.start_command_history) > 3:
-                self.start_command_history.pop(0)
-
-            # Initialize stable value on first read
-            if self.start_command_stable_value is None:
-                self.start_command_stable_value = start_value
-                return start_value
-
-            # Simple debouncing: require 1 matching read to change state (reduced from 2 for faster response)
-            # This prevents flickering while still allowing quick state changes
-            if len(self.start_command_history) >= 1:
-                last_read = self.start_command_history[-1]
-                if last_read != self.start_command_stable_value:
-                    # State change detected - update immediately for responsive UI
-                    logger.info(f"Start command state changed: {self.start_command_stable_value} -> {last_read}")
-                    self.start_command_stable_value = last_read
-
-            return self.start_command_stable_value
-
-        except Exception as e:
-            error_str = str(e)
-            logger.debug(f"Error reading Start command: {error_str}")
-            # Make sure lock is released even on error
-            try:
-                if self.plc_lock.locked():
-                    self.plc_lock.release()
-            except:
-                pass
-            # Return last stable value on error (prevents false triggers)
-            return self.start_command_stable_value if self.start_command_stable_value is not None else False
+        except Exception:
+            return False
     
     def write_vision_fault_bit(self, defects_found: bool, byte_offset: int = 1, bit_offset: int = 0) -> Dict[str, Any]:
         """Write vision fault status to PLC memory bit
