@@ -25,7 +25,15 @@
       "Read(//c/Users/HamedA/.ssh/**)",
       "Bash(yolo train:*)",
       "Bash(pip install:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(/c/Program Files/Python313/python.exe -m py_compile:*)",
+      "Bash(python3:*)",
+      "Bash(ls:*)",
+      "Bash(ping:*)",
+      "Bash(time curl -s --max-time 5 http://192.168.7.5:8080/api/plc/db123/read)",
+      "Bash(for:*)",
+      "Bash(do echo \"Test $i:\")",
+      "Bash(done)"
     ],
     "deny": [],
     "ask": []

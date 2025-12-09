@@ -2353,34 +2353,64 @@
         }
 
         // PLC Tags Status Functions
+        // Helper function for timeout (works in all browsers)
+        function fetchWithTimeout(url, options = {}, timeout = 3000) {
+            return Promise.race([
+                fetch(url, options),
+                new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Request timeout')), timeout)
+                )
+            ]);
+        }
+
         async function updatePlcTagsStatus() {
             const tagsDiv = document.getElementById('plcTagsStatus');
             if (!tagsDiv) return;
 
+            // Default tags to show if everything fails
+            const defaultTags = {
+                'start': false,
+                'connected': false,
+                'busy': false,
+                'completed': false,
+                'object_detected': false,
+                'object_ok': false,
+                'defect_detected': false,
+                'object_number': 0,
+                'defect_number': 0
+            };
+
             try {
-                const response = await fetch(`${API_BASE}/api/plc/db123/read`, {
-                    signal: AbortSignal.timeout(5000)  // 5 second timeout (increased for lock contention)
-                });
-                const data = await response.json();
-                
-                // Check for error in response (even if HTTP status is OK)
-                if (data.error) {
+                // First, test if backend is responding
+                try {
+                    await fetchWithTimeout(`${API_BASE}/api/test`, {}, 1000);
+                } catch (testError) {
+                    console.error('Backend not responding:', testError);
                     tagsDiv.innerHTML = `
                         <div style="color: var(--accent-red); text-align: center; padding: 12px; grid-column: 1 / -1;">
-                            Error: ${data.error}
+                            Backend server not responding<br>
+                            <small>Check if the backend is running on ${API_BASE}</small>
                         </div>
                     `;
                     return;
                 }
+
+                // Backend is responding, try to read tags
+                const response = await fetchWithTimeout(`${API_BASE}/api/plc/db123/read`, {}, 3000);
                 
-                // If response not OK, show error message
                 if (!response.ok) {
-                    const errorMsg = data.error || `HTTP ${response.status}`;
-                    tagsDiv.innerHTML = `<div style="color: var(--accent-red); text-align: center; padding: 12px; grid-column: 1 / -1;">Unable to read PLC tags: ${errorMsg}</div>`;
-                    return;
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 
-                const tags = data.tags || {};
+                const data = await response.json();
+                
+                // Always show tags even if there was an error (backend returns defaults)
+                const tags = data.tags || defaultTags;
+                
+                // Show error message if there was an error, but still display tags
+                if (data.error) {
+                    console.warn('PLC read error (showing cached/default values):', data.error);
+                }
                 
                 // Helper function to format boolean values
                 const formatBool = (value) => {

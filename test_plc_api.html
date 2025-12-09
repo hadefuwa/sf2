@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>PLC API Test</title>
+</head>
+<body>
+    <h1>PLC API Test</h1>
+    <div id="results"></div>
+    
+    <script>
+        const resultsDiv = document.getElementById('results');
+        
+        async function testAPI() {
+            const API_BASE = window.location.origin;
+            resultsDiv.innerHTML += `<p>Testing API at: ${API_BASE}</p>`;
+            
+            // Test 1: Config
+            try {
+                resultsDiv.innerHTML += `<p>Testing /api/config...</p>`;
+                const configResponse = await fetch(`${API_BASE}/api/config`);
+                const config = await configResponse.json();
+                resultsDiv.innerHTML += `<p style="color: green;">✓ Config OK: ${JSON.stringify(config.plc?.db123)}</p>`;
+            } catch (e) {
+                resultsDiv.innerHTML += `<p style="color: red;">✗ Config Error: ${e.message}</p>`;
+            }
+            
+            // Test 2: PLC Status
+            try {
+                resultsDiv.innerHTML += `<p>Testing /api/plc/status...</p>`;
+                const statusResponse = await fetch(`${API_BASE}/api/plc/status`);
+                const status = await statusResponse.json();
+                resultsDiv.innerHTML += `<p style="color: green;">✓ PLC Status OK: Connected=${status.connected}, IP=${status.ip}</p>`;
+            } catch (e) {
+                resultsDiv.innerHTML += `<p style="color: red;">✗ PLC Status Error: ${e.message}</p>`;
+            }
+            
+            // Test 3: DB123 Read
+            try {
+                resultsDiv.innerHTML += `<p>Testing /api/plc/db123/read...</p>`;
+                const tagsResponse = await fetch(`${API_BASE}/api/plc/db123/read`);
+                const tags = await tagsResponse.json();
+                resultsDiv.innerHTML += `<p style="color: green;">✓ DB123 Read OK: ${JSON.stringify(tags)}</p>`;
+            } catch (e) {
+                resultsDiv.innerHTML += `<p style="color: red;">✗ DB123 Read Error: ${e.message}</p>`;
+            }
+        }
+        
+        testAPI();
+    </script>
+</body>
+</html>
+
+

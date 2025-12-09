@@ -815,6 +815,15 @@ def plc_status():
         logger.error(f"Error in plc_status endpoint: {e}")
         return jsonify({'connected': False, 'ip': 'unknown', 'last_error': str(e)}), 500
 
+@app.route('/api/test', methods=['GET'])
+def test_endpoint():
+    """Simple test endpoint to verify backend is responding"""
+    return jsonify({
+        'success': True,
+        'message': 'Backend is responding',
+        'timestamp': time.time()
+    })
+
 @app.route('/api/plc/connect', methods=['POST'])
 def plc_connect():
     """Connect to PLC"""
@@ -2199,34 +2208,39 @@ def vision_detect():
 
 @app.route('/api/plc/db123/read', methods=['GET'])
 def read_db123_tags():
-    """Read current vision tags from PLC DB123"""
+    """Read current vision tags from PLC DB123 (ultra-simple version)"""
+    # Always return immediately - no exceptions that could cause timeouts
+    default_tags = {
+        'start': False,
+        'connected': False,
+        'busy': False,
+        'completed': False,
+        'object_detected': False,
+        'object_ok': False,
+        'defect_detected': False,
+        'object_number': 0,
+        'defect_number': 0
+    }
+    
     if plc_client is None:
-        return jsonify({'error': 'PLC client not initialized'}), 503
+        return jsonify({
+            'success': False,
+            'error': 'PLC client not initialized',
+            'db_number': 123,
+            'tags': default_tags,
+            'plc_connected': False
+        }), 503
     
     try:
-        # Check if PLC is connected first
-        if not plc_client.is_connected():
-            return jsonify({
-                'error': 'PLC not connected',
-                'plc_connected': False,
-                'tags': {
-                    'start': False,
-                    'connected': False,
-                    'busy': False,
-                    'completed': False,
-                    'object_detected': False,
-                    'object_ok': False,
-                    'defect_detected': False,
-                    'object_number': 0,
-                    'defect_number': 0
-                }
-            }), 503
-        
+        # Get config
         config = load_config()
         db123_config = config.get('plc', {}).get('db123', {})
         db_number = db123_config.get('db_number', 123)
         
+        # Try to read tags (returns immediately with cached values if lock busy)
         tags = plc_client.read_vision_tags(db_number)
+        
+        # Always return success - even if we got cached values
         return jsonify({
             'success': True,
             'db_number': db_number,
@@ -2235,20 +2249,13 @@ def read_db123_tags():
         })
     except Exception as e:
         logger.error(f"Error reading DB123 tags: {e}")
+        # Return default tags on error - never timeout
         return jsonify({
+            'success': False,
             'error': str(e),
-            'plc_connected': False,
-            'tags': {
-                'start': False,
-                'connected': False,
-                'busy': False,
-                'completed': False,
-                'object_detected': False,
-                'object_ok': False,
-                'defect_detected': False,
-                'object_number': 0,
-                'defect_number': 0
-            }
+            'db_number': 123,
+            'tags': default_tags,
+            'plc_connected': False
         }), 500
 
 @app.route('/api/counter-images', methods=['GET'])

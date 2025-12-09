@@ -47,6 +47,20 @@ class PLCClient:
         # Thread safety: Snap7 client is NOT thread-safe - all operations must be serialized
         self.plc_lock = threading.Lock()
         
+        # Cache for vision tags - updated by polling thread, used when lock is busy
+        self.cached_vision_tags = {
+            'start': False,
+            'connected': False,
+            'busy': False,
+            'completed': False,
+            'object_detected': False,
+            'object_ok': False,
+            'defect_detected': False,
+            'object_number': 0,
+            'defect_number': 0
+        }
+        self.cached_tags_timestamp = 0
+        
         # Only create snap7 client if library is available
         if snap7_available:
             try:
@@ -258,59 +272,94 @@ class PLCClient:
     # High-level methods for Dobot robot control
 
     def read_target_pose(self, db_number: int = 123) -> Dict[str, float]:
-        """Read target X, Y, Z position from PLC (offset 0, 4, 8) in one operation"""
+        """Read target X, Y, Z position from PLC (offset 0, 4, 8) in one operation (thread-safe)"""
         if not snap7_available or self.client is None:
             return {'x': 0.0, 'y': 0.0, 'z': 0.0}
         try:
             if not self.is_connected():
                 return {'x': 0.0, 'y': 0.0, 'z': 0.0}
 
-            # Read all 3 REAL values (12 bytes total) in one operation
-            data = self.client.db_read(db_number, 0, 12)
-            return {
-                'x': get_real(data, 0),
-                'y': get_real(data, 4),
-                'z': get_real(data, 8)
-            }
+            # Thread-safe: Only one Snap7 operation at a time
+            # Use timeout to prevent deadlock with other operations
+            if not self.plc_lock.acquire(timeout=3.0):
+                logger.warning(f"read_target_pose: Failed to acquire PLC lock within 3 seconds for DB{db_number}")
+                return {'x': 0.0, 'y': 0.0, 'z': 0.0}
+
+            try:
+                time.sleep(0.02)  # 20ms delay to avoid flooding
+                # Read all 3 REAL values (12 bytes total) in one operation
+                data = self.client.db_read(db_number, 0, 12)
+                return {
+                    'x': get_real(data, 0),
+                    'y': get_real(data, 4),
+                    'z': get_real(data, 8)
+                }
+            finally:
+                self.plc_lock.release()
         except Exception as e:
             self.last_error = f"Error reading target pose from DB{db_number}: {str(e)}"
             logger.error(self.last_error)
+            # Make sure lock is released even on error
+            try:
+                if self.plc_lock.locked():
+                    self.plc_lock.release()
+            except:
+                pass
             return {'x': 0.0, 'y': 0.0, 'z': 0.0}
 
     def read_current_pose(self, db_number: int = 123) -> Dict[str, float]:
-        """Read current X, Y, Z position from PLC (offset 12, 16, 20) in one operation"""
+        """Read current X, Y, Z position from PLC (offset 12, 16, 20) in one operation (thread-safe)"""
         if not snap7_available or self.client is None:
             return {'x': 0.0, 'y': 0.0, 'z': 0.0}
         try:
             if not self.is_connected():
                 return {'x': 0.0, 'y': 0.0, 'z': 0.0}
 
-            # Read all 3 REAL values (12 bytes total) in one operation
-            data = self.client.db_read(db_number, 12, 12)
-            return {
-                'x': get_real(data, 0),
-                'y': get_real(data, 4),
-                'z': get_real(data, 8)
-            }
+            # Thread-safe: Only one Snap7 operation at a time
+            # Use timeout to prevent deadlock with other operations
+            if not self.plc_lock.acquire(timeout=3.0):
+                logger.warning(f"read_current_pose: Failed to acquire PLC lock within 3 seconds for DB{db_number}")
+                return {'x': 0.0, 'y': 0.0, 'z': 0.0}
+
+            try:
+                time.sleep(0.02)  # 20ms delay to avoid flooding
+                # Read all 3 REAL values (12 bytes total) in one operation
+                data = self.client.db_read(db_number, 12, 12)
+                return {
+                    'x': get_real(data, 0),
+                    'y': get_real(data, 4),
+                    'z': get_real(data, 8)
+                }
+            finally:
+                self.plc_lock.release()
         except Exception as e:
             self.last_error = f"Error reading current pose from DB{db_number}: {str(e)}"
             logger.error(self.last_error)
+            # Make sure lock is released even on error
+            try:
+                if self.plc_lock.locked():
+                    self.plc_lock.release()
+            except:
+                pass
             return {'x': 0.0, 'y': 0.0, 'z': 0.0}
 
     def write_current_pose(self, pose: Dict[str, float], db_number: int = 123) -> bool:
-        """Write current X, Y, Z position to PLC (offset 12, 16, 20) in one operation"""
+        """Write current X, Y, Z position to PLC (offset 12, 16, 20) in one operation (thread-safe)"""
         if not snap7_available or self.client is None:
             return False
         try:
             if not self.is_connected():
                 return False
 
-            # Write all 3 REAL values (12 bytes total) in one operation
-            data = bytearray(12)
-            set_real(data, 0, pose.get('x', 0.0))
-            set_real(data, 4, pose.get('y', 0.0))
-            set_real(data, 8, pose.get('z', 0.0))
-            self.client.db_write(db_number, 12, data)
+            # Thread-safe: Only one Snap7 operation at a time
+            with self.plc_lock:
+                time.sleep(0.02)  # 20ms delay to avoid flooding
+                # Write all 3 REAL values (12 bytes total) in one operation
+                data = bytearray(12)
+                set_real(data, 0, pose.get('x', 0.0))
+                set_real(data, 4, pose.get('y', 0.0))
+                set_real(data, 8, pose.get('z', 0.0))
+                self.client.db_write(db_number, 12, data)
             return True
         except Exception as e:
             self.last_error = f"Error writing current pose to DB{db_number}: {str(e)}"
@@ -318,7 +367,7 @@ class PLCClient:
             return False
 
     def read_control_bits(self) -> Dict[str, bool]:
-        """Read all control bits from M0.0 - M0.7 in one operation"""
+        """Read all control bits from M0.0 - M0.7 in one operation (thread-safe)"""
         if not snap7_available or self.client is None:
             return {
                 'start': False, 'stop': False, 'home': False, 'estop': False,
@@ -332,25 +381,44 @@ class PLCClient:
                     'suction': False, 'ready': False, 'busy': False, 'error': False
                 }
 
-            # Read entire byte M0 at once (contains all 8 bits)
-            data = self.client.mb_read(0, 1)
-            byte_value = data[0]
+            # Thread-safe: Only one Snap7 operation at a time
+            # Use timeout to prevent deadlock with other operations
+            if not self.plc_lock.acquire(timeout=3.0):
+                logger.warning("read_control_bits: Failed to acquire PLC lock within 3 seconds")
+                return {
+                    'start': False, 'stop': False, 'home': False, 'estop': False,
+                    'suction': False, 'ready': False, 'busy': False, 'error': False
+                }
 
-            # Extract individual bits from the byte
-            return {
-                'start': bool((byte_value >> 0) & 1),
-                'stop': bool((byte_value >> 1) & 1),
-                'home': bool((byte_value >> 2) & 1),
-                'estop': bool((byte_value >> 3) & 1),
-                'suction': bool((byte_value >> 4) & 1),
-                'ready': bool((byte_value >> 5) & 1),
-                'busy': bool((byte_value >> 6) & 1),
-                'error': bool((byte_value >> 7) & 1)
-            }
+            try:
+                time.sleep(0.02)  # 20ms delay to avoid flooding
+                # Read entire byte M0 at once (contains all 8 bits)
+                data = self.client.mb_read(0, 1)
+                byte_value = data[0]
+
+                # Extract individual bits from the byte
+                return {
+                    'start': bool((byte_value >> 0) & 1),
+                    'stop': bool((byte_value >> 1) & 1),
+                    'home': bool((byte_value >> 2) & 1),
+                    'estop': bool((byte_value >> 3) & 1),
+                    'suction': bool((byte_value >> 4) & 1),
+                    'ready': bool((byte_value >> 5) & 1),
+                    'busy': bool((byte_value >> 6) & 1),
+                    'error': bool((byte_value >> 7) & 1)
+                }
+            finally:
+                self.plc_lock.release()
         except Exception as e:
             error_str = str(e)
             self.last_error = f"Error reading control bits: {error_str}"
             logger.debug(self.last_error)
+            # Make sure lock is released even on error
+            try:
+                if self.plc_lock.locked():
+                    self.plc_lock.release()
+            except:
+                pass
             return {
                 'start': False, 'stop': False, 'home': False, 'estop': False,
                 'suction': False, 'ready': False, 'busy': False, 'error': False
@@ -414,8 +482,8 @@ class PLCClient:
 
             # Thread-safe: Only one Snap7 operation at a time
             # Use timeout to prevent deadlock with polling thread
-            if not self.plc_lock.acquire(timeout=2.0):
-                logger.warning(f"read_db_int: Failed to acquire PLC lock within 2 seconds for DB{db_number}.DBW{offset}")
+            if not self.plc_lock.acquire(timeout=3.0):
+                logger.warning(f"read_db_int: Failed to acquire PLC lock within 3 seconds for DB{db_number}.DBW{offset}")
                 return None
 
             try:
@@ -451,90 +519,80 @@ class PLCClient:
             return False
 
     def read_vision_tags(self, db_number: int = 123) -> Dict[str, Any]:
-        """Read all vision system tags from DB123 (thread-safe)"""
+        """Read all vision system tags from DB123 (ultra-simple version)
+        
+        Returns cached values immediately if lock is busy or PLC not ready.
+        No timeouts, no waiting - just return what we have.
+        """
+        # Default return value
+        default_tags = {
+            'start': False,
+            'connected': False,
+            'busy': False,
+            'completed': False,
+            'object_detected': False,
+            'object_ok': False,
+            'defect_detected': False,
+            'object_number': 0,
+            'defect_number': 0
+        }
+        
+        # If snap7 not available, return cached or defaults
         if not snap7_available or self.client is None:
-            return {
-                'start': False,
-                'connected': False,
-                'busy': False,
-                'completed': False,
-                'object_detected': False,
-                'object_ok': False,
-                'defect_detected': False,
-                'object_number': 0,
-                'defect_number': 0
-            }
+            return self.cached_vision_tags.copy() if self.cached_vision_tags else default_tags
+        
+        # If not connected, return cached values
+        if not self.is_connected():
+            return self.cached_vision_tags.copy() if self.cached_vision_tags else default_tags
+        
+        # Try to get lock immediately (non-blocking) - if busy, return cached values
+        lock_acquired = False
         try:
-            if not self.is_connected():
-                return {
-                    'start': False,
-                    'connected': False,
-                    'busy': False,
-                    'completed': False,
-                    'object_detected': False,
-                    'object_ok': False,
-                    'defect_detected': False,
-                    'object_number': 0,
-                    'defect_number': 0
-                }
-
-            # Thread-safe: Only one Snap7 operation at a time
-            # Use timeout to prevent deadlock with polling thread
-            if not self.plc_lock.acquire(timeout=2.0):
-                logger.warning("read_vision_tags: Failed to acquire PLC lock within 2 seconds - returning default values")
-                return {
-                    'start': False,
-                    'connected': False,
-                    'busy': False,
-                    'completed': False,
-                    'object_detected': False,
-                    'object_ok': False,
-                    'defect_detected': False,
-                    'object_number': 0,
-                    'defect_number': 0
-                }
-
+            lock_acquired = self.plc_lock.acquire(blocking=False)
+            if not lock_acquired:
+                # Lock is busy, return cached values immediately
+                return self.cached_vision_tags.copy() if self.cached_vision_tags else default_tags
+            
+            # We have the lock, try to read
             try:
-                time.sleep(0.02)  # 20ms delay to avoid flooding
-                # Read all data in ONE operation: byte 40 (1 byte) + 2 bytes gap + INT values (4 bytes)
-                # Total: 1 byte (bool flags) + 1 byte padding + 2 bytes (object_number) + 2 bytes (defect_number) = 6 bytes
-                # But byte 41 is padding, so we read from 40 to 45 (6 bytes total)
+                # Read all data in ONE operation: byte 40 (1 byte) + padding + INT values
+                # Read from offset 40, 6 bytes total
                 all_data = self.client.db_read(db_number, 40, 6)
-
+                
                 # Extract bool flags from byte 0
                 bool_data = all_data[0:1]
-
-                # Extract INT values from bytes 2-3 (object_number at offset 42) and 4-5 (defect_number at offset 44)
+                
+                # Extract INT values from bytes 2-3 (object_number) and 4-5 (defect_number)
                 object_number = get_int(all_data, 2) if len(all_data) >= 4 else 0
                 defect_number = get_int(all_data, 4) if len(all_data) >= 6 else 0
-            finally:
+                
+                # Build result
+                result = {
+                    'start': get_bool(bool_data, 0, 0),          # 40.0
+                    'connected': get_bool(bool_data, 0, 1),     # 40.1
+                    'busy': get_bool(bool_data, 0, 2),          # 40.2
+                    'completed': get_bool(bool_data, 0, 3),     # 40.3
+                    'object_detected': get_bool(bool_data, 0, 4),  # 40.4
+                    'object_ok': get_bool(bool_data, 0, 5),     # 40.5
+                    'defect_detected': get_bool(bool_data, 0, 6),  # 40.6
+                    'object_number': object_number,
+                    'defect_number': defect_number
+                }
+                
+                # Update cache
+                self.cached_vision_tags = result.copy()
+                self.cached_tags_timestamp = time.time()
+                
+                return result
+                
+            except Exception as e:
+                self.last_error = f"Error reading vision tags from DB{db_number}: {str(e)}"
+                logger.error(self.last_error)
+                # Return cached values on error
+                return self.cached_vision_tags.copy() if self.cached_vision_tags else default_tags
+        finally:
+            if lock_acquired:
                 self.plc_lock.release()
-
-            return {
-                'start': get_bool(bool_data, 0, 0),          # 40.0
-                'connected': get_bool(bool_data, 0, 1),     # 40.1
-                'busy': get_bool(bool_data, 0, 2),          # 40.2
-                'completed': get_bool(bool_data, 0, 3),     # 40.3 (NEW)
-                'object_detected': get_bool(bool_data, 0, 4),  # 40.4 (was 40.3)
-                'object_ok': get_bool(bool_data, 0, 5),     # 40.5 (was 40.4)
-                'defect_detected': get_bool(bool_data, 0, 6),  # 40.6 (was 40.5)
-                'object_number': object_number,
-                'defect_number': defect_number
-            }
-        except Exception as e:
-            self.last_error = f"Error reading vision tags from DB{db_number}: {str(e)}"
-            logger.error(self.last_error)
-            return {
-                'start': False,
-                'connected': False,
-                'busy': False,
-                'completed': False,
-                'object_detected': False,
-                'object_ok': False,
-                'defect_detected': False,
-                'object_number': 0,
-                'defect_number': 0
-            }
 
     def write_vision_tags(self, tags: Dict[str, Any], db_number: int = 123) -> bool:
         """Write vision system tags to DB123 with retry logic for "Job pending" errors
@@ -677,40 +735,57 @@ class PLCClient:
             return self.start_command_stable_value if self.start_command_stable_value is not None else False
 
         # Thread-safe: Only one Snap7 operation at a time
-        with self.plc_lock:
+        # Minimize lock hold time - only protect the actual PLC read
+        try:
+            # Acquire lock with timeout to prevent deadlock
+            if not self.plc_lock.acquire(timeout=3.0):
+                logger.warning("read_vision_start_command: Failed to acquire PLC lock within 3 seconds")
+                # Return last stable value if available, otherwise False
+                return self.start_command_stable_value if self.start_command_stable_value is not None else False
+            
             try:
                 # Single read with small delay to avoid flooding
                 time.sleep(0.02)  # 20ms delay
                 bool_data = self.client.db_read(db_number, 40, 1)
                 start_value = get_bool(bool_data, 0, 0)  # Bit 0 = Start
+            finally:
+                # Release lock immediately after PLC read - don't hold it during history processing
+                self.plc_lock.release()
 
-                # Add to history for stability check
-                self.start_command_history.append(start_value)
+            # Process history outside the lock to minimize lock hold time
+            # Add to history for stability check
+            self.start_command_history.append(start_value)
 
-                # Keep history size limited to 3 readings
-                if len(self.start_command_history) > 3:
-                    self.start_command_history.pop(0)
+            # Keep history size limited to 3 readings
+            if len(self.start_command_history) > 3:
+                self.start_command_history.pop(0)
 
-                # Initialize stable value on first read
-                if self.start_command_stable_value is None:
-                    self.start_command_stable_value = start_value
-                    return start_value
+            # Initialize stable value on first read
+            if self.start_command_stable_value is None:
+                self.start_command_stable_value = start_value
+                return start_value
 
-                # Simple debouncing: require 2 consecutive matching reads to change state
-                if len(self.start_command_history) >= 2:
-                    last_two = self.start_command_history[-2:]
-                    if last_two[0] == last_two[1] and last_two[1] != self.start_command_stable_value:
-                        # State change confirmed by 2 consecutive reads
-                        logger.info(f"Start command state changed: {self.start_command_stable_value} -> {last_two[1]}")
-                        self.start_command_stable_value = last_two[1]
+            # Simple debouncing: require 2 consecutive matching reads to change state
+            if len(self.start_command_history) >= 2:
+                last_two = self.start_command_history[-2:]
+                if last_two[0] == last_two[1] and last_two[1] != self.start_command_stable_value:
+                    # State change confirmed by 2 consecutive reads
+                    logger.info(f"Start command state changed: {self.start_command_stable_value} -> {last_two[1]}")
+                    self.start_command_stable_value = last_two[1]
 
-                return self.start_command_stable_value
+            return self.start_command_stable_value
 
-            except Exception as e:
-                error_str = str(e)
-                logger.debug(f"Error reading Start command: {error_str}")
-                # Return last stable value on error (prevents false triggers)
-                return self.start_command_stable_value if self.start_command_stable_value is not None else False
+        except Exception as e:
+            error_str = str(e)
+            logger.debug(f"Error reading Start command: {error_str}")
+            # Make sure lock is released even on error
+            try:
+                if self.plc_lock.locked():
+                    self.plc_lock.release()
+            except:
+                pass
+            # Return last stable value on error (prevents false triggers)
+            return self.start_command_stable_value if self.start_command_stable_value is not None else False
     
     def write_vision_fault_bit(self, defects_found: bool, byte_offset: int = 1, bit_offset: int = 0) -> Dict[str, Any]:
         """Write vision fault status to PLC memory bit
