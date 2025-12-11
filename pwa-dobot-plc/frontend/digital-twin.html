@@ -346,13 +346,71 @@
             transform-origin: center center;
         }
 
-        /* Conveyor 1 - Moves UP (Right side) */
+        /* Gantry System - Top Rear, Spans Full Width */
+        .gantry {
+            position: absolute;
+            top: 20px;
+            left: 10%;
+            width: 80%;
+            height: 50px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid var(--primary-cyan);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.2);
+            clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0% calc(100% - 10px), 0% 10px);
+        }
+
+        .gantry-carriage {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 80px;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-purple));
+            border: 2px solid var(--primary-cyan);
+            animation: gantryMove 5s linear infinite;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+        }
+
+        @keyframes gantryMove {
+            0% { right: 0%; }
+            100% { right: calc(100% - 80px); }
+        }
+
+        .gantry.gantry-stopped .gantry-carriage {
+            animation: none;
+            opacity: 0.5;
+        }
+
+        /* Product on Gantry */
+        .product-gantry {
+            position: absolute;
+            top: 25px;
+            right: 10%;
+            width: 50px;
+            height: 30px;
+            background: linear-gradient(135deg, var(--primary-orange), var(--primary-pink));
+            border: 2px solid var(--primary-cyan);
+            clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.6);
+            animation: productGantryMove 5s linear infinite;
+        }
+
+        @keyframes productGantryMove {
+            0% { right: 10%; }
+            100% { right: calc(10% + 80% - 80px); }
+        }
+
+        .gantry.gantry-stopped ~ .product-gantry {
+            animation: none;
+        }
+
+        /* Conveyor 1 - Right Side, In-Feed (Moves UP) */
         .conveyor1 {
             position: absolute;
-            bottom: 80px;
-            right: 15%;
+            bottom: 100px;
+            right: 10%;
             width: 100px;
-            height: 300px;
+            height: 350px;
             background: linear-gradient(180deg, #3a2a4d 0%, #2a1a3d 50%, #3a2a4d 100%);
             border: 2px solid var(--primary-cyan);
             box-shadow: 0 10px 30px rgba(0, 255, 255, 0.3);
@@ -388,8 +446,8 @@
         /* Product on Conveyor 1 */
         .product1 {
             position: absolute;
-            bottom: 20px;
-            right: 15%;
+            bottom: 110px;
+            right: 10%;
             width: 60px;
             height: 40px;
             background: linear-gradient(135deg, var(--primary-orange), var(--primary-pink));
@@ -400,79 +458,21 @@
         }
 
         @keyframes product1Move {
-            0% { bottom: 20px; }
-            100% { bottom: 320px; }
+            0% { bottom: 110px; }
+            100% { bottom: 460px; }
         }
 
         .conveyor1.conveyor-stopped ~ .product1 {
             animation: none;
         }
 
-        /* Gantry System - Moves RIGHT to LEFT */
-        .gantry {
-            position: absolute;
-            top: 100px;
-            right: 15%;
-            width: 400px;
-            height: 50px;
-            background: rgba(0, 255, 255, 0.1);
-            border: 2px solid var(--primary-cyan);
-            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.2);
-            clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0% calc(100% - 10px), 0% 10px);
-        }
-
-        .gantry-carriage {
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 70px;
-            height: 100%;
-            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-purple));
-            border: 2px solid var(--primary-cyan);
-            animation: gantryMove 5s linear infinite;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
-        }
-
-        @keyframes gantryMove {
-            0% { right: 0%; }
-            100% { right: calc(100% - 70px); }
-        }
-
-        .gantry.gantry-stopped .gantry-carriage {
-            animation: none;
-            opacity: 0.5;
-        }
-
-        /* Product on Gantry */
-        .product-gantry {
-            position: absolute;
-            top: 105px;
-            right: 15%;
-            width: 50px;
-            height: 30px;
-            background: linear-gradient(135deg, var(--primary-orange), var(--primary-pink));
-            border: 2px solid var(--primary-cyan);
-            clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
-            box-shadow: 0 0 15px rgba(249, 115, 22, 0.6);
-            animation: productGantryMove 5s linear infinite;
-        }
-
-        @keyframes productGantryMove {
-            0% { right: 15%; }
-            100% { right: calc(15% + 400px - 70px); }
-        }
-
-        .gantry.gantry-stopped ~ .product-gantry {
-            animation: none;
-        }
-
-        /* Conveyor 2 - Moves DOWN (Left side) */
+        /* Conveyor 2 - Left Side, Out-Feed (Moves DOWN) */
         .conveyor2 {
             position: absolute;
-            top: 150px;
-            left: 15%;
+            top: 70px;
+            left: 10%;
             width: 100px;
-            height: 300px;
+            height: 350px;
             background: linear-gradient(0deg, #3a2a4d 0%, #2a1a3d 50%, #3a2a4d 100%);
             border: 2px solid var(--primary-cyan);
             box-shadow: 0 10px 30px rgba(0, 255, 255, 0.3);
@@ -508,8 +508,8 @@
         /* Product on Conveyor 2 */
         .product2 {
             position: absolute;
-            top: 150px;
-            left: 15%;
+            top: 80px;
+            left: 10%;
             width: 60px;
             height: 40px;
             background: linear-gradient(135deg, var(--primary-orange), var(--primary-pink));
@@ -520,28 +520,29 @@
         }
 
         @keyframes product2Move {
-            0% { top: 150px; }
-            100% { top: 450px; }
+            0% { top: 80px; }
+            100% { top: 430px; }
         }
 
         .conveyor2.conveyor-stopped ~ .product2 {
             animation: none;
         }
 
-        /* Robot Arm - At end of Conveyor 2 */
+        /* Robot Arm - Front/Bottom, Can Reach Center */
         .robot-arm {
             position: absolute;
-            bottom: 60px;
-            left: 15%;
-            width: 120px;
-            height: 180px;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 200px;
             transform-origin: bottom center;
             animation: robotMove 3s ease-in-out infinite;
         }
 
         @keyframes robotMove {
-            0%, 100% { transform: rotate(-15deg); }
-            50% { transform: rotate(15deg); }
+            0%, 100% { transform: translateX(-50%) rotate(-20deg); }
+            50% { transform: translateX(-50%) rotate(20deg); }
         }
 
         .robot-base {
@@ -549,8 +550,8 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 60px;
-            height: 40px;
+            width: 70px;
+            height: 50px;
             background: linear-gradient(135deg, var(--primary-purple), var(--primary-pink));
             border: 2px solid var(--primary-cyan);
             clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
@@ -559,22 +560,22 @@
 
         .robot-link1 {
             position: absolute;
-            bottom: 40px;
+            bottom: 50px;
             left: 50%;
             transform: translateX(-50%);
-            width: 8px;
-            height: 70px;
+            width: 10px;
+            height: 80px;
             background: linear-gradient(180deg, var(--primary-cyan), var(--primary-purple));
             box-shadow: 0 0 10px var(--primary-cyan);
         }
 
         .robot-link2 {
             position: absolute;
-            bottom: 110px;
+            bottom: 130px;
             left: 50%;
             transform: translateX(-50%) rotate(45deg);
-            width: 8px;
-            height: 50px;
+            width: 10px;
+            height: 60px;
             background: linear-gradient(180deg, var(--primary-purple), var(--primary-pink));
             box-shadow: 0 0 10px var(--primary-pink);
             transform-origin: bottom center;
@@ -582,11 +583,11 @@
 
         .robot-end-effector {
             position: absolute;
-            bottom: 160px;
+            bottom: 190px;
             left: 50%;
             transform: translateX(-50%);
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             background: var(--primary-orange);
             border: 2px solid var(--primary-cyan);
             border-radius: 50%;
@@ -598,13 +599,13 @@
             opacity: 0.5;
         }
 
-        /* Sorting Bay */
+        /* Sorting Bay - Center-Right, Between Robot and Conveyor 1 */
         .sorting-bay {
             position: absolute;
-            bottom: 20px;
-            left: 25%;
-            width: 150px;
-            height: 60px;
+            bottom: 120px;
+            right: 25%;
+            width: 120px;
+            height: 80px;
             background: rgba(0, 255, 255, 0.1);
             border: 2px dashed var(--primary-cyan);
             clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0% calc(100% - 10px), 0% 10px);
@@ -615,21 +616,23 @@
             color: var(--text-secondary);
             text-transform: uppercase;
             letter-spacing: 1px;
+            z-index: 10;
         }
 
         /* Product in Sorting Bay */
         .product-sorted {
             position: absolute;
-            bottom: 30px;
-            left: 25%;
+            bottom: 130px;
+            right: 25%;
             width: 50px;
-            height: 35px;
+            height: 40px;
             background: linear-gradient(135deg, var(--primary-orange), var(--primary-pink));
             border: 2px solid var(--primary-cyan);
             clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
             box-shadow: 0 0 15px rgba(249, 115, 22, 0.6);
             opacity: 0;
             animation: productSort 6s linear infinite;
+            z-index: 11;
         }
 
         @keyframes productSort {
@@ -832,41 +835,41 @@
                 <div class="factory-floor" id="factoryFloor">
                     <div class="floor-grid"></div>
                     
-                    <!-- Conveyor 1 - Moves UP (Right side) -->
-                    <div class="conveyor1" id="conveyor1">
-                        <div class="conveyor1-belt"></div>
-                        <div class="status-indicator status-active" style="top: 10px; right: 10px;"></div>
-                    </div>
-                    <div class="product1"></div>
-                    
-                    <!-- Gantry System - Moves RIGHT to LEFT -->
+                    <!-- Gantry System - Top Rear, Spans Full Width -->
                     <div class="gantry" id="gantry">
                         <div class="gantry-carriage"></div>
                         <div class="status-indicator status-active" style="bottom: -10px; left: 50%; transform: translateX(-50%);"></div>
                     </div>
                     <div class="product-gantry"></div>
                     
-                    <!-- Conveyor 2 - Moves DOWN (Left side) -->
+                    <!-- Conveyor 1 - Right Side, In-Feed (Moves UP) -->
+                    <div class="conveyor1" id="conveyor1">
+                        <div class="conveyor1-belt"></div>
+                        <div class="status-indicator status-active" style="top: 10px; right: 10px;"></div>
+                    </div>
+                    <div class="product1"></div>
+                    
+                    <!-- Conveyor 2 - Left Side, Out-Feed (Moves DOWN) -->
                     <div class="conveyor2" id="conveyor2">
                         <div class="conveyor2-belt"></div>
                         <div class="status-indicator status-active" style="top: 10px; left: 10px;"></div>
                     </div>
                     <div class="product2"></div>
                     
-                    <!-- Robot Arm - At end of Conveyor 2 -->
+                    <!-- Sorting Bay - Center-Right, Between Robot and Conveyor 1 -->
+                    <div class="sorting-bay">
+                        Sorting Bay
+                    </div>
+                    <div class="product-sorted"></div>
+                    
+                    <!-- Robot Arm - Front/Bottom, Can Reach Center -->
                     <div class="robot-arm" id="robotArm">
                         <div class="robot-base"></div>
                         <div class="robot-link1"></div>
                         <div class="robot-link2"></div>
                         <div class="robot-end-effector"></div>
-                        <div class="status-indicator status-active" style="top: -10px; left: -10px;"></div>
+                        <div class="status-indicator status-active" style="top: -10px; left: 50%; transform: translateX(-50%);"></div>
                     </div>
-                    
-                    <!-- Sorting Bay -->
-                    <div class="sorting-bay">
-                        Sorting Bay
-                    </div>
-                    <div class="product-sorted"></div>
                 </div>
             </div>
 
