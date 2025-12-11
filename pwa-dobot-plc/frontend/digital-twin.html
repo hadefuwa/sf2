@@ -528,14 +528,14 @@
             animation: none;
         }
 
-        /* Robot Arm - Front/Bottom, Can Reach Center - 3-Axis Design */
+        /* Robot Arm - Front/Bottom, Can Reach Center - Simple 3-Axis Design */
         .robot-arm {
             position: absolute;
             bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
-            width: 400px;
-            height: 400px;
+            width: 350px;
+            height: 350px;
             transform-origin: bottom center;
             animation: robotArmRotate 8s ease-in-out infinite;
         }
@@ -551,11 +551,11 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 100px;
-            height: 60px;
+            width: 90px;
+            height: 55px;
             background: linear-gradient(135deg, var(--primary-purple), var(--primary-pink));
             border: 3px solid var(--primary-cyan);
-            clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
+            clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
             box-shadow: 0 0 25px rgba(124, 58, 237, 0.8);
             z-index: 10;
         }
@@ -563,11 +563,11 @@
         /* Shoulder Joint */
         .robot-shoulder {
             position: absolute;
-            bottom: 60px;
+            bottom: 55px;
             left: 50%;
             transform: translateX(-50%);
-            width: 45px;
-            height: 45px;
+            width: 40px;
+            height: 40px;
             background: radial-gradient(circle, var(--primary-cyan), var(--primary-purple));
             border: 3px solid var(--primary-cyan);
             border-radius: 50%;
@@ -575,101 +575,62 @@
             z-index: 9;
         }
 
-        /* Link 1 - Shoulder to Elbow (Upper Arm) */
+        /* Link 1 - Upper Arm */
         .robot-link1 {
             position: absolute;
-            bottom: 82px;
+            bottom: 75px;
             left: 50%;
             transform: translateX(-50%);
-            width: 22px;
-            height: 160px;
+            width: 18px;
+            height: 140px;
             background: linear-gradient(180deg, var(--primary-cyan), var(--primary-purple));
-            box-shadow: 0 0 15px var(--primary-cyan);
+            box-shadow: 0 0 12px var(--primary-cyan);
             transform-origin: bottom center;
-            animation: link1Rotate 8s ease-in-out infinite;
             z-index: 8;
         }
 
-        @keyframes link1Rotate {
-            0% { transform: translateX(-50%) rotate(-45deg); }
-            50% { transform: translateX(-50%) rotate(45deg); }
-            100% { transform: translateX(-50%) rotate(-45deg); }
-        }
-
-        /* Elbow Joint - follows link1 rotation */
+        /* Elbow Joint */
         .robot-elbow {
             position: absolute;
-            bottom: 82px;
+            bottom: 215px;
             left: 50%;
-            width: 38px;
-            height: 38px;
+            transform: translateX(-50%);
+            width: 35px;
+            height: 35px;
             background: radial-gradient(circle, var(--primary-purple), var(--primary-pink));
             border: 3px solid var(--primary-pink);
             border-radius: 50%;
-            box-shadow: 0 0 20px var(--primary-pink);
-            transform-origin: bottom center;
-            animation: elbowRotate 8s ease-in-out infinite;
+            box-shadow: 0 0 18px var(--primary-pink);
             z-index: 7;
         }
 
-        @keyframes elbowRotate {
-            0% { transform: translateX(-50%) translateY(-160px) rotate(-45deg); }
-            50% { transform: translateX(-50%) translateY(-160px) rotate(45deg); }
-            100% { transform: translateX(-50%) translateY(-160px) rotate(-45deg); }
-        }
-
-        /* Link 2 - Elbow to Wrist (Forearm) - follows elbow */
+        /* Link 2 - Forearm */
         .robot-link2 {
             position: absolute;
-            bottom: 82px;
+            bottom: 230px;
             left: 50%;
-            width: 20px;
-            height: 130px;
+            transform: translateX(-50%);
+            width: 16px;
+            height: 110px;
             background: linear-gradient(180deg, var(--primary-purple), var(--primary-pink));
-            box-shadow: 0 0 15px var(--primary-pink);
+            box-shadow: 0 0 12px var(--primary-pink);
             transform-origin: bottom center;
-            animation: link2Rotate 8s ease-in-out infinite;
             z-index: 6;
         }
 
-        @keyframes link2Rotate {
-            0% { 
-                transform: translateX(-50%) translateY(-160px) rotate(-45deg) rotate(30deg);
-            }
-            50% { 
-                transform: translateX(-50%) translateY(-160px) rotate(45deg) rotate(-20deg);
-            }
-            100% { 
-                transform: translateX(-50%) translateY(-160px) rotate(-45deg) rotate(30deg);
-            }
-        }
-
-        /* Gripper / End Effector - follows link2 */
+        /* Gripper / End Effector */
         .robot-end-effector {
             position: absolute;
-            bottom: 82px;
+            bottom: 340px;
             left: 50%;
-            width: 45px;
-            height: 30px;
+            transform: translateX(-50%);
+            width: 35px;
+            height: 25px;
             background: linear-gradient(135deg, var(--primary-orange), var(--primary-pink));
             border: 2px solid var(--primary-cyan);
-            clip-path: polygon(0% 0%, 25% 0%, 30% 100%, 0% 100%, 0% 0%, 75% 0%, 100% 0%, 100% 100%, 70% 100%, 75% 0%);
-            box-shadow: 0 0 20px var(--primary-orange);
-            transform-origin: bottom center;
-            animation: endEffectorMove 8s ease-in-out infinite;
+            clip-path: polygon(0% 0%, 20% 0%, 25% 100%, 0% 100%, 0% 0%, 80% 0%, 100% 0%, 100% 100%, 75% 100%, 80% 0%);
+            box-shadow: 0 0 18px var(--primary-orange);
             z-index: 5;
-        }
-
-        @keyframes endEffectorMove {
-            0% { 
-                transform: translateX(-50%) translateY(-160px) rotate(-45deg) translateY(-130px) rotate(30deg);
-            }
-            50% { 
-                transform: translateX(-50%) translateY(-160px) rotate(45deg) translateY(-130px) rotate(-20deg);
-            }
-            100% { 
-                transform: translateX(-50%) translateY(-160px) rotate(-45deg) translateY(-130px) rotate(30deg);
-            }
         }
 
         .robot-arm.robot-stopped {
