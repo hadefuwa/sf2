@@ -291,66 +291,331 @@
             text-shadow: 0 0 30px rgba(249, 115, 22, 0.5);
         }
 
-        /* ========== CONTENT ========== */
-        .content {
+        /* ========== CONTENT GRID ========== */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 24px;
+        }
+
+        /* ========== CONVEYOR SECTION ========== */
+        .conveyor-section {
             background: var(--card-bg);
             backdrop-filter: blur(10px);
             border: 1px solid var(--border-color);
-            padding: 60px 48px;
-            text-align: center;
-            clip-path: polygon(30px 0%, 100% 0%, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0% 100%, 0% 30px);
-        }
-
-        .content h2 {
-            font-size: 64px;
-            margin-bottom: 20px;
-            filter: drop-shadow(0 0 20px rgba(0, 255, 255, 0.5));
-        }
-
-        .content h3 {
-            font-size: 2rem;
+            padding: 32px;
+            clip-path: polygon(20px 0%, 100% 0%, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0% 100%, 0% 20px);
             margin-bottom: 24px;
-            color: var(--primary-orange);
+        }
+
+        .section-title {
+            font-size: 1.2rem;
             font-weight: 700;
-            letter-spacing: 3px;
+            color: var(--primary-cyan);
+            margin-bottom: 24px;
             text-transform: uppercase;
-            text-shadow: 0 0 20px rgba(249, 115, 22, 0.5);
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .content p {
-            font-size: 16px;
-            color: var(--text-secondary);
-            line-height: 1.8;
-            max-width: 600px;
-            margin: 0 auto;
+        .section-title::before {
+            content: '>';
+            color: var(--primary-orange);
         }
 
-        .content p.sub {
-            margin-top: 24px;
-            font-size: 14px;
-            color: var(--text-secondary);
-            opacity: 0.7;
+        .conveyor-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(180deg, #2a1a3d 0%, #1a0b2e 50%, #2a1a3d 100%);
+            border: 2px solid var(--border-color);
+            overflow: hidden;
+            clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
         }
 
-        /* Coming Soon Badge */
-        .coming-soon-badge {
-            display: inline-block;
-            margin-top: 30px;
-            padding: 14px 32px;
-            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-pink));
-            border: 1px solid var(--primary-cyan);
+        .conveyor-belt {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: repeating-linear-gradient(
+                90deg,
+                #3a2a4d 0px,
+                #3a2a4d 20px,
+                #2a1a3d 20px,
+                #2a1a3d 40px
+            );
+            transform: translateY(-50%);
+            animation: conveyorMove 3s linear infinite;
+        }
+
+        @keyframes conveyorMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 40px 0; }
+        }
+
+        .rfid-tag {
+            position: absolute;
+            top: 50%;
+            left: 20%;
+            width: 80px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-purple));
+            border: 2px solid var(--primary-cyan);
+            transform: translateY(-50%);
+            animation: tagMove 8s linear infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+            clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+        }
+
+        @keyframes tagMove {
+            0% { left: -10%; }
+            100% { left: 110%; }
+        }
+
+        .rfid-reader {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 40px;
+            background: var(--card-bg);
+            border: 2px solid var(--primary-orange);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-orange);
             font-size: 12px;
             font-weight: 700;
-            letter-spacing: 3px;
             text-transform: uppercase;
-            color: var(--darker-bg);
-            animation: badgePulse 2s ease-in-out infinite;
-            clip-path: polygon(15px 0%, 100% 0%, calc(100% - 15px) 100%, 0% 100%);
+            letter-spacing: 1px;
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
+            clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
         }
 
-        @keyframes badgePulse {
-            0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.5); }
-            50% { box-shadow: 0 0 40px rgba(255, 0, 255, 0.6), 0 0 60px rgba(0, 255, 255, 0.4); }
+        .rfid-reader::before {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid var(--primary-orange);
+        }
+
+        .scan-beam {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 140px;
+            background: linear-gradient(180deg, var(--primary-cyan), transparent);
+            opacity: 0;
+            animation: scanBeam 2s ease-in-out infinite;
+        }
+
+        @keyframes scanBeam {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 0.8; }
+        }
+
+        /* ========== INFO CARDS GRID ========== */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .info-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            clip-path: polygon(15px 0%, 100% 0%, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0% 100%, 0% 15px);
+            transition: all 0.3s ease;
+        }
+
+        .info-card:hover {
+            border-color: var(--primary-cyan);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
+
+        .info-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .info-card-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary-orange);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .info-card-icon {
+            font-size: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-value {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .info-value.highlight {
+            color: var(--primary-cyan);
+            text-shadow: 0 0 10px var(--primary-cyan);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 2px;
+        }
+
+        .status-badge.active {
+            background: rgba(0, 255, 0, 0.2);
+            color: #00ff00;
+            border: 1px solid #00ff00;
+        }
+
+        .status-badge.inactive {
+            background: rgba(255, 0, 0, 0.2);
+            color: #ff0000;
+            border: 1px solid #ff0000;
+        }
+
+        /* ========== MAINTENANCE HISTORY ========== */
+        .history-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            clip-path: polygon(20px 0%, 100% 0%, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0% 100%, 0% 20px);
+        }
+
+        .history-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            clip-path: polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px);
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            background: rgba(0, 255, 255, 0.1);
+            border-color: var(--primary-cyan);
+        }
+
+        .history-icon {
+            font-size: 24px;
+            color: var(--primary-orange);
+        }
+
+        .history-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .history-action {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .history-details {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .history-time {
+            font-size: 0.75rem;
+            color: var(--primary-cyan);
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        /* ========== STATISTICS ========== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+
+        .stat-card {
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            text-align: center;
+            clip-path: polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-cyan);
+            margin-bottom: 8px;
+            text-shadow: 0 0 10px var(--primary-cyan);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         /* ========== SCROLLBAR ========== */
@@ -395,12 +660,49 @@
                 font-size: 1.5rem;
             }
 
-            .content h2 {
-                font-size: 48px;
+            .info-grid {
+                grid-template-columns: 1fr;
             }
 
-            .content h3 {
-                font-size: 1.5rem;
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .conveyor-container {
+                height: 150px;
+            }
+
+            .rfid-tag {
+                width: 60px;
+                height: 40px;
+                font-size: 18px;
+            }
+
+            .rfid-reader {
+                width: 100px;
+                height: 35px;
+                font-size: 10px;
+            }
+
+            .section-title {
+                font-size: 1rem;
+            }
+
+            .info-card {
+                padding: 16px;
+            }
+
+            .history-item {
+                grid-template-columns: auto 1fr;
+                gap: 12px;
+            }
+
+            .history-time {
+                grid-column: 1 / -1;
+                text-align: left;
+                margin-top: 8px;
+                padding-top: 8px;
+                border-top: 1px solid var(--border-color);
             }
 
             .scanlines::before {
@@ -476,14 +778,376 @@
                 </div>
             </div>
 
-            <div class="content">
-                <h2>&#128225;</h2>
-                <h3>RFID Control</h3>
-                <p>This section is under development. RFID tag management and tracking features will be available here.</p>
-                <p class="sub">Coming soon: RFID reader monitoring, inventory tracking, and product identification.</p>
-                <div class="coming-soon-badge">Coming Soon</div>
+            <div class="content-grid">
+                <!-- Conveyor Section -->
+                <div class="conveyor-section">
+                    <div class="section-title">Conveyor System</div>
+                    <div class="conveyor-container">
+                        <div class="rfid-reader">RFID Reader</div>
+                        <div class="scan-beam"></div>
+                        <div class="conveyor-belt"></div>
+                        <div class="rfid-tag">🏷️</div>
+                    </div>
+                </div>
+
+                <!-- Information Cards Grid -->
+                <div class="info-grid">
+                    <!-- Tag Information Card -->
+                    <div class="info-card">
+                        <div class="info-card-header">
+                            <div class="info-card-title">Tag Information</div>
+                            <div class="info-card-icon">🏷️</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Tag ID</span>
+                            <span class="info-value highlight" id="tagId">RF-2024-8472</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Serial Number</span>
+                            <span class="info-value" id="serialNumber">SN-847293847</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Frequency</span>
+                            <span class="info-value">13.56 MHz</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Protocol</span>
+                            <span class="info-value">ISO 15693</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Memory Size</span>
+                            <span class="info-value">2 KB</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Status</span>
+                            <span class="status-badge active" id="tagStatus">Active</span>
+                        </div>
+                    </div>
+
+                    <!-- Product Information Card -->
+                    <div class="info-card">
+                        <div class="info-card-header">
+                            <div class="info-card-title">Product Information</div>
+                            <div class="info-card-icon">📦</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Product Name</span>
+                            <span class="info-value highlight" id="productName">Motor Assembly Unit</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Part Number</span>
+                            <span class="info-value">MAU-2024-001</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Batch Number</span>
+                            <span class="info-value">BATCH-8472</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Manufacturing Date</span>
+                            <span class="info-value" id="manufacturingDate">2024-03-15</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Location</span>
+                            <span class="info-value">Conveyor Line 3</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Quality Status</span>
+                            <span class="status-badge active">Passed</span>
+                        </div>
+                    </div>
+
+                    <!-- Engineer Information Card -->
+                    <div class="info-card">
+                        <div class="info-card-header">
+                            <div class="info-card-title">Engineer Information</div>
+                            <div class="info-card-icon">👤</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Read By</span>
+                            <span class="info-value highlight" id="lastEngineer">Sarah Chen</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Engineer ID</span>
+                            <span class="info-value">ENG-2024</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Read Time</span>
+                            <span class="info-value" id="lastReadTime">2024-12-19 14:32:15</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Read Count</span>
+                            <span class="info-value highlight" id="readCount">247</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Reader Device</span>
+                            <span class="info-value">RFID-READER-03</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Signal Strength</span>
+                            <span class="info-value highlight">-42 dBm</span>
+                        </div>
+                    </div>
+
+                    <!-- Maintenance Information Card -->
+                    <div class="info-card">
+                        <div class="info-card-header">
+                            <div class="info-card-title">Maintenance History</div>
+                            <div class="info-card-icon">🔧</div>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Last Maintenance</span>
+                            <span class="info-value" id="lastMaintenance">2024-12-10</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Maintained By</span>
+                            <span class="info-value highlight">Mike Johnson</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Next Service</span>
+                            <span class="info-value" id="nextService">2025-01-10</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Service Count</span>
+                            <span class="info-value highlight">12</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Warranty Status</span>
+                            <span class="status-badge active">Valid</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Days Since Install</span>
+                            <span class="info-value highlight" id="daysSinceInstall">279</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics Section -->
+                <div class="conveyor-section">
+                    <div class="section-title">Statistics</div>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-value" id="totalReads">1,247</div>
+                            <div class="stat-label">Total Reads</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="avgReadTime">0.23s</div>
+                            <div class="stat-label">Avg Read Time</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="successRate">99.8%</div>
+                            <div class="stat-label">Success Rate</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="uptime">99.2%</div>
+                            <div class="stat-label">Uptime</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Maintenance History Section -->
+                <div class="history-section">
+                    <div class="section-title">Recent Activity Log</div>
+                    <div class="history-list" id="historyList">
+                        <!-- History items will be populated by JavaScript -->
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
+    <script>
+        // Simple JavaScript to simulate RFID tag data and updates
+        
+        // List of engineer names for simulation
+        const engineers = [
+            'Sarah Chen',
+            'Mike Johnson',
+            'David Rodriguez',
+            'Emily Watson',
+            'James Park',
+            'Lisa Anderson',
+            'Robert Kim',
+            'Jennifer Lee'
+        ];
+        
+        // List of actions for history log
+        const actions = [
+            'Tag scanned successfully',
+            'Maintenance check performed',
+            'Data updated',
+            'Quality inspection completed',
+            'Tag read by engineer',
+            'System calibration',
+            'Signal strength check',
+            'Memory verification'
+        ];
+        
+        // Function to get current date and time formatted
+        function getCurrentDateTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+        
+        // Function to get a random item from an array
+        function getRandomItem(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+        
+        // Function to update last read time
+        function updateLastReadTime() {
+            const lastReadTimeElement = document.getElementById('lastReadTime');
+            if (lastReadTimeElement) {
+                lastReadTimeElement.textContent = getCurrentDateTime();
+            }
+        }
+        
+        // Function to update last engineer
+        function updateLastEngineer() {
+            const lastEngineerElement = document.getElementById('lastEngineer');
+            if (lastEngineerElement) {
+                lastEngineerElement.textContent = getRandomItem(engineers);
+            }
+        }
+        
+        // Function to increment read count
+        function incrementReadCount() {
+            const readCountElement = document.getElementById('readCount');
+            if (readCountElement) {
+                const currentCount = parseInt(readCountElement.textContent) || 0;
+                readCountElement.textContent = currentCount + 1;
+            }
+            
+            const totalReadsElement = document.getElementById('totalReads');
+            if (totalReadsElement) {
+                const currentTotal = parseInt(totalReadsElement.textContent.replace(',', '')) || 0;
+                totalReadsElement.textContent = (currentTotal + 1).toLocaleString();
+            }
+        }
+        
+        // Function to add history item
+        function addHistoryItem() {
+            const historyList = document.getElementById('historyList');
+            if (!historyList) return;
+            
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            
+            const icon = document.createElement('div');
+            icon.className = 'history-icon';
+            icon.textContent = '📡';
+            
+            const content = document.createElement('div');
+            content.className = 'history-content';
+            
+            const action = document.createElement('div');
+            action.className = 'history-action';
+            action.textContent = getRandomItem(actions);
+            
+            const details = document.createElement('div');
+            details.className = 'history-details';
+            details.textContent = `Engineer: ${getRandomItem(engineers)} | Device: RFID-READER-03`;
+            
+            const time = document.createElement('div');
+            time.className = 'history-time';
+            time.textContent = getCurrentDateTime();
+            
+            content.appendChild(action);
+            content.appendChild(details);
+            
+            historyItem.appendChild(icon);
+            historyItem.appendChild(content);
+            historyItem.appendChild(time);
+            
+            // Add to top of list
+            historyList.insertBefore(historyItem, historyList.firstChild);
+            
+            // Keep only last 10 items
+            while (historyList.children.length > 10) {
+                historyList.removeChild(historyList.lastChild);
+            }
+        }
+        
+        // Function to simulate tag scan
+        function simulateTagScan() {
+            updateLastReadTime();
+            updateLastEngineer();
+            incrementReadCount();
+            addHistoryItem();
+        }
+        
+        // Initialize page with some history items
+        function initializeHistory() {
+            const historyList = document.getElementById('historyList');
+            if (!historyList) return;
+            
+            // Add 5 initial history items
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const now = new Date();
+                    now.setMinutes(now.getMinutes() - (5 - i));
+                    
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    
+                    const icon = document.createElement('div');
+                    icon.className = 'history-icon';
+                    icon.textContent = '📡';
+                    
+                    const content = document.createElement('div');
+                    content.className = 'history-content';
+                    
+                    const action = document.createElement('div');
+                    action.className = 'history-action';
+                    action.textContent = getRandomItem(actions);
+                    
+                    const details = document.createElement('div');
+                    details.className = 'history-details';
+                    details.textContent = `Engineer: ${getRandomItem(engineers)} | Device: RFID-READER-03`;
+                    
+                    const time = document.createElement('div');
+                    time.className = 'history-time';
+                    const timeStr = now.toISOString().slice(0, 19).replace('T', ' ');
+                    time.textContent = timeStr;
+                    
+                    content.appendChild(action);
+                    content.appendChild(details);
+                    
+                    historyItem.appendChild(icon);
+                    historyItem.appendChild(content);
+                    historyItem.appendChild(time);
+                    
+                    historyList.appendChild(historyItem);
+                }, i * 100);
+            }
+        }
+        
+        // Update time display every second
+        function updateTimeDisplay() {
+            const lastReadTimeElement = document.getElementById('lastReadTime');
+            if (lastReadTimeElement && Math.random() > 0.7) {
+                // Occasionally update the time to show activity
+                updateLastReadTime();
+            }
+        }
+        
+        // Initialize page when loaded
+        window.addEventListener('DOMContentLoaded', function() {
+            initializeHistory();
+            
+            // Simulate tag scan every 5-8 seconds
+            setInterval(function() {
+                simulateTagScan();
+            }, 5000 + Math.random() * 3000);
+            
+            // Update time display every second
+            setInterval(updateTimeDisplay, 1000);
+        });
+    </script>
 </body>
 </html>
