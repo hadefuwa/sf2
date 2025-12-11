@@ -407,7 +407,7 @@
         /* Conveyor 1 - Right Side, In-Feed (Moves UP) */
         .conveyor1 {
             position: absolute;
-            bottom: 100px;
+            top: 70px;
             right: 10%;
             width: 100px;
             height: 350px;
@@ -446,7 +446,7 @@
         /* Product on Conveyor 1 */
         .product1 {
             position: absolute;
-            bottom: 110px;
+            top: 420px;
             right: 10%;
             width: 60px;
             height: 40px;
@@ -458,8 +458,8 @@
         }
 
         @keyframes product1Move {
-            0% { bottom: 110px; }
-            100% { bottom: 460px; }
+            0% { top: 420px; }
+            100% { top: 70px; }
         }
 
         .conveyor1.conveyor-stopped ~ .product1 {
@@ -534,8 +534,8 @@
             bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
-            width: 200px;
-            height: 200px;
+            width: 400px;
+            height: 400px;
             transform-origin: bottom center;
             animation: robotMove 3s ease-in-out infinite;
         }
@@ -550,8 +550,8 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 70px;
-            height: 50px;
+            width: 140px;
+            height: 100px;
             background: linear-gradient(135deg, var(--primary-purple), var(--primary-pink));
             border: 2px solid var(--primary-cyan);
             clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
@@ -560,22 +560,22 @@
 
         .robot-link1 {
             position: absolute;
-            bottom: 50px;
+            bottom: 100px;
             left: 50%;
             transform: translateX(-50%);
-            width: 10px;
-            height: 80px;
+            width: 20px;
+            height: 160px;
             background: linear-gradient(180deg, var(--primary-cyan), var(--primary-purple));
             box-shadow: 0 0 10px var(--primary-cyan);
         }
 
         .robot-link2 {
             position: absolute;
-            bottom: 130px;
+            bottom: 260px;
             left: 50%;
             transform: translateX(-50%) rotate(45deg);
-            width: 10px;
-            height: 60px;
+            width: 20px;
+            height: 120px;
             background: linear-gradient(180deg, var(--primary-purple), var(--primary-pink));
             box-shadow: 0 0 10px var(--primary-pink);
             transform-origin: bottom center;
@@ -583,11 +583,11 @@
 
         .robot-end-effector {
             position: absolute;
-            bottom: 190px;
+            bottom: 380px;
             left: 50%;
             transform: translateX(-50%);
-            width: 24px;
-            height: 24px;
+            width: 48px;
+            height: 48px;
             background: var(--primary-orange);
             border: 2px solid var(--primary-cyan);
             border-radius: 50%;
