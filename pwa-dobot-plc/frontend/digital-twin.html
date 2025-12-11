@@ -346,6 +346,22 @@
             transform-origin: center center;
         }
 
+        /* MATRIX text on floor */
+        .floor-matrix-text {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%) rotateX(60deg) rotateZ(-45deg);
+            font-size: 48px;
+            font-weight: bold;
+            font-style: italic;
+            color: rgba(0, 255, 255, 0.15);
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            letter-spacing: 8px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
         /* Gantry System - Top Rear, Spans Full Width */
         .gantry {
             position: absolute;
@@ -357,6 +373,29 @@
             border: 2px solid var(--primary-cyan);
             box-shadow: 0 5px 20px rgba(0, 255, 255, 0.2);
             clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0% calc(100% - 10px), 0% 10px);
+        }
+
+        .gantry-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 12px;
+            color: var(--primary-cyan);
+            font-weight: bold;
+            text-shadow: 0 0 10px var(--primary-cyan);
+        }
+
+        .gantry-percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            color: var(--primary-cyan);
+            font-weight: bold;
+            text-shadow: 0 0 10px var(--primary-cyan);
+            z-index: 2;
         }
 
         .gantry-carriage {
@@ -415,6 +454,28 @@
             border: 2px solid var(--primary-cyan);
             box-shadow: 0 10px 30px rgba(0, 255, 255, 0.3);
             clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0% calc(100% - 10px), 0% 10px);
+        }
+
+        .conveyor1-label {
+            position: absolute;
+            top: -20px;
+            right: 0;
+            font-size: 11px;
+            color: var(--primary-cyan);
+            font-weight: bold;
+            text-shadow: 0 0 8px var(--primary-cyan);
+        }
+
+        .conveyor1-percentage {
+            position: absolute;
+            top: 50%;
+            right: -35px;
+            transform: translateY(-50%) rotate(90deg);
+            font-size: 12px;
+            color: var(--primary-cyan);
+            font-weight: bold;
+            text-shadow: 0 0 8px var(--primary-cyan);
+            white-space: nowrap;
         }
 
         .conveyor1-belt {
@@ -479,6 +540,28 @@
             clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0% calc(100% - 10px), 0% 10px);
         }
 
+        .conveyor2-label {
+            position: absolute;
+            top: -20px;
+            left: 0;
+            font-size: 11px;
+            color: var(--primary-cyan);
+            font-weight: bold;
+            text-shadow: 0 0 8px var(--primary-cyan);
+        }
+
+        .conveyor2-percentage {
+            position: absolute;
+            top: 50%;
+            left: -35px;
+            transform: translateY(-50%) rotate(-90deg);
+            font-size: 12px;
+            color: var(--primary-cyan);
+            font-weight: bold;
+            text-shadow: 0 0 8px var(--primary-cyan);
+            white-space: nowrap;
+        }
+
         .conveyor2-belt {
             position: absolute;
             top: 0;
@@ -536,6 +619,30 @@
             transform: translateX(-50%);
             width: 350px;
             height: 350px;
+        }
+
+        .robot-arm-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: var(--primary-cyan);
+            font-weight: bold;
+            text-shadow: 0 0 8px var(--primary-cyan);
+        }
+
+        .robot-arm-percentage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 13px;
+            color: var(--primary-pink);
+            font-weight: bold;
+            text-shadow: 0 0 10px var(--primary-pink);
+            z-index: 11;
+            pointer-events: none;
         }
 
         .robot-base {
@@ -886,9 +993,12 @@
                 <div class="twin-title">Factory Floor Visualization</div>
                 <div class="factory-floor" id="factoryFloor">
                     <div class="floor-grid"></div>
+                    <div class="floor-matrix-text">MATRIX</div>
                     
                     <!-- Gantry System - Top Rear, Spans Full Width -->
                     <div class="gantry" id="gantry">
+                        <div class="gantry-label">Gantry</div>
+                        <div class="gantry-percentage" id="gantry-percentage">87%</div>
                         <div class="gantry-carriage"></div>
                         <div class="status-indicator status-active" style="bottom: -10px; left: 50%; transform: translateX(-50%);"></div>
                     </div>
@@ -896,6 +1006,8 @@
                     
                     <!-- Conveyor 1 - Right Side, In-Feed (Moves UP) -->
                     <div class="conveyor1" id="conveyor1">
+                        <div class="conveyor1-label">Conveyor 1</div>
+                        <div class="conveyor1-percentage" id="conveyor1-percentage">92%</div>
                         <div class="conveyor1-belt"></div>
                         <div class="status-indicator status-active" style="top: 10px; right: 10px;"></div>
                     </div>
@@ -903,6 +1015,8 @@
                     
                     <!-- Conveyor 2 - Left Side, Out-Feed (Moves DOWN) -->
                     <div class="conveyor2" id="conveyor2">
+                        <div class="conveyor2-label">Conveyor 2</div>
+                        <div class="conveyor2-percentage" id="conveyor2-percentage">89%</div>
                         <div class="conveyor2-belt"></div>
                         <div class="status-indicator status-active" style="top: 10px; left: 10px;"></div>
                     </div>
@@ -911,11 +1025,14 @@
                     <!-- Sorting Bay - Center-Right, Between Robot and Conveyor 1 -->
                     <div class="sorting-bay">
                         Sorting Bay
+                        <div class="sorting-bay-percentage" id="sorting-bay-percentage">94%</div>
                     </div>
                     <div class="product-sorted"></div>
                     
                     <!-- Robot Arm - Front/Bottom, Can Reach Center - 3-Axis Design -->
                     <div class="robot-arm" id="robotArm">
+                        <div class="robot-arm-label">Robot Arm</div>
+                        <div class="robot-arm-percentage" id="robot-arm-percentage">91%</div>
                         <div class="robot-base"></div>
                         <div class="robot-arm-segments">
                             <div class="robot-shoulder"></div>
@@ -1039,6 +1156,26 @@
                         // Update efficiency and quality
                         document.getElementById('efficiency-text').textContent = (data.efficiency || 0).toFixed(1) + '%';
                         document.getElementById('quality-text').textContent = (data.quality || 0).toFixed(1) + '%';
+                        
+                        // Update component percentages (simulated based on efficiency)
+                        const baseEfficiency = data.efficiency || 94.0;
+                        const gantryPercent = Math.min(100, Math.max(85, baseEfficiency - 7)).toFixed(0);
+                        const conveyor1Percent = Math.min(100, Math.max(88, baseEfficiency - 2)).toFixed(0);
+                        const conveyor2Percent = Math.min(100, Math.max(86, baseEfficiency - 5)).toFixed(0);
+                        const robotPercent = Math.min(100, Math.max(89, baseEfficiency - 3)).toFixed(0);
+                        const sortingPercent = Math.min(100, Math.max(92, baseEfficiency + 0)).toFixed(0);
+                        
+                        const gantryPercentEl = document.getElementById('gantry-percentage');
+                        const conveyor1PercentEl = document.getElementById('conveyor1-percentage');
+                        const conveyor2PercentEl = document.getElementById('conveyor2-percentage');
+                        const robotPercentEl = document.getElementById('robot-arm-percentage');
+                        const sortingPercentEl = document.getElementById('sorting-bay-percentage');
+                        
+                        if (gantryPercentEl) gantryPercentEl.textContent = gantryPercent + '%';
+                        if (conveyor1PercentEl) conveyor1PercentEl.textContent = conveyor1Percent + '%';
+                        if (conveyor2PercentEl) conveyor2PercentEl.textContent = conveyor2Percent + '%';
+                        if (robotPercentEl) robotPercentEl.textContent = robotPercent + '%';
+                        if (sortingPercentEl) sortingPercentEl.textContent = sortingPercent + '%';
                     }
                 })
                 .catch(error => {
