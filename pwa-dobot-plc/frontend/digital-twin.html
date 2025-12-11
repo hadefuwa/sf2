@@ -971,113 +971,70 @@
                         // Update production counter
                         document.getElementById('prod-counter').textContent = (data.production_counter || 0).toLocaleString();
                         
-                        // Update conveyor 1
+                        // SIMULATION MODE: Always keep animations running
+                        // Only update status text based on API data, but animations never stop
                         const conveyor1 = document.getElementById('conveyor1');
-                        const conveyor1Belt = conveyor1 ? conveyor1.querySelector('.conveyor1-belt') : null;
-                        const product1 = document.querySelector('.product1');
-                        // Default to running - only stop if explicitly false
-                        const conveyorRunning = data.conveyor && data.conveyor.running === false ? false : true;
-                        if (conveyorRunning) {
-                            if (conveyor1) conveyor1.classList.remove('conveyor-stopped');
-                            if (conveyor1Belt) conveyor1Belt.style.animationPlayState = 'running';
-                            if (product1) product1.style.animationPlayState = 'running';
-                            document.getElementById('conveyor-status-text').textContent = 'RUNNING';
-                            document.getElementById('conveyor-status-text').style.color = 'var(--primary-cyan)';
-                            if (conveyor1) {
-                                const indicator1 = conveyor1.querySelector('.status-indicator');
-                                if (indicator1) indicator1.className = 'status-indicator status-active';
-                            }
-                        } else {
-                            if (conveyor1) conveyor1.classList.add('conveyor-stopped');
-                            if (conveyor1Belt) conveyor1Belt.style.animationPlayState = 'paused';
-                            if (product1) product1.style.animationPlayState = 'paused';
-                            document.getElementById('conveyor-status-text').textContent = 'STOPPED';
-                            document.getElementById('conveyor-status-text').style.color = '#ff0000';
-                            if (conveyor1) {
-                                const indicator1 = conveyor1.querySelector('.status-indicator');
-                                if (indicator1) indicator1.className = 'status-indicator status-inactive';
-                            }
-                        }
-                        
-                        // Update conveyor 2 (same status as conveyor 1 for now)
                         const conveyor2 = document.getElementById('conveyor2');
-                        const conveyor2Belt = conveyor2 ? conveyor2.querySelector('.conveyor2-belt') : null;
-                        const product2 = document.querySelector('.product2');
-                        if (conveyorRunning) {
-                            if (conveyor2) conveyor2.classList.remove('conveyor-stopped');
-                            if (conveyor2Belt) conveyor2Belt.style.animationPlayState = 'running';
-                            if (product2) product2.style.animationPlayState = 'running';
-                            if (conveyor2) {
-                                const indicator2 = conveyor2.querySelector('.status-indicator');
-                                if (indicator2) indicator2.className = 'status-indicator status-active';
-                            }
-                        } else {
-                            if (conveyor2) conveyor2.classList.add('conveyor-stopped');
-                            if (conveyor2Belt) conveyor2Belt.style.animationPlayState = 'paused';
-                            if (product2) product2.style.animationPlayState = 'paused';
-                            if (conveyor2) {
-                                const indicator2 = conveyor2.querySelector('.status-indicator');
-                                if (indicator2) indicator2.className = 'status-indicator status-inactive';
-                            }
-                        }
-                        
-                        // Update gantry
                         const gantry = document.getElementById('gantry');
-                        const gantryCarriage = gantry ? gantry.querySelector('.gantry-carriage') : null;
+                        
+                        // Always keep all animations running
+                        if (conveyor1) {
+                            conveyor1.classList.remove('conveyor-stopped');
+                            const belt1 = conveyor1.querySelector('.conveyor1-belt');
+                            if (belt1) belt1.style.animationPlayState = 'running';
+                            const indicator1 = conveyor1.querySelector('.status-indicator');
+                            if (indicator1) indicator1.className = 'status-indicator status-active';
+                        }
+                        
+                        const product1 = document.querySelector('.product1');
+                        if (product1) product1.style.animationPlayState = 'running';
+                        
+                        if (conveyor2) {
+                            conveyor2.classList.remove('conveyor-stopped');
+                            const belt2 = conveyor2.querySelector('.conveyor2-belt');
+                            if (belt2) belt2.style.animationPlayState = 'running';
+                            const indicator2 = conveyor2.querySelector('.status-indicator');
+                            if (indicator2) indicator2.className = 'status-indicator status-active';
+                        }
+                        
+                        const product2 = document.querySelector('.product2');
+                        if (product2) product2.style.animationPlayState = 'running';
+                        
+                        if (gantry) {
+                            gantry.classList.remove('gantry-stopped');
+                            const carriage = gantry.querySelector('.gantry-carriage');
+                            if (carriage) carriage.style.animationPlayState = 'running';
+                            const indicator = gantry.querySelector('.status-indicator');
+                            if (indicator) indicator.className = 'status-indicator status-active';
+                        }
+                        
                         const productGantry = document.querySelector('.product-gantry');
-                        // Default to running - only stop if explicitly false
-                        const gantryRunning = data.gantry && data.gantry.running === false ? false : true;
+                        if (productGantry) productGantry.style.animationPlayState = 'running';
                         
-                        if (gantryRunning) {
-                            if (gantry) gantry.classList.remove('gantry-stopped');
-                            if (gantryCarriage) gantryCarriage.style.animationPlayState = 'running';
-                            if (productGantry) productGantry.style.animationPlayState = 'running';
-                            document.getElementById('gantry-status-text').textContent = 'RUNNING';
-                            document.getElementById('gantry-status-text').style.color = 'var(--primary-cyan)';
-                            if (gantry) {
-                                const indicator = gantry.querySelector('.status-indicator');
-                                if (indicator) indicator.className = 'status-indicator status-active';
-                            }
-                        } else {
-                            if (gantry) gantry.classList.add('gantry-stopped');
-                            if (gantryCarriage) gantryCarriage.style.animationPlayState = 'paused';
-                            if (productGantry) productGantry.style.animationPlayState = 'paused';
-                            document.getElementById('gantry-status-text').textContent = 'STOPPED';
-                            document.getElementById('gantry-status-text').style.color = '#ff0000';
-                            if (gantry) {
-                                const indicator = gantry.querySelector('.status-indicator');
-                                if (indicator) indicator.className = 'status-indicator status-inactive';
-                            }
-                        }
+                        // Update status text based on API (for display only, animations keep running)
+                        const conveyorRunning = data.conveyor ? data.conveyor.running : true;
+                        const gantryRunning = data.gantry ? data.gantry.running : true;
                         
-                        // Update robot arm
+                        document.getElementById('conveyor-status-text').textContent = conveyorRunning ? 'RUNNING' : 'STOPPED';
+                        document.getElementById('conveyor-status-text').style.color = conveyorRunning ? 'var(--primary-cyan)' : '#ff0000';
+                        
+                        document.getElementById('gantry-status-text').textContent = gantryRunning ? 'RUNNING' : 'STOPPED';
+                        document.getElementById('gantry-status-text').style.color = gantryRunning ? 'var(--primary-cyan)' : '#ff0000';
+                        
+                        // Update robot arm - always keep animations running in simulation mode
                         const robotArm = document.getElementById('robotArm');
-                        const shoulder = robotArm.querySelector('.robot-shoulder');
-                        const link1 = robotArm.querySelector('.robot-link1');
-                        const elbow = robotArm.querySelector('.robot-elbow');
-                        const link2 = robotArm.querySelector('.robot-link2');
-                        const robotRunning = data.gantry.running || false;
-                        if (robotRunning) {
+                        const armSegments = robotArm ? robotArm.querySelector('.robot-arm-segments') : null;
+                        if (robotArm) {
                             robotArm.classList.remove('robot-stopped');
-                            if (shoulder) shoulder.style.animationPlayState = 'running';
-                            if (link1) link1.style.animationPlayState = 'running';
-                            if (elbow) elbow.style.animationPlayState = 'running';
-                            if (link2) link2.style.animationPlayState = 'running';
-                            document.getElementById('robot-status-text').textContent = 'RUNNING';
-                            document.getElementById('robot-status-text').style.color = 'var(--primary-cyan)';
+                            if (armSegments) armSegments.style.animationPlayState = 'running';
                             const indicator = robotArm.querySelector('.status-indicator');
-                            indicator.className = 'status-indicator status-active';
-                        } else {
-                            robotArm.classList.add('robot-stopped');
-                            if (shoulder) shoulder.style.animationPlayState = 'paused';
-                            if (link1) link1.style.animationPlayState = 'paused';
-                            if (elbow) elbow.style.animationPlayState = 'paused';
-                            if (link2) link2.style.animationPlayState = 'paused';
-                            document.getElementById('robot-status-text').textContent = 'IDLE';
-                            document.getElementById('robot-status-text').style.color = '#ffaa00';
-                            const indicator = robotArm.querySelector('.status-indicator');
-                            indicator.className = 'status-indicator status-warning';
+                            if (indicator) indicator.className = 'status-indicator status-active';
                         }
+                        
+                        // Update status text based on API data (but animations keep running)
+                        const robotRunning = data.gantry ? data.gantry.running : true;
+                        document.getElementById('robot-status-text').textContent = robotRunning ? 'RUNNING' : 'IDLE';
+                        document.getElementById('robot-status-text').style.color = robotRunning ? 'var(--primary-cyan)' : '#ffaa00';
                         
                         // Update efficiency and quality
                         document.getElementById('efficiency-text').textContent = (data.efficiency || 0).toFixed(1) + '%';
