@@ -639,7 +639,7 @@
                         <div class="kpi-header">
                             <h3 class="kpi-title">Production Counter</h3>
                         </div>
-                        <div class="kpi-value" id="production-counter">1,247</div>
+                        <div class="kpi-value" id="production-counter">0</div>
                         <div class="kpi-status status-normal">Items Processed</div>
                         <div class="kpi-subtitle">Since system start</div>
                     </div>
@@ -649,9 +649,9 @@
                         <div class="kpi-header">
                             <h3 class="kpi-title">Conveyor System</h3>
                         </div>
-                        <div class="kpi-value">RUNNING</div>
-                        <div class="kpi-status status-running">Active</div>
-                        <div class="kpi-subtitle">Speed: 2.5 m/min</div>
+                        <div class="kpi-value" id="conveyor-status">UNKNOWN</div>
+                        <div class="kpi-status" id="conveyor-status-badge">Unknown</div>
+                        <div class="kpi-subtitle" id="conveyor-subtitle">Status: Checking...</div>
                     </div>
 
                     <!-- Gantry Status -->
@@ -659,9 +659,9 @@
                         <div class="kpi-header">
                             <h3 class="kpi-title">Gantry Robot</h3>
                         </div>
-                        <div class="kpi-value">RUNNING</div>
-                        <div class="kpi-status status-running">Active</div>
-                        <div class="kpi-subtitle">Cycle time: 4.2s</div>
+                        <div class="kpi-value" id="gantry-status">UNKNOWN</div>
+                        <div class="kpi-status" id="gantry-status-badge">Unknown</div>
+                        <div class="kpi-subtitle" id="gantry-subtitle">Status: Checking...</div>
                     </div>
 
                     <!-- System Uptime -->
@@ -669,11 +669,11 @@
                         <div class="kpi-header">
                             <h3 class="kpi-title">System Uptime</h3>
                         </div>
-                        <div class="kpi-value" id="uptime">98.7%</div>
-                        <div class="kpi-status status-normal">24h 32m</div>
-                        <div class="kpi-subtitle">Last restart: 2 days ago</div>
+                        <div class="kpi-value" id="uptime">0%</div>
+                        <div class="kpi-status status-normal" id="uptime-duration">0h 0m</div>
+                        <div class="kpi-subtitle">PLC Connection Status</div>
                         <div class="progress-bar">
-                            <div class="progress-fill" id="uptime-bar" style="width: 98.7%"></div>
+                            <div class="progress-fill" id="uptime-bar" style="width: 0%"></div>
                         </div>
                     </div>
 
@@ -682,9 +682,9 @@
                         <div class="kpi-header">
                             <h3 class="kpi-title">Faults Detected</h3>
                         </div>
-                        <div class="kpi-value" id="total-faults">3</div>
+                        <div class="kpi-value" id="total-faults">0</div>
                         <div class="kpi-status status-warning">Since Start</div>
-                        <div class="kpi-subtitle">Last fault: 2h 15m ago</div>
+                        <div class="kpi-subtitle" id="fault-subtitle">Monitoring...</div>
                     </div>
 
                     <!-- Current Faults -->
@@ -692,13 +692,10 @@
                         <div class="kpi-header">
                             <h3 class="kpi-title">Active Faults</h3>
                         </div>
-                        <div class="kpi-value">1</div>
-                        <div class="kpi-status status-stopped">Critical</div>
-                        <div class="fault-list">
-                            <div class="fault-item">
-                                <div class="fault-indicator"></div>
-                                <div class="fault-text">Conveyor motor overload</div>
-                            </div>
+                        <div class="kpi-value" id="active-faults">0</div>
+                        <div class="kpi-status" id="active-faults-badge">None</div>
+                        <div class="fault-list" id="fault-list">
+                            <div class="no-faults">No active faults</div>
                         </div>
                     </div>
 
@@ -707,11 +704,11 @@
                         <div class="kpi-header">
                             <h3 class="kpi-title">Efficiency Rate</h3>
                         </div>
-                        <div class="kpi-value" id="efficiency">94.2%</div>
+                        <div class="kpi-value" id="efficiency">0%</div>
                         <div class="kpi-status status-normal">Target: 95%</div>
-                        <div class="kpi-subtitle">OEE: 91.8%</div>
+                        <div class="kpi-subtitle">System Performance</div>
                         <div class="progress-bar">
-                            <div class="progress-fill" id="efficiency-bar" style="width: 94.2%"></div>
+                            <div class="progress-fill" id="efficiency-bar" style="width: 0%"></div>
                         </div>
                     </div>
 
@@ -720,11 +717,11 @@
                         <div class="kpi-header">
                             <h3 class="kpi-title">Quality Control</h3>
                         </div>
-                        <div class="kpi-value" id="quality">99.1%</div>
+                        <div class="kpi-value" id="quality">0%</div>
                         <div class="kpi-status status-normal">Pass Rate</div>
-                        <div class="kpi-subtitle">Defects: 12 items</div>
+                        <div class="kpi-subtitle" id="quality-subtitle">Defects: 0 items</div>
                         <div class="progress-bar">
-                            <div class="progress-fill" id="quality-bar" style="width: 99.1%"></div>
+                            <div class="progress-fill" id="quality-bar" style="width: 0%"></div>
                         </div>
                     </div>
                 </div>
@@ -733,37 +730,109 @@
     </div>
 
     <script>
-        // Simulate real-time dashboard updates
-        let productionCounter = 1247;
-        let totalFaults = 3;
-        let efficiency = 94.2;
-        let quality = 99.1;
-        let uptime = 98.7;
-
+        // Real-time dashboard updates from backend API
         function updateKPIs() {
-            productionCounter += Math.floor(Math.random() * 3);
-            document.getElementById('production-counter').textContent = productionCounter.toLocaleString();
-
-            efficiency = Math.max(90, Math.min(100, efficiency + (Math.random() - 0.5) * 0.2));
-            document.getElementById('efficiency').textContent = efficiency.toFixed(1) + '%';
-            document.getElementById('efficiency-bar').style.width = efficiency.toFixed(1) + '%';
-
-            quality = Math.max(95, Math.min(100, quality + (Math.random() - 0.5) * 0.1));
-            document.getElementById('quality').textContent = quality.toFixed(1) + '%';
-            document.getElementById('quality-bar').style.width = quality.toFixed(1) + '%';
-
-            uptime = Math.max(95, Math.min(100, uptime + (Math.random() - 0.5) * 0.05));
-            document.getElementById('uptime').textContent = uptime.toFixed(1) + '%';
-            document.getElementById('uptime-bar').style.width = uptime.toFixed(1) + '%';
-
-            if (Math.random() < 0.05) {
-                totalFaults++;
-                document.getElementById('total-faults').textContent = totalFaults;
-            }
+            // Fetch real data from backend
+            fetch('/api/smart-factory')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update production counter
+                        const productionCounter = data.production_counter || 0;
+                        document.getElementById('production-counter').textContent = productionCounter.toLocaleString();
+                        
+                        // Update conveyor status
+                        const conveyorStatus = data.conveyor.status || 'UNKNOWN';
+                        const conveyorRunning = data.conveyor.running || false;
+                        document.getElementById('conveyor-status').textContent = conveyorStatus;
+                        const conveyorBadge = document.getElementById('conveyor-status-badge');
+                        conveyorBadge.textContent = conveyorRunning ? 'Active' : 'Inactive';
+                        conveyorBadge.className = 'kpi-status ' + (conveyorRunning ? 'status-running' : 'status-stopped');
+                        document.getElementById('conveyor-subtitle').textContent = 
+                            conveyorRunning ? 'System Active' : 'System Stopped';
+                        
+                        // Update gantry status
+                        const gantryStatus = data.gantry.status || 'UNKNOWN';
+                        const gantryRunning = data.gantry.running || false;
+                        const gantryConnected = data.gantry.connected || false;
+                        document.getElementById('gantry-status').textContent = gantryStatus;
+                        const gantryBadge = document.getElementById('gantry-status-badge');
+                        if (gantryRunning) {
+                            gantryBadge.textContent = 'Active';
+                            gantryBadge.className = 'kpi-status status-running';
+                        } else if (gantryConnected) {
+                            gantryBadge.textContent = 'Connected';
+                            gantryBadge.className = 'kpi-status status-normal';
+                        } else {
+                            gantryBadge.textContent = 'Disconnected';
+                            gantryBadge.className = 'kpi-status status-stopped';
+                        }
+                        document.getElementById('gantry-subtitle').textContent = 
+                            gantryRunning ? 'Cycle Active' : (gantryConnected ? 'Standby' : 'Not Connected');
+                        
+                        // Update uptime
+                        const uptimePercent = data.uptime.percent || 0;
+                        const uptimeDuration = data.uptime.duration || '0h 0m';
+                        document.getElementById('uptime').textContent = uptimePercent.toFixed(1) + '%';
+                        document.getElementById('uptime-duration').textContent = uptimeDuration;
+                        document.getElementById('uptime-bar').style.width = uptimePercent.toFixed(1) + '%';
+                        
+                        // Update faults
+                        const activeFaults = data.faults.active || 0;
+                        const totalFaults = data.faults.detected || 0;
+                        const faultDetected = data.faults.fault_detected || false;
+                        document.getElementById('total-faults').textContent = totalFaults;
+                        document.getElementById('active-faults').textContent = activeFaults;
+                        
+                        const activeFaultsBadge = document.getElementById('active-faults-badge');
+                        const faultList = document.getElementById('fault-list');
+                        
+                        if (activeFaults > 0 || faultDetected) {
+                            activeFaultsBadge.textContent = 'Critical';
+                            activeFaultsBadge.className = 'kpi-status status-stopped';
+                            faultList.innerHTML = '<div class="fault-item"><div class="fault-indicator"></div><div class="fault-text">Defect detected in production</div></div>';
+                        } else {
+                            activeFaultsBadge.textContent = 'None';
+                            activeFaultsBadge.className = 'kpi-status status-normal';
+                            faultList.innerHTML = '<div class="no-faults">No active faults</div>';
+                        }
+                        
+                        document.getElementById('fault-subtitle').textContent = 
+                            totalFaults > 0 ? `Total defects: ${totalFaults}` : 'No defects detected';
+                        
+                        // Update efficiency
+                        const efficiency = data.efficiency || 0;
+                        document.getElementById('efficiency').textContent = efficiency.toFixed(1) + '%';
+                        document.getElementById('efficiency-bar').style.width = efficiency.toFixed(1) + '%';
+                        
+                        // Update quality
+                        const quality = data.quality || 0;
+                        const defectCount = data.faults.detected || 0;
+                        document.getElementById('quality').textContent = quality.toFixed(1) + '%';
+                        document.getElementById('quality-bar').style.width = quality.toFixed(1) + '%';
+                        document.getElementById('quality-subtitle').textContent = `Defects: ${defectCount} items`;
+                    } else {
+                        console.error('Failed to fetch smart factory data:', data.error);
+                        // Show error state
+                        document.getElementById('production-counter').textContent = 'Error';
+                        document.getElementById('conveyor-status').textContent = 'ERROR';
+                        document.getElementById('gantry-status').textContent = 'ERROR';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching smart factory data:', error);
+                    // Show error state
+                    document.getElementById('production-counter').textContent = 'Error';
+                    document.getElementById('conveyor-status').textContent = 'ERROR';
+                    document.getElementById('gantry-status').textContent = 'ERROR';
+                });
         }
-
-        setInterval(updateKPIs, 5000);
+        
+        // Update immediately on page load
         updateKPIs();
+        
+        // Update every 2 seconds for real-time updates
+        setInterval(updateKPIs, 2000);
     </script>
 </body>
 </html>
