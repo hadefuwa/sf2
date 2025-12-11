@@ -377,7 +377,7 @@
         }
 
         .gantry.gantry-stopped .gantry-carriage {
-            animation: none;
+            animation-play-state: paused;
             opacity: 0.5;
         }
 
@@ -401,7 +401,7 @@
         }
 
         .gantry.gantry-stopped ~ .product-gantry {
-            animation: none;
+            animation-play-state: paused;
         }
 
         /* Conveyor 1 - Right Side, In-Feed (Moves UP) */
@@ -439,7 +439,7 @@
         }
 
         .conveyor1.conveyor-stopped .conveyor1-belt {
-            animation: none;
+            animation-play-state: paused;
             opacity: 0.5;
         }
 
@@ -463,7 +463,7 @@
         }
 
         .conveyor1.conveyor-stopped ~ .product1 {
-            animation: none;
+            animation-play-state: paused;
         }
 
         /* Conveyor 2 - Left Side, Out-Feed (Moves DOWN) */
@@ -501,7 +501,7 @@
         }
 
         .conveyor2.conveyor-stopped .conveyor2-belt {
-            animation: none;
+            animation-play-state: paused;
             opacity: 0.5;
         }
 
@@ -525,7 +525,7 @@
         }
 
         .conveyor2.conveyor-stopped ~ .product2 {
-            animation: none;
+            animation-play-state: paused;
         }
 
         /* Robot Arm - Front/Bottom, Can Reach Center - Simple 3-Axis Design */
@@ -634,8 +634,15 @@
         }
 
         .robot-arm.robot-stopped {
-            animation: none;
+            animation-play-state: paused;
             opacity: 0.5;
+        }
+        
+        .robot-arm.robot-stopped .robot-shoulder,
+        .robot-arm.robot-stopped .robot-link1,
+        .robot-arm.robot-stopped .robot-elbow,
+        .robot-arm.robot-stopped .robot-link2 {
+            animation-play-state: paused;
         }
 
         /* Sorting Bay - Center-Right, Between Robot and Conveyor 1 */
@@ -958,10 +965,12 @@
                         
                         // Update conveyor 1
                         const conveyor1 = document.getElementById('conveyor1');
+                        const conveyor1Belt = conveyor1.querySelector('.conveyor1-belt');
                         const product1 = document.querySelector('.product1');
                         const conveyorRunning = data.conveyor.running || false;
                         if (conveyorRunning) {
                             conveyor1.classList.remove('conveyor-stopped');
+                            if (conveyor1Belt) conveyor1Belt.style.animationPlayState = 'running';
                             if (product1) product1.style.animationPlayState = 'running';
                             document.getElementById('conveyor-status-text').textContent = 'RUNNING';
                             document.getElementById('conveyor-status-text').style.color = 'var(--primary-cyan)';
@@ -969,6 +978,7 @@
                             indicator1.className = 'status-indicator status-active';
                         } else {
                             conveyor1.classList.add('conveyor-stopped');
+                            if (conveyor1Belt) conveyor1Belt.style.animationPlayState = 'paused';
                             if (product1) product1.style.animationPlayState = 'paused';
                             document.getElementById('conveyor-status-text').textContent = 'STOPPED';
                             document.getElementById('conveyor-status-text').style.color = '#ff0000';
@@ -978,14 +988,17 @@
                         
                         // Update conveyor 2 (same status as conveyor 1 for now)
                         const conveyor2 = document.getElementById('conveyor2');
+                        const conveyor2Belt = conveyor2.querySelector('.conveyor2-belt');
                         const product2 = document.querySelector('.product2');
                         if (conveyorRunning) {
                             conveyor2.classList.remove('conveyor-stopped');
+                            if (conveyor2Belt) conveyor2Belt.style.animationPlayState = 'running';
                             if (product2) product2.style.animationPlayState = 'running';
                             const indicator2 = conveyor2.querySelector('.status-indicator');
                             indicator2.className = 'status-indicator status-active';
                         } else {
                             conveyor2.classList.add('conveyor-stopped');
+                            if (conveyor2Belt) conveyor2Belt.style.animationPlayState = 'paused';
                             if (product2) product2.style.animationPlayState = 'paused';
                             const indicator2 = conveyor2.querySelector('.status-indicator');
                             indicator2.className = 'status-indicator status-inactive';
@@ -993,22 +1006,22 @@
                         
                         // Update gantry
                         const gantry = document.getElementById('gantry');
-                        const gantryRunning = data.gantry.running || false;
-                        
-                        // Update gantry product
+                        const gantryCarriage = gantry.querySelector('.gantry-carriage');
                         const productGantry = document.querySelector('.product-gantry');
-                        if (productGantry) {
-                            productGantry.style.animationPlayState = gantryRunning ? 'running' : 'paused';
-                        }
+                        const gantryRunning = data.gantry.running || false;
                         
                         if (gantryRunning) {
                             gantry.classList.remove('gantry-stopped');
+                            if (gantryCarriage) gantryCarriage.style.animationPlayState = 'running';
+                            if (productGantry) productGantry.style.animationPlayState = 'running';
                             document.getElementById('gantry-status-text').textContent = 'RUNNING';
                             document.getElementById('gantry-status-text').style.color = 'var(--primary-cyan)';
                             const indicator = gantry.querySelector('.status-indicator');
                             indicator.className = 'status-indicator status-active';
                         } else {
                             gantry.classList.add('gantry-stopped');
+                            if (gantryCarriage) gantryCarriage.style.animationPlayState = 'paused';
+                            if (productGantry) productGantry.style.animationPlayState = 'paused';
                             document.getElementById('gantry-status-text').textContent = 'STOPPED';
                             document.getElementById('gantry-status-text').style.color = '#ff0000';
                             const indicator = gantry.querySelector('.status-indicator');
@@ -1053,6 +1066,35 @@
                     console.error('Error fetching digital twin data:', error);
                 });
         }
+        
+        // Start animations by default (will be controlled by API data)
+        window.addEventListener('DOMContentLoaded', function() {
+            // Ensure animations start running initially
+            const conveyor1 = document.getElementById('conveyor1');
+            const conveyor2 = document.getElementById('conveyor2');
+            const gantry = document.getElementById('gantry');
+            
+            if (conveyor1) {
+                const belt1 = conveyor1.querySelector('.conveyor1-belt');
+                const product1 = document.querySelector('.product1');
+                if (belt1) belt1.style.animationPlayState = 'running';
+                if (product1) product1.style.animationPlayState = 'running';
+            }
+            
+            if (conveyor2) {
+                const belt2 = conveyor2.querySelector('.conveyor2-belt');
+                const product2 = document.querySelector('.product2');
+                if (belt2) belt2.style.animationPlayState = 'running';
+                if (product2) product2.style.animationPlayState = 'running';
+            }
+            
+            if (gantry) {
+                const carriage = gantry.querySelector('.gantry-carriage');
+                const productGantry = document.querySelector('.product-gantry');
+                if (carriage) carriage.style.animationPlayState = 'running';
+                if (productGantry) productGantry.style.animationPlayState = 'running';
+            }
+        });
         
         // Update immediately on page load
         updateDigitalTwin();
