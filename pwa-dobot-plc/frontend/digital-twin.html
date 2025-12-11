@@ -532,29 +532,31 @@
         .robot-arm {
             position: absolute;
             bottom: 40px;
-            left: 10%;
+            left: 50%;
+            transform: translateX(-50%);
             width: 400px;
             height: 400px;
-            transform-origin: bottom left;
+            transform-origin: bottom center;
             animation: robotMove 4s ease-in-out infinite;
         }
 
         @keyframes robotMove {
             0% { 
-                transform: rotate(-60deg);
+                transform: translateX(-50%) rotate(-75deg);
             }
             50% { 
-                transform: rotate(30deg);
+                transform: translateX(-50%) rotate(75deg);
             }
             100% { 
-                transform: rotate(-60deg);
+                transform: translateX(-50%) rotate(-75deg);
             }
         }
 
         .robot-base {
             position: absolute;
             bottom: 0;
-            left: 0;
+            left: 50%;
+            transform: translateX(-50%);
             width: 140px;
             height: 100px;
             background: linear-gradient(135deg, var(--primary-purple), var(--primary-pink));
@@ -566,43 +568,45 @@
         .robot-link1 {
             position: absolute;
             bottom: 100px;
-            left: 0;
+            left: 50%;
+            transform: translateX(-50%);
             width: 20px;
             height: 160px;
             background: linear-gradient(180deg, var(--primary-cyan), var(--primary-purple));
             box-shadow: 0 0 10px var(--primary-cyan);
-            transform-origin: bottom left;
+            transform-origin: bottom center;
         }
 
         .robot-link2 {
             position: absolute;
             bottom: 260px;
-            left: 0;
+            left: 50%;
+            transform: translateX(-50%);
             width: 20px;
             height: 120px;
             background: linear-gradient(180deg, var(--primary-purple), var(--primary-pink));
             box-shadow: 0 0 10px var(--primary-pink);
-            transform-origin: bottom left;
+            transform-origin: bottom center;
             animation: link2Move 4s ease-in-out infinite;
         }
 
         @keyframes link2Move {
-            0% { transform: rotate(60deg); }
-            50% { transform: rotate(-20deg); }
-            100% { transform: rotate(60deg); }
+            0% { transform: translateX(-50%) rotate(70deg); }
+            50% { transform: translateX(-50%) rotate(-30deg); }
+            100% { transform: translateX(-50%) rotate(70deg); }
         }
 
         .robot-end-effector {
             position: absolute;
             bottom: 380px;
-            left: 0;
+            left: 50%;
+            transform: translateX(-50%);
             width: 48px;
             height: 48px;
             background: var(--primary-orange);
             border: 2px solid var(--primary-cyan);
             border-radius: 50%;
             box-shadow: 0 0 15px var(--primary-orange);
-            transform: translateX(-50%);
         }
 
         .robot-arm.robot-stopped {
