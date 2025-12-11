@@ -534,9 +534,16 @@
             bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
-            width: 500px;
-            height: 450px;
+            width: 400px;
+            height: 400px;
             transform-origin: bottom center;
+            animation: robotArmRotate 8s ease-in-out infinite;
+        }
+
+        @keyframes robotArmRotate {
+            0% { transform: translateX(-50%) rotate(-70deg); }
+            50% { transform: translateX(-50%) rotate(70deg); }
+            100% { transform: translateX(-50%) rotate(-70deg); }
         }
 
         .robot-base {
@@ -544,11 +551,11 @@
             bottom: 0;
             left: 50%;
             transform: translateX(-50%);
-            width: 120px;
-            height: 80px;
+            width: 100px;
+            height: 60px;
             background: linear-gradient(135deg, var(--primary-purple), var(--primary-pink));
             border: 3px solid var(--primary-cyan);
-            clip-path: polygon(15px 0%, 100% 0%, calc(100% - 15px) 100%, 0% 100%);
+            clip-path: polygon(12px 0%, 100% 0%, calc(100% - 12px) 100%, 0% 100%);
             box-shadow: 0 0 25px rgba(124, 58, 237, 0.8);
             z-index: 10;
         }
@@ -556,117 +563,113 @@
         /* Shoulder Joint */
         .robot-shoulder {
             position: absolute;
-            bottom: 80px;
+            bottom: 60px;
             left: 50%;
             transform: translateX(-50%);
-            width: 50px;
-            height: 50px;
+            width: 45px;
+            height: 45px;
             background: radial-gradient(circle, var(--primary-cyan), var(--primary-purple));
             border: 3px solid var(--primary-cyan);
             border-radius: 50%;
             box-shadow: 0 0 20px var(--primary-cyan);
             z-index: 9;
-            animation: shoulderRotate 8s ease-in-out infinite;
         }
 
-        @keyframes shoulderRotate {
-            0% { transform: translateX(-50%) rotate(-70deg); }
-            50% { transform: translateX(-50%) rotate(70deg); }
-            100% { transform: translateX(-50%) rotate(-70deg); }
-        }
-
-        /* Link 1 - Shoulder to Elbow */
+        /* Link 1 - Shoulder to Elbow (Upper Arm) */
         .robot-link1 {
             position: absolute;
-            bottom: 105px;
+            bottom: 82px;
             left: 50%;
             transform: translateX(-50%);
-            width: 24px;
-            height: 180px;
+            width: 22px;
+            height: 160px;
             background: linear-gradient(180deg, var(--primary-cyan), var(--primary-purple));
             box-shadow: 0 0 15px var(--primary-cyan);
             transform-origin: bottom center;
-            animation: link1Move 8s ease-in-out infinite;
+            animation: link1Rotate 8s ease-in-out infinite;
             z-index: 8;
         }
 
-        @keyframes link1Move {
-            0% { transform: translateX(-50%) rotate(-70deg); }
-            50% { transform: translateX(-50%) rotate(70deg); }
-            100% { transform: translateX(-50%) rotate(-70deg); }
+        @keyframes link1Rotate {
+            0% { transform: translateX(-50%) rotate(-45deg); }
+            50% { transform: translateX(-50%) rotate(45deg); }
+            100% { transform: translateX(-50%) rotate(-45deg); }
         }
 
-        /* Elbow Joint */
+        /* Elbow Joint - follows link1 rotation */
         .robot-elbow {
             position: absolute;
-            bottom: 285px;
+            bottom: 82px;
             left: 50%;
-            transform: translateX(-50%);
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             background: radial-gradient(circle, var(--primary-purple), var(--primary-pink));
             border: 3px solid var(--primary-pink);
             border-radius: 50%;
             box-shadow: 0 0 20px var(--primary-pink);
-            z-index: 7;
+            transform-origin: bottom center;
             animation: elbowRotate 8s ease-in-out infinite;
+            z-index: 7;
         }
 
         @keyframes elbowRotate {
-            0% { transform: translateX(-50%) rotate(60deg); }
-            50% { transform: translateX(-50%) rotate(-40deg); }
-            100% { transform: translateX(-50%) rotate(60deg); }
+            0% { transform: translateX(-50%) translateY(-160px) rotate(-45deg); }
+            50% { transform: translateX(-50%) translateY(-160px) rotate(45deg); }
+            100% { transform: translateX(-50%) translateY(-160px) rotate(-45deg); }
         }
 
-        /* Link 2 - Elbow to Wrist */
+        /* Link 2 - Elbow to Wrist (Forearm) - follows elbow */
         .robot-link2 {
             position: absolute;
-            bottom: 305px;
+            bottom: 82px;
             left: 50%;
-            transform: translateX(-50%);
             width: 20px;
-            height: 140px;
+            height: 130px;
             background: linear-gradient(180deg, var(--primary-purple), var(--primary-pink));
             box-shadow: 0 0 15px var(--primary-pink);
             transform-origin: bottom center;
-            animation: link2Move 8s ease-in-out infinite;
+            animation: link2Rotate 8s ease-in-out infinite;
             z-index: 6;
         }
 
-        @keyframes link2Move {
-            0% { transform: translateX(-50%) rotate(60deg); }
-            50% { transform: translateX(-50%) rotate(-40deg); }
-            100% { transform: translateX(-50%) rotate(60deg); }
+        @keyframes link2Rotate {
+            0% { 
+                transform: translateX(-50%) translateY(-160px) rotate(-45deg) rotate(30deg);
+            }
+            50% { 
+                transform: translateX(-50%) translateY(-160px) rotate(45deg) rotate(-20deg);
+            }
+            100% { 
+                transform: translateX(-50%) translateY(-160px) rotate(-45deg) rotate(30deg);
+            }
         }
 
-        /* Wrist Joint */
-        .robot-wrist {
-            position: absolute;
-            bottom: 445px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 35px;
-            height: 35px;
-            background: radial-gradient(circle, var(--primary-orange), var(--primary-pink));
-            border: 2px solid var(--primary-orange);
-            border-radius: 50%;
-            box-shadow: 0 0 15px var(--primary-orange);
-            z-index: 5;
-        }
-
-        /* End Effector / Gripper */
+        /* Gripper / End Effector - follows link2 */
         .robot-end-effector {
             position: absolute;
-            bottom: 465px;
+            bottom: 82px;
             left: 50%;
-            transform: translateX(-50%);
-            width: 50px;
+            width: 45px;
             height: 30px;
             background: linear-gradient(135deg, var(--primary-orange), var(--primary-pink));
             border: 2px solid var(--primary-cyan);
-            clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+            clip-path: polygon(0% 0%, 25% 0%, 30% 100%, 0% 100%, 0% 0%, 75% 0%, 100% 0%, 100% 100%, 70% 100%, 75% 0%);
             box-shadow: 0 0 20px var(--primary-orange);
-            z-index: 4;
+            transform-origin: bottom center;
+            animation: endEffectorMove 8s ease-in-out infinite;
+            z-index: 5;
+        }
+
+        @keyframes endEffectorMove {
+            0% { 
+                transform: translateX(-50%) translateY(-160px) rotate(-45deg) translateY(-130px) rotate(30deg);
+            }
+            50% { 
+                transform: translateX(-50%) translateY(-160px) rotate(45deg) translateY(-130px) rotate(-20deg);
+            }
+            100% { 
+                transform: translateX(-50%) translateY(-160px) rotate(-45deg) translateY(-130px) rotate(30deg);
+            }
         }
 
         .robot-arm.robot-stopped {
@@ -944,7 +947,6 @@
                         <div class="robot-link1"></div>
                         <div class="robot-elbow"></div>
                         <div class="robot-link2"></div>
-                        <div class="robot-wrist"></div>
                         <div class="robot-end-effector"></div>
                         <div class="status-indicator status-active" style="top: -10px; left: 50%; transform: translateX(-50%);"></div>
                     </div>
@@ -1028,11 +1030,28 @@
                             indicator2.className = 'status-indicator status-inactive';
                         }
                         
+                        // Update gantry
+                        const gantry = document.getElementById('gantry');
+                        const gantryRunning = data.gantry.running || false;
+                        
                         // Update gantry product
                         const productGantry = document.querySelector('.product-gantry');
-                        const gantryRunning = data.gantry.running || false;
                         if (productGantry) {
                             productGantry.style.animationPlayState = gantryRunning ? 'running' : 'paused';
+                        }
+                        
+                        if (gantryRunning) {
+                            gantry.classList.remove('gantry-stopped');
+                            document.getElementById('gantry-status-text').textContent = 'RUNNING';
+                            document.getElementById('gantry-status-text').style.color = 'var(--primary-cyan)';
+                            const indicator = gantry.querySelector('.status-indicator');
+                            indicator.className = 'status-indicator status-active';
+                        } else {
+                            gantry.classList.add('gantry-stopped');
+                            document.getElementById('gantry-status-text').textContent = 'STOPPED';
+                            document.getElementById('gantry-status-text').style.color = '#ff0000';
+                            const indicator = gantry.querySelector('.status-indicator');
+                            indicator.className = 'status-indicator status-inactive';
                         }
                         
                         // Update robot arm
@@ -1062,23 +1081,6 @@
                             document.getElementById('robot-status-text').style.color = '#ffaa00';
                             const indicator = robotArm.querySelector('.status-indicator');
                             indicator.className = 'status-indicator status-warning';
-                        }
-                        
-                        // Update gantry
-                        const gantry = document.getElementById('gantry');
-                        const gantryRunning = data.gantry.running || false;
-                        if (gantryRunning) {
-                            gantry.classList.remove('gantry-stopped');
-                            document.getElementById('gantry-status-text').textContent = 'RUNNING';
-                            document.getElementById('gantry-status-text').style.color = 'var(--primary-cyan)';
-                            const indicator = gantry.querySelector('.status-indicator');
-                            indicator.className = 'status-indicator status-active';
-                        } else {
-                            gantry.classList.add('gantry-stopped');
-                            document.getElementById('gantry-status-text').textContent = 'STOPPED';
-                            document.getElementById('gantry-status-text').style.color = '#ff0000';
-                            const indicator = gantry.querySelector('.status-indicator');
-                            indicator.className = 'status-indicator status-inactive';
                         }
                         
                         // Update efficiency and quality
