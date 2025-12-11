@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f051a">
+    <meta name="description" content="Digital Twin - Factory Visualization">
+    <title>Digital Twin - Smart Factory</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ========== CSS VARIABLES - NEXUS FLOW ========== */
+        :root {
+            --primary-cyan: #00ffff;
+            --primary-pink: #ff00ff;
+            --primary-purple: #7c3aed;
+            --primary-orange: #f97316;
+            --dark-bg: #1a0b2e;
+            --darker-bg: #0f051a;
+            --card-bg: rgba(26, 11, 46, 0.85);
+            --border-color: rgba(0, 255, 255, 0.3);
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+
+        /* ========== RESET & BASE ========== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-mono);
+            background: var(--darker-bg);
+            min-height: 100vh;
+            color: var(--text-primary);
+            display: flex;
+            overflow-x: hidden;
+            position: relative;
+            line-height: 1.6;
+        }
+
+        /* ========== CYBERPUNK BACKGROUND ========== */
+        .cyber-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--darker-bg);
+            overflow: hidden;
+            z-index: -5;
+        }
+
+        .cyber-gradient {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(0, 255, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(255, 0, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(124, 58, 237, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 60% 20%, rgba(249, 115, 22, 0.15) 0%, transparent 50%);
+            animation: gradientRotate 30s linear infinite;
+            filter: blur(40px);
+        }
+
+        @keyframes gradientRotate {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.2); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+        }
+
+        .grid-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.5;
+            animation: orbFloat 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: -4;
+        }
+
+        .orb1 {
+            width: 300px;
+            height: 300px;
+            background: var(--primary-cyan);
+            top: 10%;
+            left: -150px;
+        }
+
+        .orb2 {
+            width: 400px;
+            height: 400px;
+            background: var(--primary-pink);
+            bottom: 10%;
+            right: -200px;
+            animation-delay: 5s;
+        }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(100px, -50px) scale(1.1); }
+            66% { transform: translate(-50px, 100px) scale(0.9); }
+        }
+
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .scanlines::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(transparent 0%, rgba(0, 255, 255, 0.03) 50%, transparent 100%);
+            background-size: 100% 4px;
+            animation: scanline 8s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        /* ========== SIDEBAR ========== */
+        .sidebar {
+            width: 280px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-color);
+            padding: 24px;
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            margin-bottom: 40px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-cyan);
+            text-shadow: 0 0 20px var(--primary-cyan);
+            margin-bottom: 8px;
+        }
+
+        .sidebar-header h2::before {
+            content: '>';
+            margin-right: 0.5rem;
+            color: var(--primary-orange);
+        }
+
+        .sidebar-header h2::after {
+            content: '_';
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu-item {
+            margin-bottom: 8px;
+        }
+
+        .sidebar-menu-link {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            text-decoration: none;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 1px;
+            border: 1px solid transparent;
+            clip-path: polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px);
+        }
+
+        .sidebar-menu-link:hover {
+            color: var(--primary-cyan);
+            border-color: var(--border-color);
+            background: rgba(0, 255, 255, 0.05);
+            text-shadow: 0 0 10px var(--primary-cyan);
+        }
+
+        .sidebar-menu-link.active {
+            background: rgba(249, 115, 22, 0.1);
+            color: var(--primary-orange);
+            border-color: var(--primary-orange);
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
+        }
+
+        .sidebar-menu-icon {
+            font-size: 20px;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* ========== MAIN CONTENT ========== */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 32px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* ========== HEADER ========== */
+        .header {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            padding: 24px 32px;
+            margin-bottom: 32px;
+            clip-path: polygon(20px 0%, 100% 0%, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0% 100%, 0% 20px);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            background: linear-gradient(135deg, var(--primary-orange), var(--primary-pink));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(249, 115, 22, 0.5);
+        }
+
+        /* ========== DIGITAL TWIN VISUALIZATION ========== */
+        .twin-container {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            padding: 32px;
+            margin-bottom: 24px;
+            clip-path: polygon(20px 0%, 100% 0%, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0% 100%, 0% 20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .twin-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-cyan);
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .twin-title::before {
+            content: '>';
+            color: var(--primary-orange);
+        }
+
+        .factory-floor {
+            width: 100%;
+            height: 600px;
+            background: linear-gradient(135deg, #1a0b2e 0%, #2a1a3d 50%, #1a0b2e 100%);
+            border: 2px solid var(--border-color);
+            position: relative;
+            perspective: 1000px;
+            overflow: hidden;
+            clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+        }
+
+        /* Factory Floor Grid */
+        .floor-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            transform: rotateX(60deg) rotateZ(-45deg) scale(1.5);
+            transform-origin: center center;
+        }
+
+        /* Conveyor 1 - Moves UP (Right side) */
+        .conveyor1 {
+            position: absolute;
+            bottom: 80px;
+            right: 15%;
+            width: 100px;
+            height: 300px;
+            background: linear-gradient(180deg, #3a2a4d 0%, #2a1a3d 50%, #3a2a4d 100%);
+            border: 2px solid var(--primary-cyan);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.3);
+            clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0% calc(100% - 10px), 0% 10px);
+        }
+
+        .conveyor1-belt {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                180deg,
+                rgba(0, 255, 255, 0.3) 0px,
+                rgba(0, 255, 255, 0.3) 20px,
+                transparent 20px,
+                transparent 40px
+            );
+            animation: conveyor1Move 3s linear infinite;
+        }
+
+        @keyframes conveyor1Move {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 40px; }
+        }
+
+        .conveyor1.conveyor-stopped .conveyor1-belt {
+            animation: none;
+            opacity: 0.5;
+        }
+
+        /* Product on Conveyor 1 */
+        .product1 {
+            position: absolute;
+            bottom: 20px;
+            right: 15%;
+            width: 60px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-orange), var(--primary-pink));
+            border: 2px solid var(--primary-cyan);
+            clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.6);
+            animation: product1Move 4s linear infinite;
+        }
+
+        @keyframes product1Move {
+            0% { bottom: 20px; }
+            100% { bottom: 320px; }
+        }
+
+        .conveyor1.conveyor-stopped ~ .product1 {
+            animation: none;
+        }
+
+        /* Gantry System - Moves RIGHT to LEFT */
+        .gantry {
+            position: absolute;
+            top: 100px;
+            right: 15%;
+            width: 400px;
+            height: 50px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px solid var(--primary-cyan);
+            box-shadow: 0 5px 20px rgba(0, 255, 255, 0.2);
+            clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0% calc(100% - 10px), 0% 10px);
+        }
+
+        .gantry-carriage {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 70px;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-purple));
+            border: 2px solid var(--primary-cyan);
+            animation: gantryMove 5s linear infinite;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+        }
+
+        @keyframes gantryMove {
+            0% { right: 0%; }
+            100% { right: calc(100% - 70px); }
+        }
+
+        .gantry.gantry-stopped .gantry-carriage {
+            animation: none;
+            opacity: 0.5;
+        }
+
+        /* Product on Gantry */
+        .product-gantry {
+            position: absolute;
+            top: 105px;
+            right: 15%;
+            width: 50px;
+            height: 30px;
+            background: linear-gradient(135deg, var(--primary-orange), var(--primary-pink));
+            border: 2px solid var(--primary-cyan);
+            clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.6);
+            animation: productGantryMove 5s linear infinite;
+        }
+
+        @keyframes productGantryMove {
+            0% { right: 15%; }
+            100% { right: calc(15% + 400px - 70px); }
+        }
+
+        .gantry.gantry-stopped ~ .product-gantry {
+            animation: none;
+        }
+
+        /* Conveyor 2 - Moves DOWN (Left side) */
+        .conveyor2 {
+            position: absolute;
+            top: 150px;
+            left: 15%;
+            width: 100px;
+            height: 300px;
+            background: linear-gradient(0deg, #3a2a4d 0%, #2a1a3d 50%, #3a2a4d 100%);
+            border: 2px solid var(--primary-cyan);
+            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.3);
+            clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0% calc(100% - 10px), 0% 10px);
+        }
+
+        .conveyor2-belt {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 255, 0.3) 0px,
+                rgba(0, 255, 255, 0.3) 20px,
+                transparent 20px,
+                transparent 40px
+            );
+            animation: conveyor2Move 3s linear infinite;
+        }
+
+        @keyframes conveyor2Move {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 -40px; }
+        }
+
+        .conveyor2.conveyor-stopped .conveyor2-belt {
+            animation: none;
+            opacity: 0.5;
+        }
+
+        /* Product on Conveyor 2 */
+        .product2 {
+            position: absolute;
+            top: 150px;
+            left: 15%;
+            width: 60px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-orange), var(--primary-pink));
+            border: 2px solid var(--primary-cyan);
+            clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.6);
+            animation: product2Move 4s linear infinite;
+        }
+
+        @keyframes product2Move {
+            0% { top: 150px; }
+            100% { top: 450px; }
+        }
+
+        .conveyor2.conveyor-stopped ~ .product2 {
+            animation: none;
+        }
+
+        /* Robot Arm - At end of Conveyor 2 */
+        .robot-arm {
+            position: absolute;
+            bottom: 60px;
+            left: 15%;
+            width: 120px;
+            height: 180px;
+            transform-origin: bottom center;
+            animation: robotMove 3s ease-in-out infinite;
+        }
+
+        @keyframes robotMove {
+            0%, 100% { transform: rotate(-15deg); }
+            50% { transform: rotate(15deg); }
+        }
+
+        .robot-base {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-purple), var(--primary-pink));
+            border: 2px solid var(--primary-cyan);
+            clip-path: polygon(10px 0%, 100% 0%, calc(100% - 10px) 100%, 0% 100%);
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.6);
+        }
+
+        .robot-link1 {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 70px;
+            background: linear-gradient(180deg, var(--primary-cyan), var(--primary-purple));
+            box-shadow: 0 0 10px var(--primary-cyan);
+        }
+
+        .robot-link2 {
+            position: absolute;
+            bottom: 110px;
+            left: 50%;
+            transform: translateX(-50%) rotate(45deg);
+            width: 8px;
+            height: 50px;
+            background: linear-gradient(180deg, var(--primary-purple), var(--primary-pink));
+            box-shadow: 0 0 10px var(--primary-pink);
+            transform-origin: bottom center;
+        }
+
+        .robot-end-effector {
+            position: absolute;
+            bottom: 160px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 20px;
+            background: var(--primary-orange);
+            border: 2px solid var(--primary-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 15px var(--primary-orange);
+        }
+
+        .robot-arm.robot-stopped {
+            animation: none;
+            opacity: 0.5;
+        }
+
+        /* Sorting Bay */
+        .sorting-bay {
+            position: absolute;
+            bottom: 20px;
+            left: 25%;
+            width: 150px;
+            height: 60px;
+            background: rgba(0, 255, 255, 0.1);
+            border: 2px dashed var(--primary-cyan);
+            clip-path: polygon(10px 0%, calc(100% - 10px) 0%, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0% calc(100% - 10px), 0% 10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Product in Sorting Bay */
+        .product-sorted {
+            position: absolute;
+            bottom: 30px;
+            left: 25%;
+            width: 50px;
+            height: 35px;
+            background: linear-gradient(135deg, var(--primary-orange), var(--primary-pink));
+            border: 2px solid var(--primary-cyan);
+            clip-path: polygon(6px 0%, 100% 0%, calc(100% - 6px) 100%, 0% 100%);
+            box-shadow: 0 0 15px rgba(249, 115, 22, 0.6);
+            opacity: 0;
+            animation: productSort 6s linear infinite;
+        }
+
+        @keyframes productSort {
+            0%, 85% { opacity: 0; }
+            90%, 100% { opacity: 1; }
+        }
+
+        /* Status Indicators */
+        .status-indicator {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid;
+            animation: statusPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { box-shadow: 0 0 10px currentColor; }
+            50% { box-shadow: 0 0 20px currentColor, 0 0 30px currentColor; }
+        }
+
+        .status-active {
+            background: #00ff00;
+            border-color: #00ff00;
+            color: #00ff00;
+        }
+
+        .status-inactive {
+            background: #ff0000;
+            border-color: #ff0000;
+            color: #ff0000;
+        }
+
+        .status-warning {
+            background: #ffaa00;
+            border-color: #ffaa00;
+            color: #ffaa00;
+        }
+
+        /* Info Panel */
+        .info-panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            padding: 24px;
+            margin-top: 24px;
+            clip-path: polygon(20px 0%, 100% 0%, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0% 100%, 0% 20px);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+        }
+
+        .info-item {
+            padding: 16px;
+            background: rgba(0, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            clip-path: polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px);
+        }
+
+        .info-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .info-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-cyan);
+            text-shadow: 0 0 10px var(--primary-cyan);
+        }
+
+        /* ========== SCROLLBAR ========== */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--darker-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(var(--primary-cyan), var(--primary-pink));
+            border-radius: 4px;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 80px;
+                padding: 15px 10px;
+            }
+
+            .sidebar-header h2,
+            .sidebar-header p,
+            .sidebar-menu-link span:not(.sidebar-menu-icon) {
+                display: none;
+            }
+
+            .main-content {
+                margin-left: 80px;
+                padding: 20px;
+            }
+
+            .sidebar-menu-link {
+                justify-content: center;
+                padding: 14px;
+            }
+
+            .factory-floor {
+                height: 400px;
+            }
+
+            .scanlines::before {
+                display: none;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .cyber-gradient, .grid-lines, .orb, .scanlines::before {
+                animation: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Cyberpunk Background Layers -->
+    <div class="cyber-bg">
+        <div class="cyber-gradient"></div>
+    </div>
+    <div class="grid-overlay">
+        <div class="grid-lines"></div>
+    </div>
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+    <div class="scanlines"></div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2>Smart Factory</h2>
+            <p>Control System</p>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-menu-item">
+                <a href="/" class="sidebar-menu-link">
+                    <span class="sidebar-menu-icon">&#127968;</span>
+                    <span>Home</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="/robot-arm.html" class="sidebar-menu-link">
+                    <span class="sidebar-menu-icon">&#129302;</span>
+                    <span>Robot Arm</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="/smart-factory.html" class="sidebar-menu-link">
+                    <span class="sidebar-menu-icon">&#127981;</span>
+                    <span>Smart Factory</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="/vision-system.html" class="sidebar-menu-link">
+                    <span class="sidebar-menu-icon">&#128065;</span>
+                    <span>Vision System</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="/rfid.html" class="sidebar-menu-link">
+                    <span class="sidebar-menu-icon">&#128225;</span>
+                    <span>RFID</span>
+                </a>
+            </li>
+            <li class="sidebar-menu-item">
+                <a href="/digital-twin.html" class="sidebar-menu-link active">
+                    <span class="sidebar-menu-icon">&#127757;</span>
+                    <span>Digital Twin</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container">
+            <div class="header">
+                <h1>&#127757; Digital Twin</h1>
+            </div>
+
+            <div class="twin-container">
+                <div class="twin-title">Factory Floor Visualization</div>
+                <div class="factory-floor" id="factoryFloor">
+                    <div class="floor-grid"></div>
+                    
+                    <!-- Conveyor 1 - Moves UP (Right side) -->
+                    <div class="conveyor1" id="conveyor1">
+                        <div class="conveyor1-belt"></div>
+                        <div class="status-indicator status-active" style="top: 10px; right: 10px;"></div>
+                    </div>
+                    <div class="product1"></div>
+                    
+                    <!-- Gantry System - Moves RIGHT to LEFT -->
+                    <div class="gantry" id="gantry">
+                        <div class="gantry-carriage"></div>
+                        <div class="status-indicator status-active" style="bottom: -10px; left: 50%; transform: translateX(-50%);"></div>
+                    </div>
+                    <div class="product-gantry"></div>
+                    
+                    <!-- Conveyor 2 - Moves DOWN (Left side) -->
+                    <div class="conveyor2" id="conveyor2">
+                        <div class="conveyor2-belt"></div>
+                        <div class="status-indicator status-active" style="top: 10px; left: 10px;"></div>
+                    </div>
+                    <div class="product2"></div>
+                    
+                    <!-- Robot Arm - At end of Conveyor 2 -->
+                    <div class="robot-arm" id="robotArm">
+                        <div class="robot-base"></div>
+                        <div class="robot-link1"></div>
+                        <div class="robot-link2"></div>
+                        <div class="robot-end-effector"></div>
+                        <div class="status-indicator status-active" style="top: -10px; left: -10px;"></div>
+                    </div>
+                    
+                    <!-- Sorting Bay -->
+                    <div class="sorting-bay">
+                        Sorting Bay
+                    </div>
+                    <div class="product-sorted"></div>
+                </div>
+            </div>
+
+            <div class="info-panel">
+                <div class="twin-title">Real-Time Status</div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Production Counter</div>
+                        <div class="info-value" id="prod-counter">0</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Conveyor Status</div>
+                        <div class="info-value" id="conveyor-status-text">STOPPED</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Robot Arm Status</div>
+                        <div class="info-value" id="robot-status-text">IDLE</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Gantry Status</div>
+                        <div class="info-value" id="gantry-status-text">STOPPED</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">System Efficiency</div>
+                        <div class="info-value" id="efficiency-text">0%</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Quality Rate</div>
+                        <div class="info-value" id="quality-text">0%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update digital twin with real data
+        function updateDigitalTwin() {
+            fetch('/api/smart-factory')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update production counter
+                        document.getElementById('prod-counter').textContent = (data.production_counter || 0).toLocaleString();
+                        
+                        // Update conveyor 1
+                        const conveyor1 = document.getElementById('conveyor1');
+                        const product1 = document.querySelector('.product1');
+                        const conveyorRunning = data.conveyor.running || false;
+                        if (conveyorRunning) {
+                            conveyor1.classList.remove('conveyor-stopped');
+                            if (product1) product1.style.animationPlayState = 'running';
+                            document.getElementById('conveyor-status-text').textContent = 'RUNNING';
+                            document.getElementById('conveyor-status-text').style.color = 'var(--primary-cyan)';
+                            const indicator1 = conveyor1.querySelector('.status-indicator');
+                            indicator1.className = 'status-indicator status-active';
+                        } else {
+                            conveyor1.classList.add('conveyor-stopped');
+                            if (product1) product1.style.animationPlayState = 'paused';
+                            document.getElementById('conveyor-status-text').textContent = 'STOPPED';
+                            document.getElementById('conveyor-status-text').style.color = '#ff0000';
+                            const indicator1 = conveyor1.querySelector('.status-indicator');
+                            indicator1.className = 'status-indicator status-inactive';
+                        }
+                        
+                        // Update conveyor 2 (same status as conveyor 1 for now)
+                        const conveyor2 = document.getElementById('conveyor2');
+                        const product2 = document.querySelector('.product2');
+                        if (conveyorRunning) {
+                            conveyor2.classList.remove('conveyor-stopped');
+                            if (product2) product2.style.animationPlayState = 'running';
+                            const indicator2 = conveyor2.querySelector('.status-indicator');
+                            indicator2.className = 'status-indicator status-active';
+                        } else {
+                            conveyor2.classList.add('conveyor-stopped');
+                            if (product2) product2.style.animationPlayState = 'paused';
+                            const indicator2 = conveyor2.querySelector('.status-indicator');
+                            indicator2.className = 'status-indicator status-inactive';
+                        }
+                        
+                        // Update gantry product
+                        const productGantry = document.querySelector('.product-gantry');
+                        const gantryRunning = data.gantry.running || false;
+                        if (productGantry) {
+                            productGantry.style.animationPlayState = gantryRunning ? 'running' : 'paused';
+                        }
+                        
+                        // Update robot arm
+                        const robotArm = document.getElementById('robotArm');
+                        const robotRunning = data.gantry.running || false;
+                        if (robotRunning) {
+                            robotArm.classList.remove('robot-stopped');
+                            document.getElementById('robot-status-text').textContent = 'RUNNING';
+                            document.getElementById('robot-status-text').style.color = 'var(--primary-cyan)';
+                            const indicator = robotArm.querySelector('.status-indicator');
+                            indicator.className = 'status-indicator status-active';
+                        } else {
+                            robotArm.classList.add('robot-stopped');
+                            document.getElementById('robot-status-text').textContent = 'IDLE';
+                            document.getElementById('robot-status-text').style.color = '#ffaa00';
+                            const indicator = robotArm.querySelector('.status-indicator');
+                            indicator.className = 'status-indicator status-warning';
+                        }
+                        
+                        // Update gantry
+                        const gantry = document.getElementById('gantry');
+                        const gantryRunning = data.gantry.running || false;
+                        if (gantryRunning) {
+                            gantry.classList.remove('gantry-stopped');
+                            document.getElementById('gantry-status-text').textContent = 'RUNNING';
+                            document.getElementById('gantry-status-text').style.color = 'var(--primary-cyan)';
+                            const indicator = gantry.querySelector('.status-indicator');
+                            indicator.className = 'status-indicator status-active';
+                        } else {
+                            gantry.classList.add('gantry-stopped');
+                            document.getElementById('gantry-status-text').textContent = 'STOPPED';
+                            document.getElementById('gantry-status-text').style.color = '#ff0000';
+                            const indicator = gantry.querySelector('.status-indicator');
+                            indicator.className = 'status-indicator status-inactive';
+                        }
+                        
+                        // Update efficiency and quality
+                        document.getElementById('efficiency-text').textContent = (data.efficiency || 0).toFixed(1) + '%';
+                        document.getElementById('quality-text').textContent = (data.quality || 0).toFixed(1) + '%';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching digital twin data:', error);
+                });
+        }
+        
+        // Update immediately on page load
+        updateDigitalTwin();
+        
+        // Update every 2 seconds
+        setInterval(updateDigitalTwin, 2000);
+    </script>
+</body>
+</html>
+

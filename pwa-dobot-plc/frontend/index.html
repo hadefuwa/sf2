@@ -472,6 +472,9 @@
         
         .menu-card.rfid { border-left: 3px solid var(--primary-orange); }
         .menu-card.rfid:hover { box-shadow: 0 20px 50px rgba(249, 115, 22, 0.3); }
+        
+        .menu-card.digital-twin { border-left: 3px solid var(--primary-cyan); }
+        .menu-card.digital-twin:hover { box-shadow: 0 20px 50px rgba(0, 255, 255, 0.3); }
 
         /* ========== SCROLLBAR ========== */
         ::-webkit-scrollbar {
@@ -604,6 +607,12 @@
                     <span>RFID</span>
                 </a>
             </li>
+            <li class="sidebar-menu-item">
+                <a href="/digital-twin.html" class="sidebar-menu-link">
+                    <span class="sidebar-menu-icon">&#127757;</span>
+                    <span>Digital Twin</span>
+                </a>
+            </li>
         </ul>
     </nav>
 
@@ -644,6 +653,13 @@
                     <span class="menu-card-icon">&#128225;</span>
                     <h2>RFID</h2>
                     <p>RFID tag management and tracking. Monitor RFID readers, track inventory, and manage product identification.</p>
+                    <span class="menu-card-arrow">&#8594;</span>
+                </a>
+
+                <a href="/digital-twin.html" class="menu-card digital-twin">
+                    <span class="menu-card-icon">&#127757;</span>
+                    <h2>Digital Twin</h2>
+                    <p>3D factory visualization and real-time monitoring. Interactive digital representation of your smart factory systems.</p>
                     <span class="menu-card-arrow">&#8594;</span>
                 </a>
             </div>
