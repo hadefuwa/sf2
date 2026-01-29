@@ -52,4 +52,6 @@ TIA Portal requires a specific folder structure to recognize custom controls.
 - Select the control on the screen.
 - Go to **Properties** -> **Miscellaneous (or Custom)**.
 - Find the **CameraURL** property.
-- Enter your Raspberry Pi stream URL (e.g., `http://192.168.1.50:8080/stream`).
+- Enter your Raspberry Pi stream URL.
+  - If using the Smart Factory PWA backend: `http://<RASPBERRY_PI_IP>:8080/api/camera/stream`
+  - Example: `http://192.168.1.50:8080/api/camera/stream`

@@ -1,48 +1,120 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Camera Control</title>
+    <title>WinCC Camera Control</title>
     <style>
-        body, html {
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
+        }
+
+        body {
+            background-color: #0f172a;
+            /* Dark slate background */
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        .container {
+            position: relative;
             width: 100%;
             height: 100%;
-            background-color: #000; /* Black background for video */
-            overflow: hidden;
             display: flex;
             justify-content: center;
             align-items: center;
         }
-        
+
+        /* Camera Feed Image */
         #camera-feed {
             max-width: 100%;
             max-height: 100%;
-            object-fit: contain; /* Maintain aspect ratio */
-            display: block;
+            object-fit: contain;
+            /* Ensure aspect ratio is preserved */
+            display: none;
+            /* Hidden by default until URL is set */
+            z-index: 10;
         }
 
-        /* Loading state styling */
-        .loading {
-            color: white;
-            font-family: Arial, sans-serif;
+        /* Loading / Error Message Styling */
+        .status-msg {
             position: absolute;
+            text-align: center;
+            padding: 2rem;
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 12px;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 80%;
+            z-index: 1;
+        }
+
+        .status-msg h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #38bdf8;
+            /* Light blue accent */
+        }
+
+        .status-msg p {
+            color: #94a3b8;
+            font-size: 0.875rem;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 1rem;
+            border: 4px solid rgba(56, 189, 248, 0.3);
+            border-radius: 50%;
+            border-top-color: #38bdf8;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .icon-camera {
+            font-size: 48px;
+            margin-bottom: 1rem;
+            color: #475569;
         }
     </style>
     <!-- 
-      IMPORTANT: You must copy the 'webcc.min.js' file from your Siemens installation 
-      into this folder! It is required for the control to communicate with the HMI.
+      SIEMENS WEBCC LIBRARY 
+      Normally 'webcc.min.js' is generic.
+      This script tag assumes the file is in the same directory.
     -->
     <script src="webcc.min.js"></script>
-</head>
-<body>
-    <div id="loading-msg" class="loading">Waiting for Camera URL...</div>
-    <!-- We use an IMG tag for MJPEG streams (common for Pi cameras). 
-         If using HLS/RTSP, you would need a video player library here. -->
-    <img id="camera-feed" alt="Camera Feed" style="display:none;" />
-
     <script src="code.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Status Message (Loading / Error) -->
+        <div id="loading-msg" class="status-msg">
+            <div class="spinner"></div>
+            <h2>Connecting...</h2>
+            <p>Waiting for Camera URL from WinCC...</p>
+        </div>
+
+        <!-- Camera Image -->
+        <img id="camera-feed" alt="Camera Feed" />
+    </div>
 </body>
+
 </html>
