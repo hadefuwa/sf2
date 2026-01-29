@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "name": "PiCameraControl",
+    "version": "1.0.0",
+    "author": "User",
+    "description": "Custom Web Control to display Raspberry Pi Camera Stream",
+    "guid": "{551BF148-7B62-436A-8A4F-9C1D1E2F3A4B}"
+  },
+  "html": "index.html",
+  "css": [],
+  "properties": {
+    "CameraURL": {
+      "type": "string",
+      "defaultValue": "http://192.168.1.100:8080/stream",
+      "description": "URL of the camera MJPEG stream"
+    }
+  },
+  "events": [],
+  "methods": [],
+  "icon": "assets/icon.png"
+}

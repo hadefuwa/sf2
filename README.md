@@ -61,6 +61,7 @@ This project allows you to:
 ```
 smart-factory/
 ├── pwa-dobot-plc/              # Main application (core working code)
+├── WinCC_Camera_Control/       # Siemens WinCC Unified Custom Web Control
 │   ├── backend/                 # Flask server and robot control
 │   │   ├── app.py              # Main Flask application
 │   │   ├── dobot_client.py     # Dobot robot control (FIXED)
@@ -248,6 +249,7 @@ python3 app.py
 - ✅ **Emergency Stop** - Safety controls for immediate shutdown
 - ✅ **Progressive Web App** - Install and use offline
 - ✅ **Camera Support** - Optional camera integration for vision systems
+- ✅ **WinCC HMI Support** - Custom Web Control to view camera streams on Siemens Unified Panels
 
 ---
 
