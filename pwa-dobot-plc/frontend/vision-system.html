@@ -114,7 +114,11 @@
         <div class="container-fluid">
 
  <!-- PLC Connection and Start Command Status Banner -->
- <div class="content" style="margin-bottom: 24px; padding: 20px 24px;">
+ <div class="row"><div class="col-12">
+ <div class="card"><div class="card-header card-header-info">
+   <h4 class="card-title">Connection Status</h4>
+ </div>
+ <div class="card-body" style="padding: 16px 20px;">
  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
  <!-- PLC Connection Status -->
  <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
@@ -134,10 +138,16 @@
  </div>
  </div>
  </div>
- </div>
+ </div><!-- close card-body -->
+ </div><!-- close card -->
+ </div></div><!-- close col / row -->
 
- <!-- Top-Level Detection Settings -->
- <div class="content">
+ <!-- Camera System -->
+ <div class="row"><div class="col-12">
+ <div class="card"><div class="card-header card-header-purple">
+   <h4 class="card-title">Camera System</h4>
+ </div>
+ <div class="card-body" style="padding: 16px;">
  <div class="camera-section">
  <!-- Camera Viewer -->
  <div class="camera-viewer">
@@ -252,10 +262,18 @@
  <div>Analysis results will appear here</div>
  </div>
  </div>
- </div>
+ </div><!-- close camera-section -->
+ </div><!-- close card-body -->
+ </div><!-- close card -->
+ </div></div><!-- close col / row -->
 
- <!-- Detection Results Section -->
- <div style="margin-top: 24px;">
+ <!-- Detection & Analysis -->
+ <div class="row"><div class="col-12">
+ <div class="card"><div class="card-header card-header-success">
+   <h4 class="card-title">Detection & Analysis</h4>
+ </div>
+ <div class="card-body" style="padding: 16px;">
+ <div>
  <!-- Detection Stats Display -->
  <div id="objectDetectionStats" class="panel" style="display: block;">
  <h4>Detection Results</h4>
@@ -416,10 +434,14 @@
  <!-- Hidden inputs for method -->
  <input type="hidden" id="objectDetectionMethod" value="yolo">
  <input type="hidden" id="continuousObjectDetection" value="true">
- </div>
+ </div><!-- close detection inner wrapper -->
+ </div><!-- close card-body -->
+ </div><!-- close card -->
+ </div></div><!-- close col / row -->
 
  <!-- Serial Monitor Log -->
- <div class="panel" style="margin-top: 24px;">
+ <div class="row"><div class="col-12">
+ <div class="panel" style="margin-top: 0;">
  <h4 style="cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="toggleSerialMonitor()">
  <span>
  <span id="serialMonitorToggleIcon">&#9654;</span> Serial Monitor Log
@@ -444,9 +466,11 @@
  </label>
  </div>
  </div>
- </div>
- 
+ </div><!-- close serial monitor panel -->
+ </div></div><!-- close col / row -->
+
  <!-- Information Panel -->
+ <div class="row"><div class="col-12">
  <div class="info-panel">
  <h3 onclick="toggleInfoPanel()">
  <span id="infoToggleIcon">&#9654;</span>

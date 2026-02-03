@@ -78,6 +78,22 @@ body, * { font-family: 'Plus Jakarta Sans', 'Helvetica', 'Arial', sans-serif !im
 
   /* ──── SIDEBAR PARTICLES ──── */
   --particle-color:     rgba(67, 24, 255, 0.12);
+
+  /* ──── ALIASES (used by vision-system & other pages) ──── */
+  --accent-green:       #01b574;
+  --accent-red:         #e31a1a;
+  --status-error:       #e31a1a;
+  --primary-pink:       #0075ff;
+  --bg-panel:           rgba(6, 11, 40, 0.8);
+  --border-color:       rgba(226, 232, 240, 0.15);
+  --darker-bg:          #060b28;
+  --font-mono:          'Consolas', 'Courier New', monospace;
+  --md-sys-color-primary:              #0075ff;
+  --md-sys-color-on-surface:           #e2e8f0;
+  --md-sys-color-on-surface-variant:   #a0aec0;
+  --md-sys-color-outline-variant:      rgba(226, 232, 240, 0.15);
+  --md-sys-color-surface-container:    rgba(6, 11, 40, 0.6);
+  --md-sys-color-surface-container-low: rgba(6, 11, 40, 0.4);
 }
 
 /* ================================================================
@@ -366,6 +382,10 @@ h1, h2, h3, h4, h5, h6 {
   align-self: end !important;
   margin: 0 !important;
   padding-top: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  min-width: 0 !important;
 }
 .card-stats .card-header .card-title,
 .card-stats .card-header.card-header-icon .card-title,
@@ -377,6 +397,10 @@ h1, h2, h3, h4, h5, h6 {
   margin-top: 2px !important;
   padding-top: 0 !important;
   color: var(--text-white) !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  min-width: 0 !important;
 }
 
 /* reset MD's +.card-category / +.card-title padding-top:10px */
@@ -395,8 +419,10 @@ h1, h2, h3, h4, h5, h6 {
 }
 .card-stats .card-footer .stats,
 .dark-edition .card-stats .card-footer .stats {
+  display: block !important;
   color: var(--text-muted) !important;
   font-size: 12px !important;
+  overflow: hidden !important;
 }
 .card-stats .card-footer .stats i,
 .card-stats .card-footer .stats i.material-icons {
@@ -404,6 +430,10 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-muted) !important;
   vertical-align: middle;
   margin-right: 4px;
+}
+.card-stats .card-footer .stats small {
+  color: var(--text-muted) !important;
+  font-size: 11px !important;
 }
 
 /* dark-edition card-stats category colour override */
@@ -1089,4 +1119,137 @@ h1, h2, h3, h4, h5, h6 {
   background-color: var(--bg-input) !important;
   border-color: var(--border-input) !important;
   color: var(--text-primary) !important;
+}
+
+/* ================================================================
+   PANEL (generic glass card — vision-system, settings sections)
+   ================================================================ */
+.panel {
+  background: linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%);
+  backdrop-filter: blur(120px);
+  -webkit-backdrop-filter: blur(120px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.panel h4 {
+  color: var(--text-primary) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  margin: 0 0 14px 0 !important;
+}
+.panel h5 {
+  color: var(--text-secondary) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  margin: 0 0 10px 0 !important;
+}
+
+/* ================================================================
+   CAMERA SECTION (vision-system layout)
+   ================================================================ */
+.camera-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.camera-viewer {
+  background: linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%);
+  backdrop-filter: blur(120px);
+  -webkit-backdrop-filter: blur(120px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+}
+.camera-viewer h3 {
+  color: var(--text-primary) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  margin: 0 0 10px 0 !important;
+}
+
+.camera-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.camera-frame {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.camera-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.camera-controls .btn {
+  flex: 1 1 auto;
+  min-width: 80px;
+  max-width: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+}
+.camera-controls .btn span:first-child {
+  font-size: 9px !important;
+  letter-spacing: 1px;
+  opacity: 0.7;
+}
+.camera-controls .btn span:last-child {
+  font-size: 11px !important;
+  font-weight: 600;
+}
+
+/* ================================================================
+   INFO PANEL (collapsible how-it-works section)
+   ================================================================ */
+.info-panel {
+  background: linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%);
+  backdrop-filter: blur(120px);
+  -webkit-backdrop-filter: blur(120px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.info-panel h3 {
+  color: var(--text-primary) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+  cursor: pointer;
+  user-select: none;
+}
+.info-panel h4 {
+  color: var(--status-info) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+/* ================================================================
+   SERIAL LOG (vision-system)
+   ================================================================ */
+#serialLog {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  background: var(--bg-log);
+  border: 1px solid var(--border-input);
+  border-radius: 8px;
+  padding: 12px;
+  color: var(--status-success);
+  max-height: 250px;
+  overflow-y: auto;
+  margin-top: 12px;
 }
