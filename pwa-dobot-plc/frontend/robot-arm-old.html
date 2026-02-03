@@ -1,0 +1,1741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+ <meta name="theme-color" content="#1c1b1f">
+ <meta name="description" content="Dobot-PLC Control PWA">
+ <meta name="apple-mobile-web-app-capable" content="yes">
+ <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+ <link rel="manifest" href="/manifest.json">
+ <link rel="icon" type="image/png" href="/icon-192.png">
+ <link rel="apple-touch-icon" href="/icon-512.png">
+ <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+ <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+ <title>Robot Arm - Smart Factory</title>
+ <style>
+ /* ========== MATERIAL DESIGN 3 DARK THEME ========== */
+ :root {
+ /* Material Design 3 Color Tokens - Dark Theme */
+ --md-sys-color-primary: #a8c7fa;
+ --md-sys-color-on-primary: #0b3d8c;
+ --md-sys-color-primary-container: #1e54a4;
+ --md-sys-color-on-primary-container: #d6e3ff;
+
+ --md-sys-color-secondary: #bcc7dc;
+ --md-sys-color-on-secondary: #263141;
+ --md-sys-color-secondary-container: #3c4758;
+ --md-sys-color-on-secondary-container: #d8e3f8;
+
+ --md-sys-color-tertiary: #d7bce0;
+ --md-sys-color-on-tertiary: #3b2948;
+ --md-sys-color-tertiary-container: #533f5f;
+ --md-sys-color-on-tertiary-container: #f3dafd;
+
+ --md-sys-color-error: #ffb4ab;
+ --md-sys-color-on-error: #690005;
+ --md-sys-color-error-container: #93000a;
+ --md-sys-color-on-error-container: #ffdad6;
+
+ --md-sys-color-success: #4caf50;
+ --md-sys-color-on-success: #003912;
+ --md-sys-color-success-container: #005020;
+ --md-sys-color-on-success-container: #7cf77e;
+
+ --md-sys-color-warning: #ffb870;
+ --md-sys-color-on-warning: #4d2800;
+ --md-sys-color-warning-container: #6e3900;
+ --md-sys-color-on-warning-container: #ffdcc5;
+
+ --md-sys-color-background: #1c1b1f;
+ --md-sys-color-on-background: #e4e1e6;
+ --md-sys-color-surface: #1c1b1f;
+ --md-sys-color-on-surface: #e4e1e6;
+ --md-sys-color-surface-variant: #44464f;
+ --md-sys-color-on-surface-variant: #c5c6d0;
+
+ --md-sys-color-outline: #8f9099;
+ --md-sys-color-outline-variant: #44464f;
+
+ --md-sys-color-surface-container-lowest: #0f0e11;
+ --md-sys-color-surface-container-low: #24232a;
+ --md-sys-color-surface-container: #282730;
+ --md-sys-color-surface-container-high: #33323a;
+ --md-sys-color-surface-container-highest: #3e3d45;
+
+ /* Elevation Shadows */
+ --md-sys-elevation-0: none;
+ --md-sys-elevation-1: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+ --md-sys-elevation-2: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+ --md-sys-elevation-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px rgba(0, 0, 0, 0.3);
+ --md-sys-elevation-4: 0px 6px 10px 4px rgba(0, 0, 0, 0.15), 0px 2px 3px rgba(0, 0, 0, 0.3);
+ --md-sys-elevation-5: 0px 8px 12px 6px rgba(0, 0, 0, 0.15), 0px 4px 4px rgba(0, 0, 0, 0.3);
+
+ /* Shape */
+ --md-sys-shape-corner-none: 0px;
+ --md-sys-shape-corner-extra-small: 4px;
+ --md-sys-shape-corner-small: 8px;
+ --md-sys-shape-corner-medium: 12px;
+ --md-sys-shape-corner-large: 16px;
+ --md-sys-shape-corner-extra-large: 28px;
+
+ /* State Layers */
+ --md-sys-state-hover-opacity: 0.08;
+ --md-sys-state-focus-opacity: 0.12;
+ --md-sys-state-pressed-opacity: 0.12;
+
+ /* Typography */
+ --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+ }
+
+ /* ========== RESET & BASE ========== */
+ * {
+ margin: 0;
+ padding: 0;
+ box-sizing: border-box;
+ }
+
+ body {
+ font-family: var(--font-family);
+ background: var(--md-sys-color-background);
+ min-height: 100vh;
+ color: var(--md-sys-color-on-background);
+ line-height: 1.6;
+ overflow-x: hidden;
+ position: relative;
+ }
+
+ /* ========== ANIMATED BACKGROUND ========== */
+ .background-layer {
+ position: fixed;
+ inset: 0;
+ z-index: -1;
+ overflow: hidden;
+ }
+
+ /* Animated Grid Network */
+ .grid-network {
+ position: absolute;
+ inset: 0;
+ background-image:
+ linear-gradient(rgba(14, 165, 233, 0.03) 1.5px, transparent 1.5px),
+ linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1.5px, transparent 1.5px);
+ background-size: 80px 80px;
+ animation: gridFlow 20s linear infinite;
+ }
+
+ @keyframes gridFlow {
+ 0% { transform: translate(0, 0); }
+ 100% { transform: translate(80px, 80px); }
+ }
+
+ /* Animated Connection Nodes */
+ .connection-nodes {
+ position: absolute;
+ inset: 0;
+ }
+
+ .node {
+ position: absolute;
+ width: 8px;
+ height: 8px;
+ background: var(--md-sys-color-primary);
+ border-radius: 50%;
+ box-shadow: 0 0 20px var(--md-sys-color-primary), 0 0 40px var(--md-sys-color-primary);
+ animation: nodePulse 3s ease-in-out infinite;
+ }
+
+ @keyframes nodePulse {
+ 0%, 100% {
+ transform: scale(1);
+ opacity: 1;
+ }
+ 50% {
+ transform: scale(1.5);
+ opacity: 0.7;
+ }
+ }
+
+ /* Data Flow Lines */
+ .data-streams {
+ position: absolute;
+ inset: 0;
+ }
+
+ .stream-line {
+ position: absolute;
+ height: 2px;
+ background: linear-gradient(90deg,
+ transparent 0%,
+ var(--md-sys-color-primary) 50%,
+ transparent 100%
+ );
+ animation: streamFlow 4s linear infinite;
+ opacity: 0.6;
+ }
+
+ @keyframes streamFlow {
+ 0% { transform: translateX(-100%); }
+ 100% { transform: translateX(200%); }
+ }
+
+ /* Subtle Gradient Orbs */
+ .gradient-orb {
+ position: absolute;
+ border-radius: 50%;
+ filter: blur(100px);
+ opacity: 0.15;
+ animation: orbFloat 25s ease-in-out infinite;
+ }
+
+ .gradient-orb.orb-1 {
+ width: 500px;
+ height: 500px;
+ background: radial-gradient(circle, var(--md-sys-color-primary), transparent);
+ top: -200px;
+ left: -200px;
+ }
+
+ .gradient-orb.orb-2 {
+ width: 600px;
+ height: 600px;
+ background: radial-gradient(circle, var(--md-sys-color-secondary), transparent);
+ bottom: -250px;
+ right: -250px;
+ animation-delay: 8s;
+ }
+
+ .gradient-orb.orb-3 {
+ width: 400px;
+ height: 400px;
+ background: radial-gradient(circle, var(--md-sys-color-tertiary), transparent);
+ top: 40%;
+ left: 60%;
+ animation-delay: 16s;
+ }
+
+ @keyframes orbFloat {
+ 0%, 100% { transform: translate(0, 0) scale(1); }
+ 33% { transform: translate(80px, -60px) scale(1.1); }
+ 66% { transform: translate(-60px, 80px) scale(0.95); }
+ }
+
+ /* ========== SIDEBAR ========== */
+ .sidebar {
+ width: 280px;
+ background: var(--md-sys-color-surface-container-low);
+ backdrop-filter: blur(20px);
+ border-right: 1px solid var(--md-sys-color-outline-variant);
+ position: fixed;
+ left: 0;
+ top: 0;
+ height: 100vh;
+ z-index: 1000;
+ display: flex;
+ flex-direction: column;
+ overflow-y: auto;
+ }
+
+ .sidebar-header {
+ padding: 32px 24px;
+ border-bottom: 1px solid var(--md-sys-color-outline-variant);
+ }
+
+ .logo-container {
+ display: flex;
+ align-items: center;
+ gap: 12px;
+ margin-bottom: 8px;
+ }
+
+ .logo-icon {
+ width: 40px;
+ height: 40px;
+ background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
+ border-radius: 8px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-size: 18px;
+ font-weight: 700;
+ color: white;
+ box-shadow: var(--md-sys-elevation-2);
+ }
+
+ .logo-text h2 {
+ font-size: 18px;
+ font-weight: 700;
+ color: var(--md-sys-color-on-surface);
+ letter-spacing: -0.5px;
+ }
+
+ .logo-text p {
+ font-size: 11px;
+ color: var(--md-sys-color-outline);
+ text-transform: uppercase;
+ letter-spacing: 1.5px;
+ font-weight: 600;
+ }
+
+ .status-indicator {
+ display: flex;
+ align-items: center;
+ gap: 8px;
+ padding: 12px 16px;
+ background: var(--md-sys-color-surface-container-highest);
+ border: 1px solid var(--md-sys-color-outline-variant);
+ border-radius: 8px;
+ margin-top: 16px;
+ }
+
+ .status-text {
+ font-size: 12px;
+ color: var(--md-sys-color-on-surface-variant);
+ font-weight: 500;
+ }
+
+ .sidebar-nav {
+ flex: 1;
+ padding: 24px 16px;
+ }
+
+ .nav-section {
+ margin-bottom: 32px;
+ }
+
+ .nav-section-title {
+ font-size: 11px;
+ font-weight: 700;
+ text-transform: uppercase;
+ letter-spacing: 1.5px;
+ color: var(--md-sys-color-outline);
+ margin-bottom: 12px;
+ padding: 0 12px;
+ }
+
+ .nav-menu {
+ list-style: none;
+ }
+
+ .nav-item {
+ margin-bottom: 4px;
+ }
+
+ .nav-link {
+ display: flex;
+ align-items: center;
+ gap: 12px;
+ padding: 12px 16px;
+ text-decoration: none;
+ color: var(--md-sys-color-on-surface-variant);
+ border-radius: 8px;
+ transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+ font-size: 14px;
+ font-weight: 500;
+ position: relative;
+ overflow: hidden;
+ }
+
+ .nav-link::before {
+ content: '';
+ position: absolute;
+ left: 0;
+ top: 0;
+ height: 100%;
+ width: 3px;
+ background: var(--md-sys-color-primary);
+ transform: scaleY(0);
+ transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+ }
+
+ .nav-link:hover {
+ color: var(--md-sys-color-on-surface);
+ background: var(--md-sys-color-surface-container-highest);
+ }
+
+ .nav-link.active {
+ color: var(--md-sys-color-primary);
+ background: var(--md-sys-color-primary-container);
+ }
+
+ .nav-link.active::before {
+ transform: scaleY(1);
+ }
+
+ .nav-icon {
+ width: 20px;
+ height: 20px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-size: 16px;
+ }
+
+ /* ========== MAIN CONTENT ========== */
+ .main-content {
+ margin-left: 280px;
+ min-height: 100vh;
+ padding: 40px;
+ }
+
+ .container {
+ max-width: 1400px;
+ margin: 0 auto;
+ }
+
+ /* ========== HEADER ========== */
+ .header {
+ background: var(--md-sys-color-surface-container);
+ backdrop-filter: blur(20px);
+ border: 1px solid var(--md-sys-color-outline-variant);
+ border-radius: var(--md-sys-shape-corner-large);
+ padding: 32px;
+ margin-bottom: 32px;
+ box-shadow: var(--md-sys-elevation-1);
+ }
+
+ .header-content {
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ flex-wrap: wrap;
+ gap: 20px;
+ }
+
+ .header h1 {
+ font-size: 36px;
+ font-weight: 700;
+ color: var(--md-sys-color-on-surface);
+ letter-spacing: -1px;
+ }
+
+ .connection-status {
+ display: flex;
+ gap: 12px;
+ align-items: center;
+ }
+
+ .status-item {
+ display: flex;
+ align-items: center;
+ gap: 10px;
+ padding: 12px 20px;
+ background: var(--md-sys-color-surface-container-highest);
+ border: 1px solid var(--md-sys-color-outline-variant);
+ border-radius: var(--md-sys-shape-corner-small);
+ font-size: 13px;
+ font-weight: 500;
+ color: var(--md-sys-color-on-surface-variant);
+ }
+
+ .status-dot {
+ width: 8px;
+ height: 8px;
+ background: var(--md-sys-color-error);
+ border-radius: 50%;
+ animation: statusPulse 2s ease-in-out infinite;
+ box-shadow: 0 0 12px var(--md-sys-color-error);
+ }
+
+ .status-dot.connected {
+ background: #4caf50;
+ box-shadow: 0 0 12px #4caf50;
+ }
+
+ @keyframes statusPulse {
+ 0%, 100% { opacity: 1; transform: scale(1); }
+ 50% { opacity: 0.6; transform: scale(1.2); }
+ }
+
+ /* ========== GRID & CARDS ========== */
+ .grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+ gap: 24px;
+ margin-bottom: 24px;
+ }
+
+ .card {
+ background: var(--md-sys-color-surface-container);
+ backdrop-filter: blur(20px);
+ border: 1px solid var(--md-sys-color-outline-variant);
+ border-radius: var(--md-sys-shape-corner-large);
+ padding: 28px;
+ transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+ position: relative;
+ overflow: hidden;
+ box-shadow: var(--md-sys-elevation-1);
+ }
+
+ .card::before {
+ content: '';
+ position: absolute;
+ top: 0;
+ left: 0;
+ right: 0;
+ height: 3px;
+ background: linear-gradient(90deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
+ transform: scaleX(0);
+ transform-origin: left;
+ transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+ }
+
+ .card:hover {
+ transform: translateY(-4px);
+ border-color: var(--md-sys-color-primary);
+ box-shadow: var(--md-sys-elevation-3);
+ }
+
+ .card:hover::before {
+ transform: scaleX(1);
+ }
+
+ .card h2 {
+ font-size: 16px;
+ margin-bottom: 20px;
+ color: var(--md-sys-color-primary);
+ border-bottom: 1px solid var(--md-sys-color-outline-variant);
+ padding-bottom: 12px;
+ font-weight: 700;
+ letter-spacing: 0.5px;
+ }
+
+ .data-row {
+ display: flex;
+ justify-content: space-between;
+ padding: 12px 0;
+ border-bottom: 1px solid var(--md-sys-color-outline-variant);
+ }
+
+ .data-row:last-child {
+ border-bottom: none;
+ }
+
+ .data-label {
+ font-weight: 500;
+ color: var(--md-sys-color-on-surface-variant);
+ letter-spacing: 1px;
+ }
+
+ .data-value {
+ font-weight: 700;
+ color: var(--md-sys-color-on-surface);
+ }
+
+ /* ========== BUTTONS ========== */
+ .btn {
+ padding: 12px 24px;
+ border: 1px solid transparent;
+ font-family: var(--font-family);
+ font-size: 14px;
+ font-weight: 600;
+ cursor: pointer;
+ transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+ width: 100%;
+ margin: 6px 0;
+ border-radius: 8px;
+ letter-spacing: 0.5px;
+ }
+
+ .btn-primary {
+ background: var(--md-sys-color-primary);
+ color: var(--md-sys-color-on-primary);
+ border-color: var(--md-sys-color-primary);
+ box-shadow: var(--md-sys-elevation-1);
+ }
+
+ .btn-primary:hover {
+ box-shadow: var(--md-sys-elevation-2);
+ transform: translateY(-2px);
+ }
+
+ .btn-danger {
+ background: var(--md-sys-color-error);
+ color: var(--md-sys-color-on-error);
+ border-color: var(--md-sys-color-error);
+ box-shadow: var(--md-sys-elevation-1);
+ }
+
+ .btn-danger:hover {
+ box-shadow: var(--md-sys-elevation-2);
+ transform: translateY(-2px);
+ }
+
+ .btn-success {
+ background: #4caf50;
+ color: white;
+ border-color: #4caf50;
+ box-shadow: var(--md-sys-elevation-1);
+ }
+
+ .btn-success:hover {
+ box-shadow: var(--md-sys-elevation-2);
+ transform: translateY(-2px);
+ }
+
+ .btn:disabled {
+ opacity: 0.5;
+ cursor: not-allowed;
+ transform: none !important;
+ }
+
+ .control-grid {
+ display: grid;
+ grid-template-columns: repeat(2, 1fr);
+ gap: 12px;
+ }
+
+ .emergency-stop {
+ grid-column: span 2;
+ }
+
+ /* ========== OFFLINE BANNER ========== */
+ .offline-banner {
+ background: var(--md-sys-color-warning-container);
+ color: var(--md-sys-color-on-warning-container);
+ padding: 14px;
+ text-align: center;
+ margin-bottom: 20px;
+ display: none;
+ border-radius: var(--md-sys-shape-corner-small);
+ font-weight: 600;
+ letter-spacing: 0.5px;
+ box-shadow: var(--md-sys-elevation-1);
+ }
+
+ .offline-banner.show {
+ display: block;
+ }
+
+ /* ========== INPUT FIELDS ========== */
+ input[type="number"],
+ input[type="text"],
+ select {
+ background: var(--md-sys-color-surface-container-highest);
+ border: 1px solid var(--md-sys-color-outline-variant);
+ color: var(--md-sys-color-on-surface);
+ padding: 12px 16px;
+ font-family: var(--font-family);
+ font-size: 14px;
+ font-weight: 500;
+ transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+ border-radius: var(--md-sys-shape-corner-small);
+ }
+
+ input[type="number"]:focus,
+ input[type="text"]:focus,
+ select:focus {
+ outline: none;
+ border-color: var(--md-sys-color-primary);
+ box-shadow: 0 0 0 3px rgba(168, 199, 250, 0.2);
+ background: var(--md-sys-color-surface-container);
+ }
+
+ input::placeholder {
+ color: var(--md-sys-color-outline);
+ opacity: 0.7;
+ }
+
+ label {
+ color: var(--md-sys-color-on-surface-variant);
+ font-weight: 500;
+ letter-spacing: 1px;
+ }
+
+ small {
+ color: var(--md-sys-color-on-surface-variant) !important;
+ opacity: 0.7;
+ }
+
+ /* ========== DEBUG LOG ========== */
+ #debugLog {
+ font-family: 'Consolas', 'Monaco', monospace;
+ font-size: 12px;
+ max-height: 300px;
+ overflow-y: auto;
+ background: var(--md-sys-color-surface-container-lowest);
+ border: 1px solid var(--md-sys-color-outline-variant);
+ border-radius: var(--md-sys-shape-corner-small);
+ padding: 16px;
+ color: #4caf50;
+ }
+
+ /* ========== SETTINGS MODAL ========== */
+ #settingsModal > div {
+ background: var(--md-sys-color-surface-container) !important;
+ backdrop-filter: blur(20px);
+ border: 1px solid var(--md-sys-color-outline-variant);
+ border-radius: var(--md-sys-shape-corner-large);
+ color: var(--md-sys-color-on-surface);
+ }
+
+ #settingsModal h2,
+ #settingsModal h3 {
+ color: var(--md-sys-color-primary) !important;
+ letter-spacing: -0.5px;
+ font-weight: 700;
+ }
+
+ #settingsModal label {
+ color: var(--md-sys-color-on-surface-variant);
+ }
+
+ #settingsModal small {
+ color: var(--md-sys-color-outline) !important;
+ }
+
+ #settingsModal > div > div:last-child {
+ background: var(--md-sys-color-warning-container) !important;
+ border: 1px solid var(--md-sys-color-warning);
+ border-radius: var(--md-sys-shape-corner-small);
+ color: var(--md-sys-color-on-warning-container) !important;
+ }
+
+ /* ========== SCROLLBAR ========== */
+ ::-webkit-scrollbar {
+ width: 8px;
+ height: 8px;
+ }
+
+ ::-webkit-scrollbar-track {
+ background: var(--md-sys-color-surface);
+ }
+
+ ::-webkit-scrollbar-thumb {
+ background: var(--md-sys-color-outline-variant);
+ border-radius: 4px;
+ }
+
+ ::-webkit-scrollbar-thumb:hover {
+ background: var(--md-sys-color-outline);
+ }
+
+ /* ========== RESPONSIVE ========== */
+ @media (max-width: 1024px) {
+ .sidebar {
+ width: 80px;
+ }
+
+ .logo-text,
+ .status-indicator,
+ .nav-section-title,
+ .nav-link span:not(.nav-icon) {
+ display: none;
+ }
+
+ .sidebar-header {
+ padding: 24px 16px;
+ }
+
+ .logo-icon {
+ margin: 0 auto;
+ }
+
+ .nav-link {
+ justify-content: center;
+ padding: 12px;
+ }
+
+ .main-content {
+ margin-left: 80px;
+ padding: 24px;
+ }
+
+ .header-content {
+ flex-direction: column;
+ align-items: flex-start;
+ gap: 20px;
+ }
+
+ .grid {
+ grid-template-columns: 1fr;
+ }
+ }
+
+ @media (max-width: 640px) {
+ .sidebar {
+ transform: translateX(-100%);
+ transition: transform 0.3s ease;
+ }
+
+ .sidebar.mobile-open {
+ transform: translateX(0);
+ }
+
+ .main-content {
+ margin-left: 0;
+ padding: 20px;
+ }
+
+ .header h1 {
+ font-size: 28px;
+ }
+
+ .connection-status {
+ flex-wrap: wrap;
+ }
+
+ .grid {
+ gap: 16px;
+ }
+
+ .card {
+ padding: 20px;
+ }
+ }
+
+ /* Reduced Motion */
+ @media (prefers-reduced-motion: reduce) {
+ * {
+ animation-duration: 0.01ms !important;
+ animation-iteration-count: 1 !important;
+ transition-duration: 0.01ms !important;
+ }
+ }
+ </style>
+</head>
+<body>
+ <!-- Animated Background -->
+ <div class="background-layer">
+ <div class="grid-network"></div>
+ <div class="gradient-orb orb-1"></div>
+ <div class="gradient-orb orb-2"></div>
+ <div class="gradient-orb orb-3"></div>
+ <div class="connection-nodes" id="connectionNodes"></div>
+ <div class="data-streams" id="dataStreams"></div>
+ </div>
+
+ <!-- Sidebar Navigation -->
+ <nav class="sidebar">
+ <div class="sidebar-header">
+ <div class="logo-container">
+ <div class="logo-icon">SF</div>
+ <div class="logo-text">
+ <h2>Smart Factory</h2>
+ <p>IIoT Platform</p>
+ </div>
+ </div>
+ <div class="status-indicator">
+ <div class="status-dot"></div>
+ <span class="status-text">System Online</span>
+ </div>
+ </div>
+
+ <div class="sidebar-nav">
+ <nav class="nav-section">
+ <h3 class="nav-section-title">Navigation</h3>
+ <ul class="nav-menu">
+ <li class="nav-item">
+ <a href="/" class="nav-link">
+ <span class="nav-icon">🏠</span>
+ <span>Dashboard</span>
+ </a>
+ </li>
+ <li class="nav-item">
+ <a href="/robot-arm.html" class="nav-link active">
+ <span class="nav-icon">🤖</span>
+ <span>Robot Arm</span>
+ </a>
+ </li>
+ <li class="nav-item">
+ <a href="/smart-factory.html" class="nav-link">
+ <span class="nav-icon">🏭</span>
+ <span>Smart Factory</span>
+ </a>
+ </li>
+ <li class="nav-item">
+ <a href="/vision-system.html" class="nav-link">
+ <span class="nav-icon">👁</span>
+ <span>Vision System</span>
+ </a>
+ </li>
+ <li class="nav-item">
+ <a href="/rfid.html" class="nav-link">
+ <span class="nav-icon">📡</span>
+ <span>RFID</span>
+ </a>
+ </li>
+ <li class="nav-item">
+ <a href="/digital-twin.html" class="nav-link">
+ <span class="nav-icon">🔄</span>
+ <span>Digital Twin</span>
+ </a>
+ </li>
+ <li class="nav-item">
+ <a href="/plc-diagnostics.html" class="nav-link">
+ <span class="nav-icon">⚙️</span>
+ <span>PLC Diagnostics</span>
+ </a>
+ </li>
+ </ul>
+ </nav>
+ </div>
+ </nav>
+
+ <!-- Main Content -->
+ <div class="main-content">
+ <div class="offline-banner" id="offlineBanner">
+ You are currently offline. Some features may be limited.
+ </div>
+
+ <div class="container">
+ <div class="header">
+ <div class="header-content">
+ <h1>Robot Arm</h1>
+ <div class="connection-status">
+ <div class="status-item">
+ <div class="status-dot" id="plcDot"></div>
+ <span>PLC: <span id="plcStatus">Disconnected</span></span>
+ </div>
+ <div class="status-item">
+ <div class="status-dot" id="dobotDot"></div>
+ <span>Dobot: <span id="dobotStatus">Disconnected</span></span>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <div class="grid">
+ <!-- PLC Status Card -->
+ <div class="card">
+ <h2>PLC Data (DB1)</h2>
+ <div class="data-row">
+ <span class="data-label">Target X:</span>
+ <span class="data-value" id="targetX">--</span>
+ </div>
+ <div class="data-row">
+ <span class="data-label">Target Y:</span>
+ <span class="data-value" id="targetY">--</span>
+ </div>
+ <div class="data-row">
+ <span class="data-label">Target Z:</span>
+ <span class="data-value" id="targetZ">--</span>
+ </div>
+ <div class="data-row">
+ <span class="data-label">Last Update:</span>
+ <span class="data-value" id="lastUpdate">Never</span>
+ </div>
+ </div>
+
+ <!-- Dobot Status Card -->
+ <div class="card">
+ <h2>Dobot Position</h2>
+ <div class="data-row">
+ <span class="data-label">Current X:</span>
+ <span class="data-value" id="currentX">--</span>
+ </div>
+ <div class="data-row">
+ <span class="data-label">Current Y:</span>
+ <span class="data-value" id="currentY">--</span>
+ </div>
+ <div class="data-row">
+ <span class="data-label">Current Z:</span>
+ <span class="data-value" id="currentZ">--</span>
+ </div>
+ <div class="data-row">
+ <span class="data-label">Current R:</span>
+ <span class="data-value" id="currentR">--</span>
+ </div>
+ </div>
+
+ <!-- Control Bits Card -->
+ <div class="card">
+ <h2>Control Bits (M0.x)</h2>
+ <div class="data-row">
+ <span class="data-label">M0.0 Start:</span>
+ <span class="data-value" id="bitStart">OFF</span>
+ </div>
+ <div class="data-row">
+ <span class="data-label">M0.1 Stop:</span>
+ <span class="data-value" id="bitStop">OFF</span>
+ </div>
+ <div class="data-row">
+ <span class="data-label">M0.2 Home:</span>
+ <span class="data-value" id="bitHome">OFF</span>
+ </div>
+ <div class="data-row">
+ <span class="data-label">M0.3 E-Stop:</span>
+ <span class="data-value" id="bitEstop">OFF</span>
+ </div>
+ <div class="data-row">
+ <span class="data-label">M0.4 Suction:</span>
+ <span class="data-value" id="bitSuction">OFF</span>
+ </div>
+ <div class="data-row">
+ <span class="data-label">M0.5 Ready:</span>
+ <span class="data-value" id="bitReady">OFF</span>
+ </div>
+ <div class="data-row">
+ <span class="data-label">M0.6 Busy:</span>
+ <span class="data-value" id="bitBusy">OFF</span>
+ </div>
+ <div class="data-row">
+ <span class="data-label">M0.7 Error:</span>
+ <span class="data-value" id="bitError">OFF</span>
+ </div>
+ </div>
+
+ <!-- Settings Card -->
+ <div class="card">
+ <h2>Settings</h2>
+ <button class="btn btn-primary" onclick="openSettings()">Configure System</button>
+ <button class="btn btn-primary" onclick="debugDobot()" style="margin-top: 8px;">Debug Dobot</button>
+ </div>
+
+ <!-- Manual Control Card -->
+ <div class="card">
+ <h2>Manual Control</h2>
+ <div class="control-grid">
+ <button class="btn btn-success" onclick="homeRobot()">Home</button>
+ <button class="btn btn-primary" onclick="moveToTarget()">&#9654; Move to Target</button>
+ <button class="btn btn-primary" onclick="testRobot()">Test Robot</button>
+ <button class="btn btn-danger emergency-stop" onclick="emergencyStop()">
+ EMERGENCY STOP
+ </button>
+ </div>
+ </div>
+
+ <!-- Manual Position Input Card -->
+ <div class="card">
+ <h2>Manual Position</h2>
+ <label style="display: block; font-weight: 600; margin-bottom: 12px;">Enter Target Coordinates (mm):</label>
+ <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 12px;">
+ <div>
+ <label style="font-size: 12px; display: block; margin-bottom: 6px;">X (mm)</label>
+ <input type="number" id="manualX" placeholder="200" step="0.1" style="width: 100%;">
+ </div>
+ <div>
+ <label style="font-size: 12px; display: block; margin-bottom: 6px;">Y (mm)</label>
+ <input type="number" id="manualY" placeholder="0" step="0.1" style="width: 100%;">
+ </div>
+ <div>
+ <label style="font-size: 12px; display: block; margin-bottom: 6px;">Z (mm)</label>
+ <input type="number" id="manualZ" placeholder="150" step="0.1" style="width: 100%;">
+ </div>
+ <div>
+ <label style="font-size: 12px; display: block; margin-bottom: 6px;">R (degrees)</label>
+ <input type="number" id="manualR" placeholder="0" step="0.1" value="0" style="width: 100%;">
+ </div>
+ </div>
+ <button class="btn btn-primary" onclick="moveToManual()" style="width: 100%; margin-bottom: 10px;">&#9654; Move to Position</button>
+ <button class="btn btn-success" onclick="useCurrentPosition()" style="width: 100%;">Use Current Position</button>
+ <small style="display: block; margin-top: 12px;">
+ Enter X, Y, Z coordinates in millimeters and R (rotation) in degrees
+ </small>
+ </div>
+
+ <!-- Suction & Gripper Control Card -->
+ <div class="card">
+ <h2>End Effector Control</h2>
+ <div class="control-grid">
+ <button class="btn btn-success" onclick="suctionOn()">Pump ON</button>
+ <button class="btn btn-danger" onclick="suctionOff()">Pump OFF</button>
+ <button class="btn btn-primary" onclick="gripperOpen()">Gripper OPEN</button>
+ <button class="btn btn-primary" onclick="gripperClose()">Gripper CLOSE</button>
+ </div>
+ </div>
+
+ <!-- Position Presets Card -->
+ <div class="card">
+ <h2>Position Presets</h2>
+ <div class="control-grid">
+ <button class="btn btn-primary" onclick="moveToPreset('safe')">Safe Position</button>
+ <button class="btn btn-primary" onclick="moveToPreset('pickup')">Pickup Position</button>
+ <button class="btn btn-primary" onclick="moveToPreset('dropoff')">Dropoff Position</button>
+ <button class="btn btn-primary" onclick="moveToPreset('inspect')">Inspect Position</button>
+ </div>
+ <small style="display: block; margin-top: 12px;">
+ Configure preset positions in Settings
+ </small>
+ </div>
+ </div>
+
+ <!-- Debug Log Card -->
+ <div class="card" style="margin-top: 24px;">
+ <h2>Debug Log</h2>
+ <div id="debugLog">
+ <div style="color: var(--text-secondary);">Waiting for events...</div>
+ </div>
+ <button class="btn btn-primary" onclick="clearLog()" style="margin-top: 12px;">Clear Log</button>
+ </div>
+ </div>
+
+ <!-- Settings Modal -->
+ <div id="settingsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; overflow-y: auto;">
+ <div style="max-width: 800px; margin: 50px auto; padding: 30px;">
+ <h2 style="margin-bottom: 24px;">System Settings</h2>
+ 
+ <!-- Dobot Settings -->
+ <h3 style="margin-top: 24px;">Dobot Configuration</h3>
+ <div style="margin-bottom: 18px;">
+ <label style="display: block; font-weight: 600; margin-bottom: 8px;">USB Device Path:</label>
+ <select id="settingDobotUSB" style="width: 100%; padding: 12px;">
+ <option value="">Auto-detect (recommended)</option>
+ </select>
+ <small style="display: block; margin-top: 6px;">Select detected device or use auto-detect</small>
+ </div>
+ <div style="margin-bottom: 18px;">
+ <label style="display: block; font-weight: 600; margin-bottom: 8px;">Home Position (mm):</label>
+ <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+ <input type="number" id="settingHomeX" placeholder="X" style="padding: 12px;">
+ <input type="number" id="settingHomeY" placeholder="Y" style="padding: 12px;">
+ <input type="number" id="settingHomeZ" placeholder="Z" style="padding: 12px;">
+ <input type="number" id="settingHomeR" placeholder="R" style="padding: 12px;">
+ </div>
+ </div>
+
+ <!-- PLC Settings -->
+ <h3 style="margin-top: 30px;">PLC Configuration</h3>
+ <div style="margin-bottom: 18px;">
+ <label style="display: block; font-weight: 600; margin-bottom: 8px;">PLC IP Address:</label>
+ <input type="text" id="settingPLCIP" style="width: 100%; padding: 12px;" placeholder="192.168.1.150">
+ </div>
+ <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 18px;">
+ <div>
+ <label style="display: block; font-weight: 600; margin-bottom: 8px;">Rack:</label>
+ <input type="number" id="settingPLCRack" style="width: 100%; padding: 12px;" placeholder="0">
+ </div>
+ <div>
+ <label style="display: block; font-weight: 600; margin-bottom: 8px;">Slot:</label>
+ <input type="number" id="settingPLCSlot" style="width: 100%; padding: 12px;" placeholder="1">
+ </div>
+ </div>
+ <div style="margin-bottom: 18px;">
+ <label style="display: block; font-weight: 600; margin-bottom: 8px;">Poll Interval (seconds):</label>
+ <input type="number" step="0.1" id="settingPollInterval" style="width: 100%; padding: 12px;" placeholder="2.0">
+ <small style="display: block; margin-top: 6px;">How often to read PLC data (2.0 recommended for S7-1200)</small>
+ </div>
+
+ <!-- Buttons -->
+ <div style="display: flex; gap: 12px; margin-top: 30px;">
+ <button class="btn btn-success" onclick="saveSettings()" style="flex: 1;">Save Settings</button>
+ <button class="btn btn-primary" onclick="restartServer()" style="flex: 1;">Restart Server</button>
+ <button class="btn btn-danger" onclick="closeSettings()" style="flex: 1;">Cancel</button>
+ </div>
+ 
+ <div style="margin-top: 24px; padding: 18px; background: rgba(245, 158, 11, 0.15); border: 1px solid var(--accent-orange); color: var(--accent-orange);">
+ WARN Note: Server restart required for changes to take effect. Click "Save Settings" then restart the app.
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <script>
+ // Service Worker Registration
+ if ('serviceWorker' in navigator) {
+ navigator.serviceWorker.register('/sw.js').then(reg => {
+ console.log('Service Worker registered:', reg);
+ }).catch(err => {
+ console.error('Service Worker registration failed:', err);
+ });
+ }
+
+ // Offline detection
+ window.addEventListener('online', () => {
+ document.getElementById('offlineBanner').classList.remove('show');
+ });
+
+ window.addEventListener('offline', () => {
+ document.getElementById('offlineBanner').classList.add('show');
+ });
+
+ // Polling interval
+ let pollInterval = null;
+ let isPolling = false;
+
+ function updatePLCStatus(connected) {
+ const dot = document.getElementById('plcDot');
+ const text = document.getElementById('plcStatus');
+
+ if (connected) {
+ dot.classList.add('connected');
+ text.textContent = 'Connected';
+ text.style.color = '#10b981';
+ } else {
+ dot.classList.remove('connected');
+ text.textContent = 'Disconnected';
+ text.style.color = '#ef4444';
+ }
+ }
+
+ function updateDobotStatus(connected) {
+ const dot = document.getElementById('dobotDot');
+ const text = document.getElementById('dobotStatus');
+
+ if (connected) {
+ dot.classList.add('connected');
+ text.textContent = 'Connected';
+ text.style.color = '#10b981';
+ } else {
+ dot.classList.remove('connected');
+ text.textContent = 'Disconnected';
+ text.style.color = '#ef4444';
+ }
+ }
+
+ async function fetchAllData() {
+ try {
+ const response = await fetch('/api/data');
+ const data = await response.json();
+
+ updatePLCStatus(data.plc.status.connected);
+
+ document.getElementById('targetX').textContent = data.plc.pose.x?.toFixed(2) || '--';
+ document.getElementById('targetY').textContent = data.plc.pose.y?.toFixed(2) || '--';
+ document.getElementById('targetZ').textContent = data.plc.pose.z?.toFixed(2) || '--';
+
+ const bits = data.plc.control;
+ document.getElementById('bitStart').textContent = bits.start ? 'ON' : 'OFF';
+ document.getElementById('bitStart').style.color = bits.start ? '#10b981' : '#ef4444';
+ document.getElementById('bitStop').textContent = bits.stop ? 'ON' : 'OFF';
+ document.getElementById('bitStop').style.color = bits.stop ? '#10b981' : '#ef4444';
+ document.getElementById('bitHome').textContent = bits.home ? 'ON' : 'OFF';
+ document.getElementById('bitHome').style.color = bits.home ? '#10b981' : '#ef4444';
+ document.getElementById('bitEstop').textContent = bits.estop ? 'ON' : 'OFF';
+ document.getElementById('bitEstop').style.color = bits.estop ? '#ef4444' : '#10b981';
+ document.getElementById('bitSuction').textContent = bits.suction ? 'ON' : 'OFF';
+ document.getElementById('bitSuction').style.color = bits.suction ? '#10b981' : '#ef4444';
+ document.getElementById('bitReady').textContent = bits.ready ? 'ON' : 'OFF';
+ document.getElementById('bitReady').style.color = bits.ready ? '#10b981' : '#ef4444';
+ document.getElementById('bitBusy').textContent = bits.busy ? 'ON' : 'OFF';
+ document.getElementById('bitBusy').style.color = bits.busy ? '#f59e0b' : '#10b981';
+ document.getElementById('bitError').textContent = bits.error ? 'ON' : 'OFF';
+ document.getElementById('bitError').style.color = bits.error ? '#ef4444' : '#10b981';
+
+ updateDobotStatus(data.dobot.status.connected);
+
+ if (data.dobot.status.connected) {
+ document.getElementById('currentX').textContent = data.dobot.pose.x?.toFixed(2) || '--';
+ document.getElementById('currentY').textContent = data.dobot.pose.y?.toFixed(2) || '--';
+ document.getElementById('currentZ').textContent = data.dobot.pose.z?.toFixed(2) || '--';
+ document.getElementById('currentR').textContent = data.dobot.pose.r?.toFixed(2) || '--';
+ } else {
+ document.getElementById('currentX').textContent = '--';
+ document.getElementById('currentY').textContent = '--';
+ document.getElementById('currentZ').textContent = '--';
+ document.getElementById('currentR').textContent = '--';
+ }
+
+ const now = new Date();
+ document.getElementById('lastUpdate').textContent = now.toLocaleTimeString();
+
+ } catch (error) {
+ console.error('Error fetching data:', error);
+ updatePLCStatus(false);
+ updateDobotStatus(false);
+ }
+ }
+
+ async function pollData() {
+ if (isPolling) return;
+ isPolling = true;
+ try {
+ await fetchAllData();
+ } finally {
+ isPolling = false;
+ }
+ }
+
+ function startPolling() {
+ if (pollInterval) return;
+ pollData();
+ pollInterval = setInterval(pollData, 2000);
+ }
+
+ function stopPolling() {
+ if (pollInterval) {
+ clearInterval(pollInterval);
+ pollInterval = null;
+ }
+ }
+
+ function addLog(message, type = 'info') {
+ const logDiv = document.getElementById('debugLog');
+ const timestamp = new Date().toLocaleTimeString();
+ const colors = {
+ 'info': '#0ea5e9',
+ 'success': '#10b981',
+ 'error': '#ef4444',
+ 'warning': '#f59e0b'
+ };
+ const color = colors[type] || colors['info'];
+ 
+ const entry = document.createElement('div');
+ entry.style.color = color;
+ entry.style.marginBottom = '6px';
+ entry.innerHTML = `[${timestamp}] ${message}`;
+ 
+ logDiv.appendChild(entry);
+ logDiv.scrollTop = logDiv.scrollHeight;
+ 
+ while (logDiv.children.length > 50) {
+ logDiv.removeChild(logDiv.firstChild);
+ }
+ }
+
+ function clearLog() {
+ document.getElementById('debugLog').innerHTML = '<div style="color: #94a3b8;">Log cleared...</div>';
+ }
+
+ async function homeRobot() {
+ try {
+ addLog('HM Sending home command...', 'info');
+ const response = await fetch('/api/dobot/home', { method: 'POST' });
+ const data = await response.json();
+ if (data.success) {
+ addLog('Home command sent!', 'success');
+ } else {
+ addLog('Home failed: ' + (data.error || 'Unknown error'), 'error');
+ }
+ } catch (error) {
+ addLog('Error: ' + error.message, 'error');
+ }
+ }
+
+ async function moveToTarget() {
+ const x = parseFloat(document.getElementById('targetX').textContent);
+ const y = parseFloat(document.getElementById('targetY').textContent);
+ const z = parseFloat(document.getElementById('targetZ').textContent);
+
+ if (isNaN(x) || isNaN(y) || isNaN(z)) {
+ addLog('Invalid target position values', 'error');
+ return;
+ }
+
+ try {
+ addLog(` Moving to (${x}, ${y}, ${z})...`, 'info');
+ const response = await fetch('/api/dobot/move', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ x, y, z, r: 0 })
+ });
+ const data = await response.json();
+ if (data.success) {
+ addLog('Move command executed successfully!', 'success');
+ } else {
+ addLog('Move failed: ' + (data.error || 'Unknown error'), 'error');
+ }
+ } catch (error) {
+ addLog('Error: ' + error.message, 'error');
+ }
+ }
+
+ async function moveToManual() {
+ const x = parseFloat(document.getElementById('manualX').value);
+ const y = parseFloat(document.getElementById('manualY').value);
+ const z = parseFloat(document.getElementById('manualZ').value);
+ const r = parseFloat(document.getElementById('manualR').value) || 0;
+
+ if (isNaN(x) || isNaN(y) || isNaN(z)) {
+ addLog('Please enter valid X, Y, Z coordinates', 'error');
+ return;
+ }
+
+ if (Math.abs(x) > 500 || Math.abs(y) > 500 || z < 0 || z > 500) {
+ addLog(` Warning: Position (${x}, ${y}, ${z}) may be outside safe range.`, 'warning');
+ }
+
+ try {
+ addLog(` Moving to manual position (${x}, ${y}, ${z}, ${r})...`, 'info');
+ const response = await fetch('/api/dobot/move', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ x, y, z, r })
+ });
+ const data = await response.json();
+ if (data.success) {
+ addLog('Robot moved successfully!', 'success');
+ } else {
+ addLog('Move failed: ' + (data.error || 'Unknown error'), 'error');
+ }
+ } catch (error) {
+ addLog('Error: ' + error.message, 'error');
+ }
+ }
+
+ function useCurrentPosition() {
+ const x = document.getElementById('currentX').textContent;
+ const y = document.getElementById('currentY').textContent;
+ const z = document.getElementById('currentZ').textContent;
+ const r = document.getElementById('currentR').textContent;
+
+ if (x === '--' || y === '--' || z === '--') {
+ addLog('No current position available. Connect to Dobot first.', 'error');
+ return;
+ }
+
+ document.getElementById('manualX').value = parseFloat(x);
+ document.getElementById('manualY').value = parseFloat(y);
+ document.getElementById('manualZ').value = parseFloat(z);
+ document.getElementById('manualR').value = parseFloat(r);
+
+ addLog('Current position loaded into manual controls', 'success');
+ }
+
+ async function suctionOn() {
+ try {
+ addLog('Turning pump ON...', 'info');
+ const response = await fetch('/api/dobot/suction', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ enable: true })
+ });
+ const data = await response.json();
+ if (data.success) {
+ addLog('Pump activated', 'success');
+ } else {
+ addLog('Failed to activate pump', 'error');
+ }
+ } catch (error) {
+ addLog('Error: ' + error.message, 'error');
+ }
+ }
+
+ async function suctionOff() {
+ try {
+ addLog('Turning pump OFF...', 'info');
+ const response = await fetch('/api/dobot/suction', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ enable: false })
+ });
+ const data = await response.json();
+ if (data.success) {
+ addLog('Pump deactivated', 'success');
+ } else {
+ addLog('Failed to deactivate pump', 'error');
+ }
+ } catch (error) {
+ addLog('Error: ' + error.message, 'error');
+ }
+ }
+
+ async function gripperOpen() {
+ try {
+ addLog('Opening gripper...', 'info');
+ const response = await fetch('/api/dobot/gripper', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ open: true })
+ });
+ const data = await response.json();
+ if (data.success) {
+ addLog('Gripper opened', 'success');
+ } else {
+ addLog('' + (data.message || 'Gripper not available'), 'warning');
+ }
+ } catch (error) {
+ addLog('Error: ' + error.message, 'error');
+ }
+ }
+
+ async function gripperClose() {
+ try {
+ addLog('Closing gripper...', 'info');
+ const response = await fetch('/api/dobot/gripper', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ open: false })
+ });
+ const data = await response.json();
+ if (data.success) {
+ addLog('Gripper closed', 'success');
+ } else {
+ addLog('' + (data.message || 'Gripper not available'), 'warning');
+ }
+ } catch (error) {
+ addLog('Error: ' + error.message, 'error');
+ }
+ }
+
+ async function moveToPreset(preset) {
+ const presets = {
+ safe: { x: 200, y: 0, z: 200, r: 0, name: 'Safe Position' },
+ pickup: { x: 250, y: 50, z: 50, r: 0, name: 'Pickup Position' },
+ dropoff: { x: 250, y: -50, z: 50, r: 0, name: 'Dropoff Position' },
+ inspect: { x: 200, y: 0, z: 100, r: 0, name: 'Inspect Position' }
+ };
+
+ const pos = presets[preset];
+ if (!pos) return;
+
+ try {
+ addLog(` Moving to ${pos.name}...`, 'info');
+ const response = await fetch('/api/dobot/move', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ x: pos.x, y: pos.y, z: pos.z, r: pos.r })
+ });
+ const data = await response.json();
+ if (data.success) {
+ addLog(` Moved to ${pos.name}`, 'success');
+ } else {
+ addLog('Move failed', 'error');
+ }
+ } catch (error) {
+ addLog('Error: ' + error.message, 'error');
+ }
+ }
+
+ async function testRobot() {
+ addLog('Starting robot test sequence...', 'info');
+
+ try {
+ const response = await fetch('/api/dobot/test', { method: 'POST' });
+ const data = await response.json();
+
+ if (data.steps) {
+ data.steps.forEach(step => {
+ const emoji = step.success ? '' : '';
+ const type = step.success ? 'success' : 'error';
+ addLog(`${emoji} Step ${step.step}: ${step.name} - ${step.message}`, type);
+ });
+ }
+
+ if (data.success) {
+ addLog('All tests passed! Robot is working perfectly!', 'success');
+ } else {
+ addLog('Some tests failed. Check details above.', 'warning');
+ }
+ } catch (error) {
+ addLog('Test error: ' + error.message, 'error');
+ }
+ }
+
+ async function emergencyStop() {
+ try {
+ addLog('EMERGENCY STOP TRIGGERED!', 'error');
+ const response = await fetch('/api/emergency-stop', { method: 'POST' });
+ const data = await response.json();
+ if (data.success) {
+ addLog('EMERGENCY STOP activated! All movement stopped.', 'warning');
+ }
+ } catch (error) {
+ addLog('Error: ' + error.message, 'error');
+ }
+ }
+
+ async function openSettings() {
+ try {
+ addLog('Loading settings...', 'info');
+ 
+ const response = await fetch('/api/settings');
+ const settings = await response.json();
+ 
+ const usbSelect = document.getElementById('settingDobotUSB');
+ usbSelect.innerHTML = '<option value="">Auto-detect (recommended)</option>';
+ 
+ if (settings.available_usb_ports && settings.available_usb_ports.length > 0) {
+ addLog(` Found ${settings.available_usb_ports.length} USB devices`, 'success');
+ settings.available_usb_ports.forEach(port => {
+ const option = document.createElement('option');
+ option.value = port;
+ option.textContent = port;
+ usbSelect.appendChild(option);
+ });
+ } else {
+ addLog('No USB devices detected', 'warning');
+ const option = document.createElement('option');
+ option.value = '/dev/ttyACM0';
+ option.textContent = '/dev/ttyACM0 (fallback)';
+ usbSelect.appendChild(option);
+ }
+ 
+ usbSelect.value = settings.dobot.usb_path || '';
+ document.getElementById('settingHomeX').value = settings.dobot.home_position.x;
+ document.getElementById('settingHomeY').value = settings.dobot.home_position.y;
+ document.getElementById('settingHomeZ').value = settings.dobot.home_position.z;
+ document.getElementById('settingHomeR').value = settings.dobot.home_position.r;
+ document.getElementById('settingPLCIP').value = settings.plc.ip;
+ document.getElementById('settingPLCRack').value = settings.plc.rack;
+ document.getElementById('settingPLCSlot').value = settings.plc.slot;
+ document.getElementById('settingPollInterval').value = settings.plc.poll_interval;
+ 
+ document.getElementById('settingsModal').style.display = 'block';
+ } catch (error) {
+ addLog('Error loading settings: ' + error.message, 'error');
+ alert('Error loading settings: ' + error.message);
+ }
+ }
+
+ function closeSettings() {
+ document.getElementById('settingsModal').style.display = 'none';
+ }
+
+ async function saveSettings() {
+ try {
+ const settings = {
+ dobot: {
+ usb_path: document.getElementById('settingDobotUSB').value || '/dev/ttyACM0',
+ home_position: {
+ x: parseFloat(document.getElementById('settingHomeX').value),
+ y: parseFloat(document.getElementById('settingHomeY').value),
+ z: parseFloat(document.getElementById('settingHomeZ').value),
+ r: parseFloat(document.getElementById('settingHomeR').value)
+ },
+ use_usb: true
+ },
+ plc: {
+ ip: document.getElementById('settingPLCIP').value,
+ rack: parseInt(document.getElementById('settingPLCRack').value),
+ slot: parseInt(document.getElementById('settingPLCSlot').value),
+ db_number: 1,
+ poll_interval: parseFloat(document.getElementById('settingPollInterval').value)
+ }
+ };
+
+ addLog('Saving settings...', 'info');
+ const response = await fetch('/api/settings', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify(settings)
+ });
+
+ const result = await response.json();
+ if (result.success) {
+ addLog('Settings saved! Restart server to apply.', 'success');
+ alert('Settings saved successfully!\n\nRestart the server for changes to take effect.');
+ closeSettings();
+ } else {
+ addLog('Failed to save settings', 'error');
+ alert('Failed to save settings: ' + (result.error || 'Unknown error'));
+ }
+ } catch (error) {
+ addLog('Error: ' + error.message, 'error');
+ alert('Error saving settings: ' + error.message);
+ }
+ }
+
+ async function restartServer() {
+ if (!confirm('Are you sure you want to restart the server?')) {
+ return;
+ }
+
+ try {
+ addLog('Restarting server...', 'info');
+ const response = await fetch('/api/restart', { method: 'POST' });
+ const result = await response.json();
+ 
+ if (result.success) {
+ addLog('' + result.message, 'success');
+ alert('' + result.message + '\n\nThe page will reload automatically.');
+ closeSettings();
+ setTimeout(() => {
+ window.location.reload();
+ }, 3000);
+ } else {
+ addLog('Restart failed: ' + (result.error || 'Unknown error'), 'error');
+ alert('Restart failed: ' + (result.error || 'Unknown error'));
+ }
+ } catch (error) {
+ addLog('Error: ' + error.message, 'error');
+ alert('Error restarting server: ' + error.message);
+ }
+ }
+
+ async function debugDobot() {
+ try {
+ addLog('Getting Dobot debug information...', 'info');
+ const response = await fetch('/api/dobot/debug');
+ const debug = await response.json();
+ 
+ addLog('Dobot Debug Information:', 'info');
+ addLog(` pydobot available: ${debug.pydobot_available}`, debug.pydobot_available ? 'success' : 'error');
+ addLog(` USB enabled: ${debug.use_usb}`, debug.use_usb ? 'success' : 'warning');
+ addLog(` Configured port: ${debug.configured_port}`, 'info');
+ addLog(` Actual port: ${debug.actual_port || 'None'}`, debug.actual_port ? 'success' : 'warning');
+ addLog(` Connected: ${debug.connected}`, debug.connected ? 'success' : 'error');
+ addLog(` Last error: ${debug.last_error || 'None'}`, debug.last_error ? 'error' : 'success');
+ 
+ addLog(` Available ports: ${debug.available_ports.length} found`, debug.available_ports.length > 0 ? 'success' : 'error');
+ debug.available_ports.forEach(port => {
+ addLog(` - ${port}`, 'info');
+ });
+ 
+ debug.port_details.forEach(port => {
+ if (port.exists) {
+ addLog(` Port ${port.port}: permissions=${port.permissions}, readable=${port.readable}, writable=${port.writable}`, 
+ (port.readable && port.writable) ? 'success' : 'warning');
+ } else {
+ addLog(` Port ${port.port}: ${port.error}`, 'error');
+ }
+ });
+ 
+ if (!debug.pydobot_available) {
+ addLog('To fix: pip install pydobot', 'info');
+ }
+ if (!debug.connected && debug.available_ports.length === 0) {
+ addLog('Check if Dobot is connected via USB', 'info');
+ }
+ if (!debug.connected && debug.available_ports.length > 0) {
+ addLog('Try: sudo chmod 666 /dev/ttyACM*', 'info');
+ }
+ 
+ } catch (error) {
+ addLog('Debug error: ' + error.message, 'error');
+ }
+ }
+
+ window.addEventListener('load', startPolling);
+ window.addEventListener('beforeunload', stopPolling);
+ document.addEventListener('visibilitychange', () => {
+ if (document.hidden) {
+ stopPolling();
+ } else {
+ startPolling();
+ }
+ });
+
+ // Generate animated connection nodes
+ function generateNodes() {
+ const container = document.getElementById('connectionNodes');
+ if (!container) return;
+
+ const nodeCount = 15;
+ for (let i = 0; i < nodeCount; i++) {
+ const node = document.createElement('div');
+ node.className = 'node';
+ node.style.left = `${Math.random() * 100}%`;
+ node.style.top = `${Math.random() * 100}%`;
+ node.style.animationDelay = `${Math.random() * 3}s`;
+ container.appendChild(node);
+ }
+ }
+
+ // Generate data stream lines
+ function generateDataStreams() {
+ const container = document.getElementById('dataStreams');
+ if (!container) return;
+
+ const streamCount = 8;
+ for (let i = 0; i < streamCount; i++) {
+ const stream = document.createElement('div');
+ stream.className = 'stream-line';
+ stream.style.top = `${(100 / streamCount) * i + Math.random() * 10}%`;
+ stream.style.width = `${200 + Math.random() * 300}px`;
+ stream.style.animationDelay = `${Math.random() * 4}s`;
+ stream.style.animationDuration = `${3 + Math.random() * 3}s`;
+ container.appendChild(stream);
+ }
+ }
+
+ // Initialize background animations
+ generateNodes();
+ generateDataStreams();
+
+ // Regenerate on resize (debounced)
+ let resizeTimer;
+ window.addEventListener('resize', () => {
+ clearTimeout(resizeTimer);
+ resizeTimer = setTimeout(() => {
+ const nodes = document.getElementById('connectionNodes');
+ const streams = document.getElementById('dataStreams');
+ if (nodes) nodes.innerHTML = '';
+ if (streams) streams.innerHTML = '';
+ generateNodes();
+ generateDataStreams();
+ }, 250);
+ });
+ </script>
+</body>
+</html>
