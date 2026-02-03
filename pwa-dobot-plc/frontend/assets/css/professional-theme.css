@@ -5,10 +5,41 @@
    the :root block below. Nothing else needs to touch.
    ================================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+/* ── Self-hosted fonts (Pi has no internet) ── */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('../fonts/PlusJakartaSans-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* ── Self-hosted Material Icons ── */
+@font-face {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../fonts/MaterialIcons-Regular.woff2') format('woff2');
+}
+.material-icons {
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+}
 
 /* global font override */
 body, * { font-family: 'Plus Jakarta Sans', 'Helvetica', 'Arial', sans-serif !important; }
+/* keep material-icons on its own font */
+.material-icons { font-family: 'Material Icons' !important; }
 
 :root {
   /* ──── BACKGROUNDS ──── */
@@ -111,6 +142,7 @@ body.dark-edition,
   width: 32px !important;
   height: 32px !important;
   min-width: 32px !important;
+  max-width: 32px !important;
   border-radius: 12px !important;
   background: rgba(26, 31, 55, 0.8) !important;
   display: flex !important;
@@ -119,6 +151,7 @@ body.dark-edition,
   color: #ffffff !important;
   font-size: 18px !important;
   line-height: 32px !important;
+  overflow: hidden !important;
   transition: background 0.3s ease, box-shadow 0.3s ease !important;
 }
 
@@ -297,6 +330,7 @@ h1, h2, h3, h4, h5, h6 {
   grid-column: 1 !important;
   width: 48px !important;
   height: 48px !important;
+  overflow: hidden !important;
   min-width: 48px !important;
   border-radius: 15px !important;
   background: linear-gradient(195deg, var(--status-info), #0062d6) !important;
