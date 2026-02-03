@@ -1941,14 +1941,18 @@ def generate_frames():
 
 @app.route('/api/camera/stream')
 def camera_stream():
-    """MJPEG video stream endpoint"""
+    """MJPEG video stream endpoint - iFrame embeddable for WinCC Unified"""
     if camera_service is None:
         return jsonify({'error': 'Camera service not initialized'}), 503
     
-    return Response(
+    response = Response(
         generate_frames(),
         mimetype='multipart/x-mixed-replace; boundary=frame'
     )
+    # Allow embedding in iFrames for WinCC Unified HMI panels
+    response.headers['X-Frame-Options'] = 'ALLOWALL'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
 
 @app.route('/api/camera/status', methods=['GET'])
 def camera_status():
