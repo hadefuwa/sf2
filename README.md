@@ -5,6 +5,7 @@ A comprehensive smart factory automation system featuring Dobot Magician robot c
 ## 📋 Table of Contents
 
 - [Quick Start](#-quick-start)
+- [Autostart on Boot](#-autostart-on-boot)
 - [What This Project Does](#-what-this-project-does)
 - [Project Structure](#-project-structure)
 - [Installation](#-installation)
@@ -20,24 +21,151 @@ A comprehensive smart factory automation system featuring Dobot Magician robot c
 
 ## 🚀 Quick Start
 
-### On Raspberry Pi:
+### Already set up — just restart
 
 ```bash
-# Navigate to project directory
-cd ~/smart-factory
-
-# Pull latest changes (if using git)
-git pull origin main
-
-# Go to backend directory
-cd pwa-dobot-plc/backend
-
-# Activate virtual environment (if using one)
+cd ~/sf2/pwa-dobot-plc/backend
 source venv/bin/activate
-
-# Run the application
 python3 app.py
 ```
+
+Open `http://your-pi-ip:8080` in your browser.
+
+---
+
+### Fresh Raspberry Pi — full setup from scratch
+
+Run these steps once on a new Pi. Internet is required for the initial install only.
+
+#### 1. Clone the repo
+
+```bash
+cd ~
+git clone https://github.com/hadefuwa/rpi-dobot.git sf2
+cd sf2
+```
+
+#### 2. Install system packages
+
+```bash
+sudo apt-get update
+sudo apt-get install -y python3-pip python3-venv build-essential
+
+# USB serial access (needed for Dobot)
+sudo usermod -a -G dialout $USER
+```
+
+#### 3. Install Snap7 (PLC communication)
+
+```bash
+cd ~
+wget https://sourceforge.net/projects/snap7/files/1.4.2/snap7-full-1.4.2.tar.gz
+tar -zxvf snap7-full-1.4.2.tar.gz
+cd snap7-full-1.4.2/build/unix
+make -f arm_v7_linux.mk
+sudo cp ../bin/arm_v7-linux/libsnap7.so /usr/lib/
+sudo ldconfig
+```
+
+#### 4. Set up the Python venv and install packages
+
+```bash
+cd ~/sf2/pwa-dobot-plc/backend
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+#### 5. Configure your hardware
+
+Edit `config.json` in the backend folder — update `dobot.port` to match your USB device (`/dev/ttyACM0` or `/dev/ttyACM1` — run `ls /dev/ttyACM*` to check) and `plc.ip` to your PLC's IP address.
+
+#### 6. Test it manually first
+
+```bash
+source venv/bin/activate
+python3 app.py
+```
+
+If you see `Starting Flask server on 0.0.0.0:8080`, open `http://your-pi-ip:8080` and confirm everything works before setting up autostart.
+
+#### 7. Set up autostart on boot
+
+See the [Autostart on Boot](#-autostart-on-boot) section below — choose **systemd** (recommended, no extra software) or **PM2**.
+
+---
+
+### ⚡ Autostart on Boot
+
+Two options. Pick one.
+
+#### Option A — systemd (recommended)
+
+No extra software needed. Create a single service file:
+
+```bash
+sudo nano /etc/systemd/system/smart-factory.service
+```
+
+Paste this content, then save and close:
+
+```ini
+[Unit]
+Description=Smart Factory Backend
+After=network.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi/sf2/pwa-dobot-plc/backend
+ExecStart=/home/pi/sf2/pwa-dobot-plc/backend/venv/bin/python app.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start it:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable smart-factory
+sudo systemctl start smart-factory
+
+# Check it's running
+sudo systemctl status smart-factory
+```
+
+If you also run the vision service separately, create a second service file at `/etc/systemd/system/vision-service.service` with the same structure but `ExecStart=/home/pi/sf2/pwa-dobot-plc/backend/venv/bin/python vision_service.py` and `Environment="VISION_PORT=5001"`.
+
+**Useful commands:**
+```bash
+sudo systemctl status smart-factory      # check status / recent logs
+sudo systemctl restart smart-factory     # restart
+sudo systemctl stop smart-factory        # stop
+sudo journalctl -u smart-factory -n 50   # last 50 log lines
+```
+
+#### Option B — PM2
+
+Requires Node.js (`sudo apt-get install -y nodejs npm`).
+
+```bash
+npm install -g pm2
+
+cd ~/sf2/pwa-dobot-plc
+pm2 start deploy/ecosystem.config.js
+
+# Save and enable on boot
+pm2 save
+pm2 startup
+# Run the sudo command it prints out
+```
+
+Note: the `ecosystem.config.js` paths assume the repo is at `/home/pi/sf2`. Edit the file if your path is different.
 
 **Access the web interface:** Open your browser and visit `http://your-pi-ip-address:8080`
 
@@ -579,6 +707,6 @@ MIT License - Feel free to use and modify!
 
 ---
 
-**Last Updated:** 2025-01-27  
-**Version:** v4.1  
+**Last Updated:** 2026-02-03
+**Version:** v4.2
 **Status:** Production Ready ✅
