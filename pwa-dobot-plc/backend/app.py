@@ -2437,6 +2437,19 @@ def vision_detect():
         logger.error(f"Error in vision detection: {e}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/vision/process-manual', methods=['POST'])
+def vision_process_manual():
+    """Manually trigger vision processing"""
+    logger.info("📸 Manual vision processing triggered via API")
+    
+    # Run the handshake process in a background thread to avoid blocking the API response
+    threading.Thread(target=process_vision_handshake, daemon=True).start()
+    
+    return jsonify({
+        'success': True,
+        'message': 'Vision processing started. Results will be available shortly.'
+    })
+
 @app.route('/api/plc/db123/read', methods=['GET'])
 def read_db123_tags():
     """Read current vision tags from PLC DB123 (ultra-simple version)"""

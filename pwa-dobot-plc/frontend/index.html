@@ -1,1067 +1,786 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#1c1b1f">
-    <meta name="description" content="Smart Factory Control System">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="manifest" href="/manifest.json">
-    <link rel="icon" type="image/png" href="/icon-192.png">
-    <link rel="apple-touch-icon" href="/icon-512.png">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <title>Smart Factory - Control Dashboard</title>
-    <style>
-        /* ========== MATERIAL DESIGN 3 DARK THEME ========== */
-        :root {
-            /* Material Design 3 Color Tokens - Dark Theme */
-            --md-sys-color-primary: #a8c7fa;
-            --md-sys-color-on-primary: #0b3d8c;
-            --md-sys-color-primary-container: #1e54a4;
-            --md-sys-color-on-primary-container: #d6e3ff;
-
-            --md-sys-color-secondary: #bcc7dc;
-            --md-sys-color-on-secondary: #263141;
-            --md-sys-color-secondary-container: #3c4758;
-            --md-sys-color-on-secondary-container: #d8e3f8;
-
-            --md-sys-color-tertiary: #d7bce0;
-            --md-sys-color-on-tertiary: #3b2948;
-            --md-sys-color-tertiary-container: #533f5f;
-            --md-sys-color-on-tertiary-container: #f3dafd;
-
-            --md-sys-color-error: #ffb4ab;
-            --md-sys-color-on-error: #690005;
-            --md-sys-color-error-container: #93000a;
-            --md-sys-color-on-error-container: #ffdad6;
-
-            --md-sys-color-background: #1c1b1f;
-            --md-sys-color-on-background: #e4e1e6;
-            --md-sys-color-surface: #1c1b1f;
-            --md-sys-color-on-surface: #e4e1e6;
-            --md-sys-color-surface-variant: #44464f;
-            --md-sys-color-on-surface-variant: #c5c6d0;
-
-            --md-sys-color-outline: #8f9099;
-            --md-sys-color-outline-variant: #44464f;
-
-            --md-sys-color-surface-container-lowest: #0f0e11;
-            --md-sys-color-surface-container-low: #24232a;
-            --md-sys-color-surface-container: #282730;
-            --md-sys-color-surface-container-high: #33323a;
-            --md-sys-color-surface-container-highest: #3e3d45;
-
-            /* Elevation Shadows */
-            --md-sys-elevation-0: none;
-            --md-sys-elevation-1: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
-            --md-sys-elevation-2: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
-            --md-sys-elevation-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px rgba(0, 0, 0, 0.3);
-            --md-sys-elevation-4: 0px 6px 10px 4px rgba(0, 0, 0, 0.15), 0px 2px 3px rgba(0, 0, 0, 0.3);
-            --md-sys-elevation-5: 0px 8px 12px 6px rgba(0, 0, 0, 0.15), 0px 4px 4px rgba(0, 0, 0, 0.3);
-
-            /* Typography */
-            --md-sys-typescale-display-large-font: 'Roboto', sans-serif;
-            --md-sys-typescale-display-large-size: 57px;
-            --md-sys-typescale-display-large-weight: 400;
-
-            --md-sys-typescale-headline-large-font: 'Roboto', sans-serif;
-            --md-sys-typescale-headline-large-size: 32px;
-            --md-sys-typescale-headline-large-weight: 400;
-
-            --md-sys-typescale-title-large-font: 'Roboto', sans-serif;
-            --md-sys-typescale-title-large-size: 22px;
-            --md-sys-typescale-title-large-weight: 500;
-
-            --md-sys-typescale-body-large-font: 'Roboto', sans-serif;
-            --md-sys-typescale-body-large-size: 16px;
-            --md-sys-typescale-body-large-weight: 400;
-
-            --md-sys-typescale-label-large-font: 'Roboto', sans-serif;
-            --md-sys-typescale-label-large-size: 14px;
-            --md-sys-typescale-label-large-weight: 500;
-
-            /* Shape */
-            --md-sys-shape-corner-none: 0px;
-            --md-sys-shape-corner-extra-small: 4px;
-            --md-sys-shape-corner-small: 8px;
-            --md-sys-shape-corner-medium: 12px;
-            --md-sys-shape-corner-large: 16px;
-            --md-sys-shape-corner-extra-large: 28px;
-
-            /* State Layers */
-            --md-sys-state-hover-opacity: 0.08;
-            --md-sys-state-focus-opacity: 0.12;
-            --md-sys-state-pressed-opacity: 0.12;
-        }
-
-        /* ========== BASE STYLES ========== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: var(--md-sys-typescale-body-large-font);
-            font-size: var(--md-sys-typescale-body-large-size);
-            font-weight: var(--md-sys-typescale-body-large-weight);
-            background: var(--md-sys-color-background);
-            color: var(--md-sys-color-on-background);
-            min-height: 100vh;
-            line-height: 1.5;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-        }
-
-        /* ========== NAVIGATION DRAWER ========== */
-        .md-navigation-drawer {
-            width: 360px;
-            height: 100vh;
-            background: var(--md-sys-color-surface-container-low);
-            position: fixed;
-            left: 0;
-            top: 0;
-            z-index: 1000;
-            display: flex;
-            flex-direction: column;
-            overflow-y: auto;
-        }
-
-        .drawer-header {
-            padding: 24px 28px;
-            border-bottom: 1px solid var(--md-sys-color-outline-variant);
-        }
-
-        .drawer-header-content {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        .app-icon {
-            width: 56px;
-            height: 56px;
-            background: var(--md-sys-color-primary-container);
-            color: var(--md-sys-color-on-primary-container);
-            border-radius: var(--md-sys-shape-corner-large);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            font-weight: 500;
-            box-shadow: var(--md-sys-elevation-1);
-        }
-
-        .app-title {
-            flex: 1;
-        }
-
-        .app-title h1 {
-            font-size: 22px;
-            font-weight: 500;
-            color: var(--md-sys-color-on-surface);
-            margin-bottom: 4px;
-        }
-
-        .app-title p {
-            font-size: 14px;
-            color: var(--md-sys-color-on-surface-variant);
-        }
-
-        .status-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 16px;
-            background: var(--md-sys-color-surface-container-highest);
-            border-radius: var(--md-sys-shape-corner-small);
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--md-sys-color-on-surface-variant);
-        }
-
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            background: #4caf50;
-            border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.1); }
-        }
-
-        .drawer-nav {
-            flex: 1;
-            padding: 8px;
-        }
-
-        .nav-section-label {
-            padding: 8px 28px;
-            font-size: 11px;
-            font-weight: 500;
-            color: var(--md-sys-color-on-surface-variant);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 16px;
-        }
-
-        .nav-item {
-            list-style: none;
-            margin: 4px 12px;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 16px;
-            border-radius: var(--md-sys-shape-corner-extra-large);
-            text-decoration: none;
-            color: var(--md-sys-color-on-surface-variant);
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .nav-link::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: var(--md-sys-color-on-surface);
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .nav-link:hover::before {
-            opacity: var(--md-sys-state-hover-opacity);
-        }
-
-        .nav-link.active {
-            background: var(--md-sys-color-secondary-container);
-            color: var(--md-sys-color-on-secondary-container);
-        }
-
-        .nav-icon {
-            font-family: 'Material Icons';
-            font-size: 24px;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* ========== MAIN CONTENT ========== */
-        .main-content {
-            margin-left: 360px;
-            min-height: 100vh;
-            background: var(--md-sys-color-background);
-        }
-
-        /* Top App Bar */
-        .md-top-app-bar {
-            height: 64px;
-            background: var(--md-sys-color-surface);
-            padding: 0 24px;
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: var(--md-sys-elevation-2);
-        }
-
-        .top-app-bar-title {
-            flex: 1;
-            font-size: 22px;
-            font-weight: 500;
-            color: var(--md-sys-color-on-surface);
-        }
-
-        .md-icon-button {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: none;
-            background: transparent;
-            color: var(--md-sys-color-on-surface-variant);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.2s;
-        }
-
-        .md-icon-button::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: 50%;
-            background: var(--md-sys-color-on-surface);
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .md-icon-button:hover::before {
-            opacity: var(--md-sys-state-hover-opacity);
-        }
-
-        .md-icon-button .material-icons {
-            font-size: 24px;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Content Container */
-        .content-container {
-            padding: 24px;
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-
-        /* Page Header */
-        .page-header {
-            margin-bottom: 32px;
-            padding: 32px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: var(--md-sys-shape-corner-large);
-            box-shadow: 0 4px 20px 0 rgba(0,0,0,.14), 0 7px 10px -5px rgba(102,126,234,.4);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .page-header::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 400px;
-            height: 400px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50%;
-        }
-
-        .page-header h1 {
-            font-size: 32px;
-            font-weight: 300;
-            color: #ffffff;
-            margin-bottom: 8px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .page-header p {
-            font-size: 16px;
-            color: rgba(255,255,255,0.8);
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Stats Row */
-        .stats-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 24px;
-            margin-bottom: 32px;
-        }
-
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: var(--md-sys-shape-corner-large);
-            padding: 24px;
-            box-shadow: 0 4px 20px 0 rgba(0,0,0,.14), 0 7px 10px -5px rgba(102,126,234,.4);
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 120px;
-            height: 120px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50%;
-            transform: translate(40%, -40%);
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 14px 26px -12px rgba(102,126,234,.42), 0 4px 23px 0 rgba(0,0,0,.12), 0 8px 10px -5px rgba(102,126,234,.2);
-        }
-
-        .stat-card:nth-child(2) {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            box-shadow: 0 4px 20px 0 rgba(0,0,0,.14), 0 7px 10px -5px rgba(245,87,108,.4);
-        }
-
-        .stat-card:nth-child(3) {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            box-shadow: 0 4px 20px 0 rgba(0,0,0,.14), 0 7px 10px -5px rgba(79,172,254,.4);
-        }
-
-        .stat-card:nth-child(4) {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            box-shadow: 0 4px 20px 0 rgba(0,0,0,.14), 0 7px 10px -5px rgba(67,233,123,.4);
-        }
-
-        .stat-label {
-            font-size: 14px;
-            color: rgba(255,255,255,0.8);
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 300;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .stat-value {
-            font-size: 36px;
-            font-weight: 300;
-            color: #ffffff;
-            position: relative;
-            z-index: 1;
-        }
-
-        /* Module Cards Grid */
-        .module-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-            gap: 16px;
-        }
-
-        .md-card {
-            background: var(--md-sys-color-surface-container);
-            border-radius: var(--md-sys-shape-corner-large);
-            overflow: hidden;
-            box-shadow: 0 1px 4px 0 rgba(0,0,0,.14);
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            position: relative;
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .md-card::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .md-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 12px 20px -10px rgba(102,126,234,.28), 0 4px 20px 0 rgba(0,0,0,.12), 0 7px 8px -5px rgba(102,126,234,.2);
-        }
-
-        .md-card:hover::after {
-            opacity: 1;
-        }
-
-        .card-header {
-            padding: 20px;
-            display: flex;
-            align-items: flex-start;
-            gap: 16px;
-        }
-
-        .card-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: var(--md-sys-shape-corner-medium);
-            background: var(--md-sys-color-primary-container);
-            color: var(--md-sys-color-on-primary-container);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            flex-shrink: 0;
-        }
-
-        .card-header-content {
-            flex: 1;
-        }
-
-        .card-title {
-            font-size: 22px;
-            font-weight: 500;
-            color: var(--md-sys-color-on-surface);
-            margin-bottom: 4px;
-        }
-
-        .card-subtitle {
-            font-size: 14px;
-            color: var(--md-sys-color-on-surface-variant);
-        }
-
-        .card-content {
-            padding: 0 20px 20px;
-            flex: 1;
-        }
-
-        .card-description {
-            font-size: 14px;
-            line-height: 1.6;
-            color: var(--md-sys-color-on-surface-variant);
-        }
-
-        .card-actions {
-            padding: 8px 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-top: 1px solid var(--md-sys-color-outline-variant);
-        }
-
-        .card-meta {
-            display: flex;
-            gap: 16px;
-            align-items: center;
-        }
-
-        .meta-item {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 12px;
-            color: var(--md-sys-color-on-surface-variant);
-        }
-
-        .meta-item .material-icons {
-            font-size: 16px;
-        }
-
-        /* Material Button */
-        .md-button {
-            height: 40px;
-            padding: 0 24px;
-            border: none;
-            border-radius: var(--md-sys-shape-corner-extra-large);
-            font-family: var(--md-sys-typescale-label-large-font);
-            font-size: var(--md-sys-typescale-label-large-size);
-            font-weight: var(--md-sys-typescale-label-large-weight);
-            cursor: pointer;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .md-button-filled {
-            background: var(--md-sys-color-primary);
-            color: var(--md-sys-color-on-primary);
-            box-shadow: var(--md-sys-elevation-1);
-        }
-
-        .md-button-filled:hover {
-            box-shadow: var(--md-sys-elevation-2);
-        }
-
-        .md-button-text {
-            background: transparent;
-            color: var(--md-sys-color-primary);
-        }
-
-        .md-button-text::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: var(--md-sys-color-primary);
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .md-button-text:hover::before {
-            opacity: var(--md-sys-state-hover-opacity);
-        }
-
-        /* Card Variants */
-        .md-card.card-robot .card-icon {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: #ffffff;
-            box-shadow: 0 4px 20px 0 rgba(0,0,0,.14), 0 7px 10px -5px rgba(102,126,234,.4);
-        }
-
-        .md-card.card-factory .card-icon {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-            color: #ffffff;
-            box-shadow: 0 4px 20px 0 rgba(0,0,0,.14), 0 7px 10px -5px rgba(67,233,123,.4);
-        }
-
-        .md-card.card-vision .card-icon {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-            color: #ffffff;
-            box-shadow: 0 4px 20px 0 rgba(0,0,0,.14), 0 7px 10px -5px rgba(79,172,254,.4);
-        }
-
-        .md-card.card-rfid .card-icon {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-            color: #ffffff;
-            box-shadow: 0 4px 20px 0 rgba(0,0,0,.14), 0 7px 10px -5px rgba(250,112,154,.4);
-        }
-
-        .md-card.card-twin .card-icon {
-            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
-            color: #ffffff;
-            box-shadow: 0 4px 20px 0 rgba(0,0,0,.14), 0 7px 10px -5px rgba(48,207,208,.4);
-        }
-
-        .md-card.card-plc .card-icon {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: #ffffff;
-            box-shadow: 0 4px 20px 0 rgba(0,0,0,.14), 0 7px 10px -5px rgba(245,87,108,.4);
-        }
-
-        /* FAB (Floating Action Button) */
-        .md-fab {
-            width: 56px;
-            height: 56px;
-            border-radius: var(--md-sys-shape-corner-large);
-            background: var(--md-sys-color-primary-container);
-            color: var(--md-sys-color-on-primary-container);
-            border: none;
-            box-shadow: var(--md-sys-elevation-3);
-            cursor: pointer;
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
-        }
-
-        .md-fab:hover {
-            box-shadow: var(--md-sys-elevation-4);
-        }
-
-        .md-fab .material-icons {
-            font-size: 24px;
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--md-sys-color-surface);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--md-sys-color-outline-variant);
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--md-sys-color-outline);
-        }
-
-        /* ========== RESPONSIVE ========== */
-        @media (max-width: 1024px) {
-            .md-navigation-drawer {
-                width: 280px;
-            }
-
-            .main-content {
-                margin-left: 280px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .md-navigation-drawer {
-                transform: translateX(-100%);
-                transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
-            }
-
-            .md-navigation-drawer.open {
-                transform: translateX(0);
-            }
-
-            .main-content {
-                margin-left: 0;
-            }
-
-            .module-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Reduced Motion */
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
-            }
-        }
-    </style>
+  <meta charset="utf-8" />
+  <link rel="apple-touch-icon" sizes="76x76" href="./assets/img/apple-icon.png">
+  <link rel="icon" type="image/png" href="./assets/img/favicon.png">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>Smart Factory - Control Dashboard</title>
+  <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
+  
+  <!-- Fonts and icons -->
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
+  
+  <!-- CSS Files -->
+  <link href="./assets/css/material-dashboard.min.css?v=2.1.0" rel="stylesheet" />
+  <link href="./assets/demo/demo.css" rel="stylesheet" />
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1c1b1f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <style>
+    /* Custom enhancements for Smart Factory */
+    .system-status-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    .system-status-badge.online {
+      background: #4caf50;
+      box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+    }
+
+    .system-status-badge.offline {
+      background: #f44336;
+      box-shadow: 0 0 10px rgba(244, 67, 54, 0.5);
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .card-category {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      opacity: 0.7;
+      margin-bottom: 5px;
+    }
+
+    .card-stats .card-header.card-header-icon i {
+      font-size: 36px;
+    }
+
+    /* Hover effects */
+    .card:hover {
+      transform: translateY(-5px);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* Loading spinner */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .loading-overlay.active {
+      display: flex;
+    }
+
+    .spinner {
+      border: 4px solid rgba(255,255,255,0.1);
+      border-left-color: #9c27b0;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
-<body>
-    <!-- Navigation Drawer -->
-    <nav class="md-navigation-drawer">
-        <div class="drawer-header">
-            <div class="drawer-header-content">
-                <div class="app-icon">SF</div>
-                <div class="app-title">
-                    <h1>Smart Factory</h1>
-                    <p>Control System</p>
-                </div>
-            </div>
-            <div class="status-chip">
-                <span class="status-dot"></span>
-                <span>System Online</span>
-            </div>
-        </div>
 
-        <div class="drawer-nav">
-            <div class="nav-section-label">Navigation</div>
-            <ul>
-                <li class="nav-item">
-                    <a href="/" class="nav-link active">
-                        <span class="nav-icon material-icons">dashboard</span>
-                        <span>Dashboard</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/robot-arm.html" class="nav-link">
-                        <span class="nav-icon material-icons">precision_manufacturing</span>
-                        <span>Robot Arm</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/smart-factory.html" class="nav-link">
-                        <span class="nav-icon material-icons">factory</span>
-                        <span>Smart Factory</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/vision-system.html" class="nav-link">
-                        <span class="nav-icon material-icons">visibility</span>
-                        <span>Vision System</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/rfid.html" class="nav-link">
-                        <span class="nav-icon material-icons">nfc</span>
-                        <span>RFID</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/digital-twin.html" class="nav-link">
-                        <span class="nav-icon material-icons">view_in_ar</span>
-                        <span>Digital Twin</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/plc-diagnostics.html" class="nav-link">
-                        <span class="nav-icon material-icons">settings</span>
-                        <span>PLC Diagnostics</span>
-                    </a>
-                </li>
+<body class="dark-edition">
+  <div class="wrapper ">
+    <div class="sidebar" data-color="purple" data-background-color="black" data-image="./assets/img/sidebar-2.jpg">
+      <div class="logo">
+        <a href="/" class="simple-text logo-normal">
+          <i class="material-icons">factory</i>
+          Smart Factory
+        </a>
+      </div>
+      <div class="sidebar-wrapper">
+        <ul class="nav">
+          <li class="nav-item active">
+            <a class="nav-link" href="/index.html">
+              <i class="material-icons">dashboard</i>
+              <p>Dashboard</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/robot-arm.html">
+              <i class="material-icons">precision_manufacturing</i>
+              <p>Robot Arm</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/vision-system.html">
+              <i class="material-icons">visibility</i>
+              <p>Vision System</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/smart-factory.html">
+              <i class="material-icons">settings</i>
+              <p>Factory Control</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/rfid.html">
+              <i class="material-icons">nfc</i>
+              <p>RFID Tracking</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/digital-twin.html">
+              <i class="material-icons">view_in_ar</i>
+              <p>Digital Twin</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/plc-diagnostics.html">
+              <i class="material-icons">analytics</i>
+              <p>PLC Diagnostics</p>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="main-panel">
+      <!-- Navbar -->
+      <nav class="navbar navbar-expand-lg navbar-transparent navbar-absolute fixed-top ">
+        <div class="container-fluid">
+          <div class="navbar-wrapper">
+            <a class="navbar-brand" href="javascript:;">Control Dashboard</a>
+          </div>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" aria-controls="navigation-index" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="navbar-toggler-icon icon-bar"></span>
+            <span class="navbar-toggler-icon icon-bar"></span>
+            <span class="navbar-toggler-icon icon-bar"></span>
+          </button>
+          <div class="collapse navbar-collapse justify-content-end">
+            <ul class="navbar-nav">
+              <li class="nav-item">
+                <a class="nav-link" href="javascript:;">
+                  <i class="material-icons">notifications</i>
+                  <span class="notification">5</span>
+                  <p class="d-lg-none d-md-block">Notifications</p>
+                </a>
+              </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link" href="javascript:;" id="navbarDropdownProfile" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                  <i class="material-icons">person</i>
+                  <p class="d-lg-none d-md-block">Account</p>
+                </a>
+                <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownProfile">
+                  <a class="dropdown-item" href="#">Profile</a>
+                  <a class="dropdown-item" href="#">Settings</a>
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item" href="#">Log out</a>
+                </div>
+              </li>
             </ul>
+          </div>
         </div>
-    </nav>
+      </nav>
+      <!-- End Navbar -->
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <!-- Top App Bar -->
-        <div class="md-top-app-bar">
-            <button class="md-icon-button" id="menuButton">
-                <span class="material-icons">menu</span>
-            </button>
-            <h2 class="top-app-bar-title">Control Dashboard</h2>
-            <button class="md-icon-button">
-                <span class="material-icons">notifications</span>
-            </button>
-            <button class="md-icon-button">
-                <span class="material-icons">account_circle</span>
-            </button>
-        </div>
-
-        <!-- Content -->
-        <div class="content-container">
-            <!-- Page Header -->
-            <div class="page-header">
-                <h1>Welcome to Smart Factory</h1>
-                <p>Monitor and control your industrial operations in real-time</p>
+      <div class="content">
+        <div class="container-fluid">
+          <!-- System Stats Cards -->
+          <div class="row">
+            <div class="col-lg-3 col-md-6 col-sm-6">
+              <div class="card card-stats">
+                <div class="card-header card-header-warning card-header-icon">
+                  <div class="card-icon">
+                    <i class="material-icons">precision_manufacturing</i>
+                  </div>
+                  <p class="card-category">Robot Status</p>
+                  <h3 class="card-title" id="robot-status">
+                    <span class="text-success">READY</span>
+                  </h3>
+                </div>
+                <div class="card-footer">
+                  <div class="stats">
+                    <i class="material-icons text-success">check_circle</i>
+                    <span id="robot-position">Position: (0, 0, 0)</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <!-- Stats Row -->
-            <div class="stats-row">
-                <div class="stat-card">
-                    <span class="stat-label">Active Modules</span>
-                    <div class="stat-value">6</div>
+            <div class="col-lg-3 col-md-6 col-sm-6">
+              <div class="card card-stats">
+                <div class="card-header card-header-success card-header-icon">
+                  <div class="card-icon">
+                    <i class="material-icons">visibility</i>
+                  </div>
+                  <p class="card-category">Vision System</p>
+                  <h3 class="card-title" id="vision-status">
+                    <span class="text-success">ACTIVE</span>
+                  </h3>
                 </div>
-                <div class="stat-card">
-                    <span class="stat-label">System Status</span>
-                    <div class="stat-value">Online</div>
+                <div class="card-footer">
+                  <div class="stats">
+                    <i class="material-icons">update</i>
+                    <span id="vision-fps">30 FPS</span>
+                  </div>
                 </div>
-                <div class="stat-card">
-                    <span class="stat-label">Uptime</span>
-                    <div class="stat-value">99.8%</div>
-                </div>
-                <div class="stat-card">
-                    <span class="stat-label">Active Tasks</span>
-                    <div class="stat-value">12</div>
-                </div>
+              </div>
             </div>
 
-            <!-- Module Cards -->
-            <div class="module-grid">
-                <!-- Robot Arm -->
-                <a href="/robot-arm.html" class="md-card card-robot">
-                    <div class="card-header">
-                        <div class="card-icon">
-                            <span class="material-icons">precision_manufacturing</span>
-                        </div>
-                        <div class="card-header-content">
-                            <div class="card-title">Robot Arm Control</div>
-                            <div class="card-subtitle">Dobot Magician</div>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <p class="card-description">
-                            Precision control and monitoring of Dobot robotic arm. Manage PLC integration, coordinate positioning, and end effector operations with real-time feedback.
-                        </p>
-                    </div>
-                    <div class="card-actions">
-                        <div class="card-meta">
-                            <span class="meta-item">
-                                <span class="material-icons">fiber_manual_record</span>
-                                <span>Ready</span>
-                            </span>
-                            <span class="meta-item">
-                                <span class="material-icons">bolt</span>
-                                <span>Active</span>
-                            </span>
-                        </div>
-                        <button class="md-icon-button">
-                            <span class="material-icons">arrow_forward</span>
-                        </button>
-                    </div>
-                </a>
-
-                <!-- Smart Factory -->
-                <a href="/smart-factory.html" class="md-card card-factory">
-                    <div class="card-header">
-                        <div class="card-icon">
-                            <span class="material-icons">factory</span>
-                        </div>
-                        <div class="card-header-content">
-                            <div class="card-title">Smart Factory</div>
-                            <div class="card-subtitle">Operations Center</div>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <p class="card-description">
-                            Factory-wide monitoring and control center. Track production metrics, system health, OEE analytics, and manage automated workflows across all operations.
-                        </p>
-                    </div>
-                    <div class="card-actions">
-                        <div class="card-meta">
-                            <span class="meta-item">
-                                <span class="material-icons">fiber_manual_record</span>
-                                <span>Running</span>
-                            </span>
-                            <span class="meta-item">
-                                <span class="material-icons">analytics</span>
-                                <span>Analytics</span>
-                            </span>
-                        </div>
-                        <button class="md-icon-button">
-                            <span class="material-icons">arrow_forward</span>
-                        </button>
-                    </div>
-                </a>
-
-                <!-- Vision System -->
-                <a href="/vision-system.html" class="md-card card-vision">
-                    <div class="card-header">
-                        <div class="card-icon">
-                            <span class="material-icons">visibility</span>
-                        </div>
-                        <div class="card-header-content">
-                            <div class="card-title">Vision System</div>
-                            <div class="card-subtitle">AI Quality Control</div>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <p class="card-description">
-                            AI-powered computer vision for quality inspection. Real-time image processing, defect detection, object recognition, and automated quality control analysis.
-                        </p>
-                    </div>
-                    <div class="card-actions">
-                        <div class="card-meta">
-                            <span class="meta-item">
-                                <span class="material-icons">fiber_manual_record</span>
-                                <span>Scanning</span>
-                            </span>
-                            <span class="meta-item">
-                                <span class="material-icons">verified</span>
-                                <span>98.5% Acc</span>
-                            </span>
-                        </div>
-                        <button class="md-icon-button">
-                            <span class="material-icons">arrow_forward</span>
-                        </button>
-                    </div>
-                </a>
-
-                <!-- RFID -->
-                <a href="/rfid.html" class="md-card card-rfid">
-                    <div class="card-header">
-                        <div class="card-icon">
-                            <span class="material-icons">nfc</span>
-                        </div>
-                        <div class="card-header-content">
-                            <div class="card-title">RFID Tracking</div>
-                            <div class="card-subtitle">Asset Management</div>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <p class="card-description">
-                            Asset and inventory management via RFID. Monitor tag readers, track product movement, manage inventory levels, and maintain full traceability.
-                        </p>
-                    </div>
-                    <div class="card-actions">
-                        <div class="card-meta">
-                            <span class="meta-item">
-                                <span class="material-icons">fiber_manual_record</span>
-                                <span>Connected</span>
-                            </span>
-                            <span class="meta-item">
-                                <span class="material-icons">inventory</span>
-                                <span>Tracking</span>
-                            </span>
-                        </div>
-                        <button class="md-icon-button">
-                            <span class="material-icons">arrow_forward</span>
-                        </button>
-                    </div>
-                </a>
-
-                <!-- Digital Twin -->
-                <a href="/digital-twin.html" class="md-card card-twin">
-                    <div class="card-header">
-                        <div class="card-icon">
-                            <span class="material-icons">view_in_ar</span>
-                        </div>
-                        <div class="card-header-content">
-                            <div class="card-title">Digital Twin</div>
-                            <div class="card-subtitle">3D Visualization</div>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <p class="card-description">
-                            3D virtualization of factory systems. Real-time synchronized digital replica, predictive simulation, and interactive monitoring of physical assets.
-                        </p>
-                    </div>
-                    <div class="card-actions">
-                        <div class="card-meta">
-                            <span class="meta-item">
-                                <span class="material-icons">fiber_manual_record</span>
-                                <span>Synced</span>
-                            </span>
-                            <span class="meta-item">
-                                <span class="material-icons">sync</span>
-                                <span>Real-time</span>
-                            </span>
-                        </div>
-                        <button class="md-icon-button">
-                            <span class="material-icons">arrow_forward</span>
-                        </button>
-                    </div>
-                </a>
-
-                <!-- PLC Diagnostics -->
-                <a href="/plc-diagnostics.html" class="md-card card-plc">
-                    <div class="card-header">
-                        <div class="card-icon">
-                            <span class="material-icons">settings</span>
-                        </div>
-                        <div class="card-header-content">
-                            <div class="card-title">PLC Diagnostics</div>
-                            <div class="card-subtitle">Siemens S7-1200</div>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <p class="card-description">
-                            Siemens PLC monitoring and diagnostics. View data blocks, monitor control bits, track communication status, and troubleshoot industrial automation systems.
-                        </p>
-                    </div>
-                    <div class="card-actions">
-                        <div class="card-meta">
-                            <span class="meta-item">
-                                <span class="material-icons">fiber_manual_record</span>
-                                <span>S7-1200</span>
-                            </span>
-                            <span class="meta-item">
-                                <span class="material-icons">monitor_heart</span>
-                                <span>Monitor</span>
-                            </span>
-                        </div>
-                        <button class="md-icon-button">
-                            <span class="material-icons">arrow_forward</span>
-                        </button>
-                    </div>
-                </a>
+            <div class="col-lg-3 col-md-6 col-sm-6">
+              <div class="card card-stats">
+                <div class="card-header card-header-danger card-header-icon">
+                  <div class="card-icon">
+                    <i class="material-icons">info_outline</i>
+                  </div>
+                  <p class="card-category">PLC Connection</p>
+                  <h3 class="card-title" id="plc-status">
+                    <span id="plc-state">CHECKING...</span>
+                  </h3>
+                </div>
+                <div class="card-footer">
+                  <div class="stats">
+                    <i class="material-icons">router</i>
+                    <span id="plc-ip">192.168.0.1</span>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            <div class="col-lg-3 col-md-6 col-sm-6">
+              <div class="card card-stats">
+                <div class="card-header card-header-info card-header-icon">
+                  <div class="card-icon">
+                    <i class="material-icons">nfc</i>
+                  </div>
+                  <p class="card-category">RFID Scans</p>
+                  <h3 class="card-title" id="rfid-count">
+                    0
+                  </h3>
+                </div>
+                <div class="card-footer">
+                  <div class="stats">
+                    <i class="material-icons">update</i>
+                    Last scan: <span id="rfid-last">Never</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Production Overview -->
+          <div class="row">
+            <div class="col-lg-12 col-md-12">
+              <div class="card">
+                <div class="card-header card-header-primary">
+                  <h4 class="card-title">Production Overview</h4>
+                  <p class="card-category">Real-time factory metrics</p>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-3">
+                      <div class="text-center">
+                        <h5 class="card-category">Units Produced Today</h5>
+                        <h2 class="card-title" id="units-today">0</h2>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="text-center">
+                        <h5 class="card-category">Defects Detected</h5>
+                        <h2 class="card-title text-warning" id="defects-today">0</h2>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="text-center">
+                        <h5 class="card-category">Quality Rate</h5>
+                        <h2 class="card-title text-success" id="quality-rate">100%</h2>
+                      </div>
+                    </div>
+                    <div class="col-md-3">
+                      <div class="text-center">
+                        <h5 class="card-category">Uptime</h5>
+                        <h2 class="card-title text-info" id="uptime">99.8%</h2>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="row">
+            <div class="col-lg-6 col-md-12">
+              <div class="card">
+                <div class="card-header card-header-tabs card-header-primary">
+                  <div class="nav-tabs-navigation">
+                    <div class="nav-tabs-wrapper">
+                      <span class="nav-tabs-title">Quick Actions:</span>
+                      <ul class="nav nav-tabs" data-tabs="tabs">
+                        <li class="nav-item">
+                          <a class="nav-link active" href="#robot" data-toggle="tab">
+                            <i class="material-icons">precision_manufacturing</i> Robot
+                            <div class="ripple-container"></div>
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a class="nav-link" href="#vision" data-toggle="tab">
+                            <i class="material-icons">camera_alt</i> Vision
+                            <div class="ripple-container"></div>
+                          </a>
+                        </li>
+                        <li class="nav-item">
+                          <a class="nav-link" href="#plc" data-toggle="tab">
+                            <i class="material-icons">settings_input_component</i> PLC
+                            <div class="ripple-container"></div>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="tab-content">
+                    <div class="tab-pane active" id="robot">
+                      <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-primary" onclick="homeRobot()">
+                          <i class="material-icons">home</i> Home
+                        </button>
+                        <button class="btn btn-success" onclick="pickPlace()">
+                          <i class="material-icons">vertical_align_center</i> Pick & Place
+                        </button>
+                        <button class="btn btn-danger" onclick="emergencyStop()">
+                          <i class="material-icons">stop</i> E-Stop
+                        </button>
+                        <button class="btn btn-info" onclick="window.location.href='/robot-arm.html'">
+                          <i class="material-icons">open_in_new</i> Full Control
+                        </button>
+                      </div>
+                    </div>
+                    <div class="tab-pane" id="vision">
+                      <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-primary" onclick="startVision()">
+                          <i class="material-icons">play_arrow</i> Start Camera
+                        </button>
+                        <button class="btn btn-warning" onclick="captureImage()">
+                          <i class="material-icons">camera</i> Capture
+                        </button>
+                        <button class="btn btn-success" onclick="runInspection()">
+                          <i class="material-icons">search</i> Inspect
+                        </button>
+                        <button class="btn btn-info" onclick="window.location.href='/vision-system.html'">
+                          <i class="material-icons">open_in_new</i> Full Interface
+                        </button>
+                      </div>
+                    </div>
+                    <div class="tab-pane" id="plc">
+                      <div class="d-flex flex-wrap gap-2">
+                        <button class="btn btn-success" onclick="connectPLC()">
+                          <i class="material-icons">link</i> Connect
+                        </button>
+                        <button class="btn btn-primary" onclick="readPLC()">
+                          <i class="material-icons">refresh</i> Read Status
+                        </button>
+                        <button class="btn btn-warning" onclick="writePLC()">
+                          <i class="material-icons">edit</i> Write Data
+                        </button>
+                        <button class="btn btn-info" onclick="window.location.href='/plc-diagnostics.html'">
+                          <i class="material-icons">open_in_new</i> Diagnostics
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-6 col-md-12">
+              <div class="card">
+                <div class="card-header card-header-warning">
+                  <h4 class="card-title">System Alerts</h4>
+                  <p class="card-category">Recent notifications</p>
+                </div>
+                <div class="card-body table-responsive">
+                  <table class="table table-hover">
+                    <tbody id="alerts-table">
+                      <tr>
+                        <td>
+                          <div class="flag">
+                            <i class="material-icons text-success">check_circle</i>
+                          </div>
+                        </td>
+                        <td>System initialized successfully</td>
+                        <td class="text-right">Just now</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="flag">
+                            <i class="material-icons text-info">info</i>
+                          </div>
+                        </td>
+                        <td>Robot ready for operations</td>
+                        <td class="text-right">1 min ago</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="flag">
+                            <i class="material-icons text-warning">warning</i>
+                          </div>
+                        </td>
+                        <td>PLC connection check required</td>
+                        <td class="text-right">5 min ago</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-    </main>
+      </div>
 
-    <!-- FAB -->
-    <button class="md-fab">
-        <span class="material-icons">add</span>
-    </button>
+      <footer class="footer">
+        <div class="container-fluid">
+          <nav class="float-left">
+            <ul>
+              <li>
+                <a href="/">Smart Factory</a>
+              </li>
+              <li>
+                <a href="/about">About</a>
+              </li>
+            </ul>
+          </nav>
+          <div class="copyright float-right">
+            &copy;
+            <script>document.write(new Date().getFullYear())</script>, Smart Factory Control System
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
 
-    <script>
-        // Mobile menu toggle
-        const menuButton = document.getElementById('menuButton');
-        const drawer = document.querySelector('.md-navigation-drawer');
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="spinner"></div>
+  </div>
 
-        if (menuButton && drawer) {
-            menuButton.addEventListener('click', () => {
-                drawer.classList.toggle('open');
-            });
+  <!--   Core JS Files   -->
+  <script src="./assets/js/core/jquery.min.js"></script>
+  <script src="./assets/js/core/popper.min.js"></script>
+  <script src="./assets/js/core/bootstrap-material-design.min.js"></script>
+  <script src="./assets/js/plugins/perfect-scrollbar.jquery.min.js"></script>
+  <script src="./assets/js/material-dashboard.js?v=2.1.0" type="text/javascript"></script>
+
+  <!-- Custom JavaScript -->
+  <script>
+    // API Configuration
+    const API_BASE = window.location.origin;
+
+    // Status update interval
+    let statusInterval;
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Smart Factory Dashboard initializing...');
+      initializeDashboard();
+      startStatusUpdates();
+      
+      // Service Worker for PWA
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(err => {
+          console.log('ServiceWorker registration failed:', err);
+        });
+      }
+    });
+
+    function initializeDashboard() {
+      updateRobotStatus();
+      updatePLCStatus();
+      updateVisionStatus();
+      updateProductionStats();
+    }
+
+    function startStatusUpdates() {
+      // Update every 2 seconds
+      statusInterval = setInterval(() => {
+        updateRobotStatus();
+        updatePLCStatus();
+        updateVisionStatus();
+      }, 2000);
+    }
+
+    // Robot Control Functions
+    async function homeRobot() {
+      showLoading();
+      try {
+        const response = await fetch(`${API_BASE}/api/robot/home`, {
+          method: 'POST'
+        });
+        const data = await response.json();
+        showNotification('Robot homing...', 'info');
+      } catch (error) {
+        showNotification('Failed to home robot', 'danger');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function pickPlace() {
+      showLoading();
+      try {
+        const response = await fetch(`${API_BASE}/api/robot/pick-place`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pickX: 200,
+            pickY: 0,
+            pickZ: 50,
+            placeX: 200,
+            placeY: 100,
+            placeZ: 50
+          })
+        });
+        const data = await response.json();
+        showNotification('Pick and place operation started', 'success');
+      } catch (error) {
+        showNotification('Failed to execute pick and place', 'danger');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function emergencyStop() {
+      try {
+        const response = await fetch(`${API_BASE}/api/robot/emergency-stop`, {
+          method: 'POST'
+        });
+        showNotification('EMERGENCY STOP ACTIVATED', 'danger');
+      } catch (error) {
+        console.error('E-Stop failed:', error);
+      }
+    }
+
+    // Vision System Functions
+    async function startVision() {
+      showLoading();
+      try {
+        const response = await fetch(`${API_BASE}/api/vision/start`, {
+          method: 'POST'
+        });
+        showNotification('Vision system started', 'success');
+      } catch (error) {
+        showNotification('Failed to start vision system', 'danger');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function captureImage() {
+      showLoading();
+      try {
+        const response = await fetch(`${API_BASE}/api/vision/capture`);
+        const data = await response.json();
+        showNotification('Image captured', 'success');
+      } catch (error) {
+        showNotification('Failed to capture image', 'danger');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function runInspection() {
+      showLoading();
+      try {
+        const response = await fetch(`${API_BASE}/api/vision/inspect`);
+        const data = await response.json();
+        showNotification(`Inspection complete: ${data.result}`, 'info');
+      } catch (error) {
+        showNotification('Inspection failed', 'danger');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // PLC Functions
+    async function connectPLC() {
+      showLoading();
+      try {
+        const response = await fetch(`${API_BASE}/api/plc/connect`, {
+          method: 'POST'
+        });
+        const data = await response.json();
+        if (data.connected) {
+          showNotification('PLC connected', 'success');
         }
+      } catch (error) {
+        showNotification('PLC connection failed', 'danger');
+      } finally {
+        hideLoading();
+      }
+    }
 
-        // Close drawer when clicking outside on mobile
-        if (window.innerWidth <= 768) {
-            document.addEventListener('click', (e) => {
-                if (!drawer.contains(e.target) && !menuButton.contains(e.target)) {
-                    drawer.classList.remove('open');
-                }
-            });
+    async function readPLC() {
+      showLoading();
+      try {
+        const response = await fetch(`${API_BASE}/api/plc/read`);
+        const data = await response.json();
+        showNotification('PLC data read successfully', 'success');
+      } catch (error) {
+        showNotification('Failed to read PLC data', 'danger');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    async function writePLC() {
+      showLoading();
+      try {
+        const response = await fetch(`${API_BASE}/api/plc/write`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: 'DB1.DBW0', value: 100 })
+        });
+        showNotification('Data written to PLC', 'success');
+      } catch (error) {
+        showNotification('Failed to write to PLC', 'danger');
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Status Update Functions
+    async function updateRobotStatus() {
+      try {
+        const response = await fetch(`${API_BASE}/api/robot/status`);
+        const data = await response.json();
+        
+        document.getElementById('robot-status').innerHTML = 
+          `<span class="text-${data.connected ? 'success' : 'danger'}">${data.status}</span>`;
+        
+        if (data.position) {
+          document.getElementById('robot-position').textContent = 
+            `Position: (${data.position.x}, ${data.position.y}, ${data.position.z})`;
         }
-    </script>
+      } catch (error) {
+        document.getElementById('robot-status').innerHTML = 
+          '<span class="text-danger">ERROR</span>';
+      }
+    }
+
+    async function updatePLCStatus() {
+      try {
+        const response = await fetch(`${API_BASE}/api/plc/status`);
+        const data = await response.json();
+        
+        document.getElementById('plc-state').textContent = 
+          data.connected ? 'CONNECTED' : 'DISCONNECTED';
+        document.getElementById('plc-state').className = 
+          data.connected ? 'text-success' : 'text-danger';
+      } catch (error) {
+        document.getElementById('plc-state').textContent = 'ERROR';
+        document.getElementById('plc-state').className = 'text-danger';
+      }
+    }
+
+    async function updateVisionStatus() {
+      try {
+        const response = await fetch(`${API_BASE}/api/vision/status`);
+        const data = await response.json();
+        
+        document.getElementById('vision-status').innerHTML = 
+          `<span class="text-${data.active ? 'success' : 'warning'}">${data.status}</span>`;
+        
+        if (data.fps) {
+          document.getElementById('vision-fps').textContent = `${data.fps} FPS`;
+        }
+      } catch (error) {
+        document.getElementById('vision-status').innerHTML = 
+          '<span class="text-danger">ERROR</span>';
+      }
+    }
+
+    async function updateProductionStats() {
+      try {
+        const response = await fetch(`${API_BASE}/api/stats/production`);
+        const data = await response.json();
+        
+        document.getElementById('units-today').textContent = data.unitsProduced || 0;
+        document.getElementById('defects-today').textContent = data.defects || 0;
+        document.getElementById('quality-rate').textContent = 
+          `${data.qualityRate || 100}%`;
+        document.getElementById('uptime').textContent = `${data.uptime || 99.8}%`;
+      } catch (error) {
+        console.error('Failed to fetch production stats:', error);
+      }
+    }
+
+    // Utility Functions
+    function showLoading() {
+      document.getElementById('loading-overlay').classList.add('active');
+    }
+
+    function hideLoading() {
+      document.getElementById('loading-overlay').classList.remove('active');
+    }
+
+    function showNotification(message, type) {
+      $.notify({
+        icon: "notifications",
+        message: message
+      }, {
+        type: type,
+        timer: 3000,
+        placement: {
+          from: 'top',
+          align: 'right'
+        }
+      });
+    }
+
+    // Add alert to table
+    function addAlert(icon, iconClass, message) {
+      const table = document.getElementById('alerts-table');
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString();
+      
+      const row = table.insertRow(0);
+      row.innerHTML = `
+        <td>
+          <div class="flag">
+            <i class="material-icons ${iconClass}">${icon}</i>
+          </div>
+        </td>
+        <td>${message}</td>
+        <td class="text-right">${timeStr}</td>
+      `;
+      
+      // Keep only last 10 alerts
+      while (table.rows.length > 10) {
+        table.deleteRow(10);
+      }
+    }
+
+    // Cleanup on page unload
+    window.addEventListener('beforeunload', function() {
+      if (statusInterval) {
+        clearInterval(statusInterval);
+      }
+    });
+  </script>
 </body>
 </html>
