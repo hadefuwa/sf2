@@ -56,12 +56,7 @@
               <p>Vision System</p>
             </a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/smart-factory.html">
-              <i class="material-icons">settings</i>
-              <p>Factory Control</p>
-            </a>
-          </li>
+
           <li class="nav-item">
             <a class="nav-link" href="/rfid.html">
               <i class="material-icons">nfc</i>
@@ -209,39 +204,156 @@
             </div>
           </div>
 
-          <!-- Production Overview -->
+          <!-- Factory KPIs -->
           <div class="row">
-            <div class="col-lg-12 col-md-12">
-              <div class="card">
-                <div class="card-header card-header-purple">
-                  <h4 class="card-title">Production Overview</h4>
-                  <p class="card-category">Real-time factory metrics</p>
+            <div class="col-lg-3 col-md-6 col-sm-6">
+              <div class="card card-stats kpi-card">
+                <div class="card-header card-header-info card-header-icon">
+                  <div class="card-icon">
+                    <i class="material-icons">inventory</i>
+                  </div>
+                  <p class="card-category">Production Counter</p>
+                  <h3 class="card-title kpi-value" id="production-counter">0</h3>
                 </div>
-                <div class="card-body">
-                  <div class="row">
-                    <div class="col-md-3">
-                      <div class="text-center">
-                        <h5 class="card-category">Units Produced Today</h5>
-                        <h2 class="card-title" id="units-today">0</h2>
-                      </div>
+                <div class="card-footer">
+                  <div class="stats">
+                    <span class="kpi-status status-normal">Items Processed</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-sm-6">
+              <div class="card card-stats kpi-card">
+                <div class="card-header card-header-success card-header-icon">
+                  <div class="card-icon">
+                    <i class="material-icons">conveyor_belt</i>
+                  </div>
+                  <p class="card-category">Conveyor System</p>
+                  <h3 class="card-title" id="conveyor-status">UNKNOWN</h3>
+                </div>
+                <div class="card-footer">
+                  <div class="stats">
+                    <span class="kpi-status" id="conveyor-status-badge">Unknown</span>
+                    <div><small id="conveyor-subtitle">Status: Checking...</small></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-sm-6">
+              <div class="card card-stats kpi-card">
+                <div class="card-header card-header-warning card-header-icon">
+                  <div class="card-icon">
+                    <i class="material-icons">precision_manufacturing</i>
+                  </div>
+                  <p class="card-category">Gantry Robot</p>
+                  <h3 class="card-title" id="gantry-status">UNKNOWN</h3>
+                </div>
+                <div class="card-footer">
+                  <div class="stats">
+                    <span class="kpi-status" id="gantry-status-badge">Unknown</span>
+                    <div><small id="gantry-subtitle">Status: Checking...</small></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-sm-6">
+              <div class="card card-stats kpi-card">
+                <div class="card-header card-header-primary card-header-icon">
+                  <div class="card-icon">
+                    <i class="material-icons">schedule</i>
+                  </div>
+                  <p class="card-category">System Uptime</p>
+                  <h3 class="card-title kpi-value" id="uptime">0%</h3>
+                </div>
+                <div class="card-footer">
+                  <div class="stats">
+                    <span class="kpi-status status-normal" id="uptime-duration">0h 0m</span>
+                    <div class="progress-bar">
+                      <div class="progress-fill" id="uptime-bar" style="width: 0%"></div>
                     </div>
-                    <div class="col-md-3">
-                      <div class="text-center">
-                        <h5 class="card-category">Defects Detected</h5>
-                        <h2 class="card-title text-warning" id="defects-today">0</h2>
-                      </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-3 col-md-6 col-sm-6">
+              <div class="card card-stats kpi-card">
+                <div class="card-header card-header-danger card-header-icon">
+                  <div class="card-icon">
+                    <i class="material-icons">error_outline</i>
+                  </div>
+                  <p class="card-category">Faults Detected</p>
+                  <h3 class="card-title kpi-value" id="total-faults">0</h3>
+                </div>
+                <div class="card-footer">
+                  <div class="stats">
+                    <span class="kpi-status status-warning">Since Start</span>
+                    <div><small id="fault-subtitle">Monitoring...</small></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-sm-6">
+              <div class="card card-stats kpi-card">
+                <div class="card-header card-header-rose card-header-icon">
+                  <div class="card-icon">
+                    <i class="material-icons">warning</i>
+                  </div>
+                  <p class="card-category">Active Faults</p>
+                  <h3 class="card-title kpi-value" id="active-faults">0</h3>
+                </div>
+                <div class="card-footer">
+                  <div class="stats">
+                    <span class="kpi-status" id="active-faults-badge">None</span>
+                    <div class="fault-list" id="fault-list">
+                      <div class="no-faults">No active faults</div>
                     </div>
-                    <div class="col-md-3">
-                      <div class="text-center">
-                        <h5 class="card-category">Quality Rate</h5>
-                        <h2 class="card-title text-success" id="quality-rate">100%</h2>
-                      </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-sm-6">
+              <div class="card card-stats kpi-card">
+                <div class="card-header card-header-success card-header-icon">
+                  <div class="card-icon">
+                    <i class="material-icons">speed</i>
+                  </div>
+                  <p class="card-category">Efficiency Rate</p>
+                  <h3 class="card-title kpi-value" id="efficiency">0%</h3>
+                </div>
+                <div class="card-footer">
+                  <div class="stats">
+                    <span class="kpi-status status-normal">Target: 95%</span>
+                    <div class="progress-bar">
+                      <div class="progress-fill" id="efficiency-bar" style="width: 0%"></div>
                     </div>
-                    <div class="col-md-3">
-                      <div class="text-center">
-                        <h5 class="card-category">Uptime</h5>
-                        <h2 class="card-title text-info" id="uptime">99.8%</h2>
-                      </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 col-sm-6">
+              <div class="card card-stats kpi-card">
+                <div class="card-header card-header-info card-header-icon">
+                  <div class="card-icon">
+                    <i class="material-icons">verified</i>
+                  </div>
+                  <p class="card-category">Quality Control</p>
+                  <h3 class="card-title kpi-value" id="quality">0%</h3>
+                </div>
+                <div class="card-footer">
+                  <div class="stats">
+                    <span class="kpi-status status-normal">Pass Rate</span>
+                    <div><small id="quality-subtitle">Defects: 0 items</small></div>
+                    <div class="progress-bar">
+                      <div class="progress-fill" id="quality-bar" style="width: 0%"></div>
                     </div>
                   </div>
                 </div>
@@ -439,7 +551,7 @@
       updateRobotStatus();
       updatePLCStatus();
       updateVisionStatus();
-      updateProductionStats();
+      updateKPIs();
     }
 
     function startStatusUpdates() {
@@ -448,6 +560,7 @@
         updateRobotStatus();
         updatePLCStatus();
         updateVisionStatus();
+        updateKPIs();
       }, 2000);
     }
 
@@ -641,9 +754,71 @@
       }
     }
 
-    async function updateProductionStats() {
-      // Stats are static - no backend endpoint yet
-      // Future: integrate with /api/smart-factory for real data
+    function updateKPIs() {
+      fetch('/api/smart-factory')
+        .then(response => response.json())
+        .then(data => {
+          if (!data.success) throw new Error(data.error);
+
+          document.getElementById('production-counter').textContent = (data.production_counter || 0).toLocaleString();
+
+          // Conveyor
+          document.getElementById('conveyor-status').textContent = data.conveyor.status || 'UNKNOWN';
+          const conveyorBadge = document.getElementById('conveyor-status-badge');
+          conveyorBadge.textContent = data.conveyor.running ? 'Active' : 'Inactive';
+          conveyorBadge.className = 'kpi-status ' + (data.conveyor.running ? 'status-running' : 'status-stopped');
+          document.getElementById('conveyor-subtitle').textContent = data.conveyor.running ? 'System Active' : 'System Stopped';
+
+          // Gantry
+          document.getElementById('gantry-status').textContent = data.gantry.status || 'UNKNOWN';
+          const gantryBadge = document.getElementById('gantry-status-badge');
+          if (data.gantry.running) {
+            gantryBadge.textContent = 'Active';
+            gantryBadge.className = 'kpi-status status-running';
+          } else if (data.gantry.connected) {
+            gantryBadge.textContent = 'Connected';
+            gantryBadge.className = 'kpi-status status-normal';
+          } else {
+            gantryBadge.textContent = 'Disconnected';
+            gantryBadge.className = 'kpi-status status-stopped';
+          }
+          document.getElementById('gantry-subtitle').textContent =
+            data.gantry.running ? 'Cycle Active' : (data.gantry.connected ? 'Standby' : 'Not Connected');
+
+          // Uptime
+          document.getElementById('uptime').textContent = (data.uptime.percent || 0).toFixed(1) + '%';
+          document.getElementById('uptime-duration').textContent = data.uptime.duration || '0h 0m';
+          document.getElementById('uptime-bar').style.width = (data.uptime.percent || 0).toFixed(1) + '%';
+
+          // Faults
+          const totalFaults = data.faults.detected || 0;
+          const activeFaults = data.faults.active || 0;
+          document.getElementById('total-faults').textContent = totalFaults;
+          document.getElementById('active-faults').textContent = activeFaults;
+          document.getElementById('fault-subtitle').textContent = totalFaults > 0 ? `Total defects: ${totalFaults}` : 'No defects detected';
+
+          const activeFaultsBadge = document.getElementById('active-faults-badge');
+          const faultList = document.getElementById('fault-list');
+          if (activeFaults > 0 || data.faults.fault_detected) {
+            activeFaultsBadge.textContent = 'Critical';
+            activeFaultsBadge.className = 'kpi-status status-stopped';
+            faultList.innerHTML = '<div class="fault-item"><div class="fault-indicator"></div><div class="fault-text">Defect detected in production</div></div>';
+          } else {
+            activeFaultsBadge.textContent = 'None';
+            activeFaultsBadge.className = 'kpi-status status-normal';
+            faultList.innerHTML = '<div class="no-faults">No active faults</div>';
+          }
+
+          // Efficiency & Quality
+          document.getElementById('efficiency').textContent = (data.efficiency || 0).toFixed(1) + '%';
+          document.getElementById('efficiency-bar').style.width = (data.efficiency || 0).toFixed(1) + '%';
+          document.getElementById('quality').textContent = (data.quality || 0).toFixed(1) + '%';
+          document.getElementById('quality-bar').style.width = (data.quality || 0).toFixed(1) + '%';
+          document.getElementById('quality-subtitle').textContent = `Defects: ${totalFaults} items`;
+        })
+        .catch(error => {
+          console.error('Error fetching smart factory data:', error);
+        });
     }
 
     // Utility Functions
