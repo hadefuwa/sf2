@@ -1,844 +1,1030 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0f051a">
-    <meta name="description" content="Smart Factory Control">
-    <title>Smart Factory - Control System</title>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        /* ========== CSS VARIABLES - NEXUS FLOW ========== */
-        :root {
-            --primary-cyan: #00ffff;
-            --primary-pink: #ff00ff;
-            --primary-purple: #7c3aed;
-            --primary-orange: #f97316;
-            --secondary-amber: #fbbf24;
-            --dark-bg: #1a0b2e;
-            --darker-bg: #0f051a;
-            --card-bg: rgba(26, 11, 46, 0.85);
-            --border-color: rgba(0, 255, 255, 0.3);
-            --text-primary: #ffffff;
-            --text-secondary: #a1a1aa;
-            --accent-green: #10b981;
-            --accent-red: #ef4444;
-            --accent-orange: #f59e0b;
-            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-        }
-
-        /* ========== RESET & BASE ========== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: var(--font-mono);
-            background: var(--darker-bg);
-            min-height: 100vh;
-            color: var(--text-primary);
-            display: flex;
-            overflow-x: hidden;
-            position: relative;
-            line-height: 1.6;
-        }
-
-        /* ========== CYBERPUNK BACKGROUND ========== */
-        .cyber-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--darker-bg);
-            overflow: hidden;
-            z-index: -5;
-        }
-
-        .cyber-gradient {
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: 
-                radial-gradient(circle at 20% 30%, rgba(0, 255, 255, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(255, 0, 255, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 40% 80%, rgba(124, 58, 237, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 60% 20%, rgba(249, 115, 22, 0.15) 0%, transparent 50%);
-            animation: gradientRotate 30s linear infinite;
-            filter: blur(40px);
-        }
-
-        @keyframes gradientRotate {
-            0% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(180deg) scale(1.2); }
-            100% { transform: rotate(360deg) scale(1); }
-        }
-
-        .grid-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-        }
-
-        .grid-lines {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: gridMove 20s linear infinite;
-        }
-
-        @keyframes gridMove {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
-        }
-
-        .orb {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.5;
-            animation: orbFloat 20s ease-in-out infinite;
-            pointer-events: none;
-            z-index: -4;
-        }
-
-        .orb1 {
-            width: 300px;
-            height: 300px;
-            background: var(--primary-cyan);
-            top: 10%;
-            left: -150px;
-        }
-
-        .orb2 {
-            width: 400px;
-            height: 400px;
-            background: var(--primary-pink);
-            bottom: 10%;
-            right: -200px;
-            animation-delay: 5s;
-        }
-
-        @keyframes orbFloat {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(100px, -50px) scale(1.1); }
-            66% { transform: translate(-50px, 100px) scale(0.9); }
-        }
-
-        .scanlines {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .scanlines::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(transparent 0%, rgba(0, 255, 255, 0.03) 50%, transparent 100%);
-            background-size: 100% 4px;
-            animation: scanline 8s linear infinite;
-        }
-
-        @keyframes scanline {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(100%); }
-        }
-
-        /* ========== SIDEBAR ========== */
-        .sidebar {
-            width: 280px;
-            background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid var(--border-color);
-            padding: 24px;
-            position: fixed;
-            left: 0;
-            top: 0;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 1000;
-        }
-
-        .sidebar-header {
-            margin-bottom: 40px;
-            padding-bottom: 24px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .sidebar-header h2 {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--primary-cyan);
-            text-shadow: 0 0 20px var(--primary-cyan);
-            margin-bottom: 8px;
-        }
-
-        .sidebar-header h2::before {
-            content: '>';
-            margin-right: 0.5rem;
-            color: var(--primary-orange);
-        }
-
-        .sidebar-header h2::after {
-            content: '_';
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
-        }
-
-        .sidebar-header p {
-            font-size: 12px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .sidebar-menu {
-            list-style: none;
-        }
-
-        .sidebar-menu-item {
-            margin-bottom: 8px;
-        }
-
-        .sidebar-menu-link {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 14px 18px;
-            text-decoration: none;
-            color: var(--text-secondary);
-            transition: all 0.3s ease;
-            font-size: 14px;
-            font-weight: 500;
-            letter-spacing: 1px;
-            border: 1px solid transparent;
-            clip-path: polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px);
-        }
-
-        .sidebar-menu-link:hover {
-            color: var(--primary-cyan);
-            border-color: var(--border-color);
-            background: rgba(0, 255, 255, 0.05);
-            text-shadow: 0 0 10px var(--primary-cyan);
-        }
-
-        .sidebar-menu-link.active {
-            background: rgba(0, 255, 255, 0.1);
-            color: var(--primary-cyan);
-            border-color: var(--primary-cyan);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
-        }
-
-        /* ========== MAIN CONTENT ========== */
-        .main-content {
-            flex: 1;
-            margin-left: 280px;
-            padding: 32px;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        /* ========== HEADER ========== */
-        .header {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            padding: 32px;
-            margin-bottom: 32px;
-            clip-path: polygon(20px 0%, 100% 0%, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0% 100%, 0% 20px);
-        }
-
-        .header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-pink));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
-        }
-
-        /* ========== CONTENT ========== */
-        .content {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            padding: 48px;
-            clip-path: polygon(20px 0%, 100% 0%, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0% 100%, 0% 20px);
-        }
-
-        .content h2 {
-            font-size: 1.5rem;
-            margin-bottom: 12px;
-            color: var(--primary-cyan);
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
-        }
-
-        .content p {
-            font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.6;
-        }
-
-        /* ========== DASHBOARD GRID ========== */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 24px;
-            margin-top: 40px;
-        }
-
-        .kpi-card {
-            background: rgba(15, 5, 26, 0.9);
-            border: 1px solid var(--border-color);
-            padding: 28px;
-            transition: all 0.4s ease;
-            clip-path: polygon(15px 0%, 100% 0%, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0% 100%, 0% 15px);
-            animation: fadeInUp 0.6s ease-out forwards;
-            opacity: 0;
-            transform: translateY(20px);
-        }
-
-        .kpi-card:nth-child(1) { animation-delay: 0.1s; }
-        .kpi-card:nth-child(2) { animation-delay: 0.2s; }
-        .kpi-card:nth-child(3) { animation-delay: 0.3s; }
-        .kpi-card:nth-child(4) { animation-delay: 0.4s; }
-        .kpi-card:nth-child(5) { animation-delay: 0.5s; }
-        .kpi-card:nth-child(6) { animation-delay: 0.6s; }
-        .kpi-card:nth-child(7) { animation-delay: 0.7s; }
-        .kpi-card:nth-child(8) { animation-delay: 0.8s; }
-
-        @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .kpi-card:hover {
-            border-color: var(--primary-cyan);
-            box-shadow: 0 20px 50px rgba(0, 255, 255, 0.2);
-            transform: translateY(-6px);
-        }
-
-        .kpi-header {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .kpi-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--primary-cyan);
-            margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
-        }
-
-        .kpi-value {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin: 12px 0;
-            text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: rgba(0, 255, 255, 0.2);
-            margin-top: 16px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, var(--primary-cyan), var(--primary-pink));
-            transition: width 0.8s ease;
-            position: relative;
-        }
-
-        .progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-            animation: shimmer 2s infinite;
-        }
-
-        @keyframes shimmer {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
-        }
-
-        .kpi-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 18px;
-            font-size: 11px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            border: 1px solid;
-            clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
-        }
-
-        .status-running {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--accent-green);
-            border-color: var(--accent-green);
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
-            animation: pulse-green 2s infinite;
-        }
-
-        .status-stopped {
-            background: rgba(239, 68, 68, 0.15);
-            color: var(--accent-red);
-            border-color: var(--accent-red);
-            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
-            animation: pulse-red 2s infinite;
-        }
-
-        .status-warning {
-            background: rgba(245, 158, 11, 0.15);
-            color: var(--accent-orange);
-            border-color: var(--accent-orange);
-            box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
-            animation: pulse-orange 2s infinite;
-        }
-
-        .status-normal {
-            background: rgba(0, 255, 255, 0.1);
-            color: var(--primary-cyan);
-            border-color: var(--primary-cyan);
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
-        }
-
-        @keyframes pulse-green {
-            0%, 100% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
-            50% { box-shadow: 0 0 25px rgba(16, 185, 129, 0.6); }
-        }
-
-        @keyframes pulse-red {
-            0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
-            50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.6); }
-        }
-
-        @keyframes pulse-orange {
-            0%, 100% { box-shadow: 0 0 15px rgba(245, 158, 11, 0.3); }
-            50% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.6); }
-        }
-
-        .kpi-subtitle {
-            font-size: 12px;
-            color: var(--text-secondary);
-            margin-top: 12px;
-        }
-
-        .fault-list {
-            margin-top: 20px;
-        }
-
-        .fault-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        .fault-item:last-child {
-            border-bottom: none;
-        }
-
-        .fault-indicator {
-            width: 10px;
-            height: 10px;
-            background: var(--accent-red);
-            flex-shrink: 0;
-            box-shadow: 0 0 10px var(--accent-red);
-        }
-
-        .fault-text {
-            font-size: 13px;
-            color: var(--text-secondary);
-        }
-
-        .no-faults {
-            font-size: 13px;
-            color: var(--accent-green);
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* ========== SCROLLBAR ========== */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--darker-bg);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: linear-gradient(var(--primary-cyan), var(--primary-pink));
-            border-radius: 4px;
-        }
-
-        /* ========== RESPONSIVE ========== */
-        @media (max-width: 768px) {
-            .sidebar {
-                width: 80px;
-                padding: 15px 10px;
-            }
-
-            .sidebar-header h2,
-            .sidebar-header p,
-            .sidebar-menu-link span:last-child {
-                display: none;
-            }
-
-            .main-content {
-                margin-left: 80px;
-                padding: 20px;
-            }
-
-            .sidebar-menu-link {
-                justify-content: center;
-                padding: 14px;
-            }
-
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .scanlines::before {
-                display: none;
-            }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .cyber-gradient, .grid-lines, .orb, .scanlines::before {
-                animation: none !important;
-            }
-        }
-    </style>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+ <meta name="theme-color" content="#0b1220">
+ <meta name="description" content="Smart Factory Control">
+ <title>Smart Factory - Control System</title>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+ <style>
+ /* ========== PROFESSIONAL IIOT VARIABLES ========== */
+ :root {
+ /* Primary Industrial Colors */
+ --primary-blue: #0ea5e9;
+ --primary-teal: #14b8a6;
+ --primary-indigo: #6366f1;
+ --accent-orange: #f97316;
+ --accent-amber: #fbbf24;
+
+ /* Status Colors */
+ --status-success: #10b981;
+ --status-warning: #f59e0b;
+ --status-error: #ef4444;
+ --status-info: #3b82f6;
+
+ /* Background & Surfaces */
+ --bg-dark: #0a1628;
+ --bg-darker: #050b16;
+ --surface-1: rgba(15, 23, 42, 0.85);
+ --surface-2: rgba(30, 41, 59, 0.7);
+ --surface-glass: rgba(255, 255, 255, 0.03);
+
+ /* Borders & Dividers */
+ --border-primary: rgba(14, 165, 233, 0.2);
+ --border-secondary: rgba(148, 163, 184, 0.15);
+ --border-glow: rgba(14, 165, 233, 0.4);
+
+ /* Text */
+ --text-primary: #f8fafc;
+ --text-secondary: #94a3b8;
+ --text-tertiary: #64748b;
+
+ /* Typography */
+ --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+ /* Legacy aliases for backwards compatibility */
+ --primary-cyan: #0ea5e9;
+ --primary-pink: #14b8a6;
+ --darker-bg: #050b16;
+ --card-bg: rgba(15, 23, 42, 0.85);
+ --border-color: rgba(148, 163, 184, 0.15);
+ --accent-green: #10b981;
+ --accent-red: #ef4444;
+ }
+
+ /* ========== RESET & BASE ========== */
+ * {
+ margin: 0;
+ padding: 0;
+ box-sizing: border-box;
+ }
+
+ body {
+ font-family: var(--font-family);
+ background: var(--bg-darker);
+ min-height: 100vh;
+ color: var(--text-primary);
+ display: flex;
+ overflow-x: hidden;
+ position: relative;
+ line-height: 1.6;
+ }
+
+ /* ========== ANIMATED BACKGROUND ========== */
+ .cyber-bg {
+ position: fixed;
+ top: 0;
+ left: 0;
+ width: 100%;
+ height: 100%;
+ background: var(--bg-darker);
+ overflow: hidden;
+ z-index: -5;
+ }
+
+ /* Animated Grid Network */
+ .grid-network {
+ position: absolute;
+ inset: 0;
+ background-image:
+ linear-gradient(rgba(14, 165, 233, 0.03) 1.5px, transparent 1.5px),
+ linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1.5px, transparent 1.5px);
+ background-size: 80px 80px;
+ animation: gridFlow 20s linear infinite;
+ }
+
+ @keyframes gridFlow {
+ 0% { transform: translate(0, 0); }
+ 100% { transform: translate(80px, 80px); }
+ }
+
+ /* Animated Connection Nodes */
+ .connection-nodes {
+ position: absolute;
+ inset: 0;
+ }
+
+ .node {
+ position: absolute;
+ width: 8px;
+ height: 8px;
+ background: var(--primary-blue);
+ border-radius: 50%;
+ box-shadow: 0 0 20px var(--primary-blue), 0 0 40px var(--primary-blue);
+ animation: nodePulse 3s ease-in-out infinite;
+ }
+
+ @keyframes nodePulse {
+ 0%, 100% {
+ transform: scale(1);
+ opacity: 1;
+ }
+ 50% {
+ transform: scale(1.5);
+ opacity: 0.7;
+ }
+ }
+
+ /* Data Flow Lines */
+ .data-streams {
+ position: absolute;
+ inset: 0;
+ }
+
+ .stream-line {
+ position: absolute;
+ height: 2px;
+ background: linear-gradient(90deg,
+ transparent 0%,
+ var(--primary-blue) 50%,
+ transparent 100%
+ );
+ animation: streamFlow 4s linear infinite;
+ opacity: 0.6;
+ }
+
+ @keyframes streamFlow {
+ 0% { transform: translateX(-100%); }
+ 100% { transform: translateX(200%); }
+ }
+
+ /* Subtle Gradient Orbs */
+ .gradient-orb {
+ position: absolute;
+ border-radius: 50%;
+ filter: blur(100px);
+ opacity: 0.15;
+ animation: orbFloat 25s ease-in-out infinite;
+ }
+
+ .gradient-orb.orb-1 {
+ width: 500px;
+ height: 500px;
+ background: radial-gradient(circle, var(--primary-blue), transparent);
+ top: -200px;
+ left: -200px;
+ }
+
+ .gradient-orb.orb-2 {
+ width: 600px;
+ height: 600px;
+ background: radial-gradient(circle, var(--primary-teal), transparent);
+ bottom: -250px;
+ right: -250px;
+ animation-delay: 8s;
+ }
+
+ .gradient-orb.orb-3 {
+ width: 400px;
+ height: 400px;
+ background: radial-gradient(circle, var(--primary-indigo), transparent);
+ top: 40%;
+ left: 60%;
+ animation-delay: 16s;
+ }
+
+ @keyframes orbFloat {
+ 0%, 100% { transform: translate(0, 0) scale(1); }
+ 33% { transform: translate(80px, -60px) scale(1.1); }
+ 66% { transform: translate(-60px, 80px) scale(0.95); }
+ }
+
+ /* Legacy classes for compatibility */
+ .cyber-gradient { display: none; }
+ .grid-overlay { display: none; }
+ .grid-lines { display: none; }
+ .orb { display: none; }
+ .orb1 { display: none; }
+ .orb2 { display: none; }
+ .scanlines { display: none; }
+
+ /* ========== SIDEBAR ========== */
+ .sidebar {
+ width: 280px;
+ background: var(--surface-1);
+ backdrop-filter: blur(20px);
+ border-right: 1px solid var(--border-secondary);
+ position: fixed;
+ left: 0;
+ top: 0;
+ height: 100vh;
+ z-index: 1000;
+ display: flex;
+ flex-direction: column;
+ overflow-y: auto;
+ }
+
+ .sidebar-header {
+ padding: 32px 24px;
+ border-bottom: 1px solid var(--border-secondary);
+ }
+
+ .logo-container {
+ display: flex;
+ align-items: center;
+ gap: 12px;
+ margin-bottom: 8px;
+ }
+
+ .logo-icon {
+ width: 40px;
+ height: 40px;
+ background: linear-gradient(135deg, var(--primary-blue), var(--primary-teal));
+ border-radius: 8px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-size: 18px;
+ font-weight: 700;
+ color: white;
+ box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
+ }
+
+ .logo-text h2 {
+ font-size: 18px;
+ font-weight: 700;
+ color: var(--text-primary);
+ letter-spacing: -0.5px;
+ margin-bottom: 0;
+ }
+
+ .logo-text p {
+ font-size: 11px;
+ color: var(--text-tertiary);
+ text-transform: uppercase;
+ letter-spacing: 1.5px;
+ font-weight: 600;
+ margin: 0;
+ }
+
+ .status-indicator {
+ display: flex;
+ align-items: center;
+ gap: 8px;
+ padding: 12px 16px;
+ background: var(--surface-glass);
+ border: 1px solid var(--border-secondary);
+ border-radius: 8px;
+ margin-top: 16px;
+ }
+
+ .status-dot {
+ width: 8px;
+ height: 8px;
+ background: var(--status-success);
+ border-radius: 50%;
+ animation: statusPulse 2s ease-in-out infinite;
+ box-shadow: 0 0 12px var(--status-success);
+ }
+
+ @keyframes statusPulse {
+ 0%, 100% { opacity: 1; transform: scale(1); }
+ 50% { opacity: 0.6; transform: scale(1.2); }
+ }
+
+ .status-text {
+ font-size: 12px;
+ color: var(--text-secondary);
+ font-weight: 500;
+ }
+
+ .sidebar-nav {
+ flex: 1;
+ padding: 24px 16px;
+ }
+
+ .nav-section {
+ margin-bottom: 32px;
+ }
+
+ .nav-section-title {
+ font-size: 11px;
+ font-weight: 700;
+ text-transform: uppercase;
+ letter-spacing: 1.5px;
+ color: var(--text-tertiary);
+ margin-bottom: 12px;
+ padding: 0 12px;
+ }
+
+ .nav-menu {
+ list-style: none;
+ }
+
+ .sidebar-menu {
+ list-style: none;
+ }
+
+ .sidebar-menu-item, .nav-item {
+ margin-bottom: 4px;
+ }
+
+ .sidebar-menu-link, .nav-link {
+ display: flex;
+ align-items: center;
+ gap: 12px;
+ padding: 12px 16px;
+ text-decoration: none;
+ color: var(--text-secondary);
+ border-radius: 8px;
+ transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+ font-size: 14px;
+ font-weight: 500;
+ position: relative;
+ overflow: hidden;
+ }
+
+ .sidebar-menu-link::before, .nav-link::before {
+ content: '';
+ position: absolute;
+ left: 0;
+ top: 0;
+ height: 100%;
+ width: 3px;
+ background: var(--primary-blue);
+ transform: scaleY(0);
+ transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+ }
+
+ .sidebar-menu-link:hover, .nav-link:hover {
+ color: var(--text-primary);
+ background: var(--surface-glass);
+ }
+
+ .sidebar-menu-link.active, .nav-link.active {
+ color: var(--primary-blue);
+ background: rgba(14, 165, 233, 0.1);
+ }
+
+ .sidebar-menu-link.active::before, .nav-link.active::before {
+ transform: scaleY(1);
+ }
+
+ .nav-icon {
+ width: 20px;
+ height: 20px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-size: 16px;
+ }
+
+ /* ========== MAIN CONTENT ========== */
+ .main-content {
+ flex: 1;
+ margin-left: 280px;
+ padding: 32px;
+ min-height: 100vh;
+ }
+
+ .container {
+ max-width: 1400px;
+ margin: 0 auto;
+ }
+
+ /* ========== HEADER ========== */
+ .header {
+ background: var(--surface-1);
+ backdrop-filter: blur(20px);
+ border: 1px solid var(--border-secondary);
+ border-radius: 16px;
+ padding: 32px;
+ margin-bottom: 32px;
+ }
+
+ .header h1 {
+ font-size: 2rem;
+ font-weight: 700;
+ letter-spacing: -0.5px;
+ color: var(--text-primary);
+ margin: 0;
+ }
+
+ /* ========== CONTENT ========== */
+ .content {
+ background: var(--surface-1);
+ backdrop-filter: blur(20px);
+ border: 1px solid var(--border-secondary);
+ border-radius: 16px;
+ padding: 48px;
+ }
+
+ .content h2 {
+ font-size: 1.5rem;
+ margin-bottom: 12px;
+ color: var(--text-primary);
+ font-weight: 700;
+ letter-spacing: -0.5px;
+ }
+
+ .content p {
+ font-size: 16px;
+ color: var(--text-secondary);
+ line-height: 1.6;
+ }
+
+ /* ========== DASHBOARD GRID ========== */
+ .dashboard-grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+ gap: 24px;
+ margin-top: 40px;
+ }
+
+ .kpi-card {
+ background: var(--surface-1);
+ backdrop-filter: blur(20px);
+ border: 1px solid var(--border-secondary);
+ border-radius: 16px;
+ padding: 28px;
+ transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+ animation: fadeInUp 0.6s ease-out forwards;
+ opacity: 0;
+ transform: translateY(20px);
+ position: relative;
+ overflow: hidden;
+ }
+
+ .kpi-card:nth-child(1) { animation-delay: 0.1s; }
+ .kpi-card:nth-child(2) { animation-delay: 0.2s; }
+ .kpi-card:nth-child(3) { animation-delay: 0.3s; }
+ .kpi-card:nth-child(4) { animation-delay: 0.4s; }
+ .kpi-card:nth-child(5) { animation-delay: 0.5s; }
+ .kpi-card:nth-child(6) { animation-delay: 0.6s; }
+ .kpi-card:nth-child(7) { animation-delay: 0.7s; }
+ .kpi-card:nth-child(8) { animation-delay: 0.8s; }
+
+ @keyframes fadeInUp {
+ to {
+ opacity: 1;
+ transform: translateY(0);
+ }
+ }
+
+ .kpi-card:hover {
+ transform: translateY(-4px);
+ border-color: var(--border-glow);
+ box-shadow:
+ 0 20px 40px rgba(0, 0, 0, 0.4),
+ 0 0 0 1px var(--border-primary);
+ }
+
+ .kpi-header {
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ margin-bottom: 20px;
+ padding-bottom: 16px;
+ border-bottom: 1px solid var(--border-color);
+ }
+
+ .kpi-title {
+ font-size: 12px;
+ font-weight: 600;
+ color: var(--primary-blue);
+ margin: 0;
+ text-transform: uppercase;
+ letter-spacing: 1.5px;
+ }
+
+ .kpi-value {
+ font-size: 2.5rem;
+ font-weight: 700;
+ color: var(--text-primary);
+ margin: 12px 0;
+ letter-spacing: -1px;
+ }
+
+ .progress-bar {
+ width: 100%;
+ height: 8px;
+ background: var(--surface-glass);
+ border-radius: 4px;
+ margin-top: 16px;
+ overflow: hidden;
+ }
+
+ .progress-fill {
+ height: 100%;
+ background: linear-gradient(90deg, var(--primary-blue), var(--primary-teal));
+ transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+ position: relative;
+ border-radius: 4px;
+ }
+
+ .progress-fill::after {
+ content: '';
+ position: absolute;
+ top: 0;
+ left: 0;
+ right: 0;
+ bottom: 0;
+ background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+ animation: shimmer 2s infinite;
+ }
+
+ @keyframes shimmer {
+ 0% { transform: translateX(-100%); }
+ 100% { transform: translateX(100%); }
+ }
+
+ .kpi-status {
+ display: inline-flex;
+ align-items: center;
+ gap: 8px;
+ padding: 8px 18px;
+ font-size: 11px;
+ font-weight: 700;
+ text-transform: uppercase;
+ letter-spacing: 1.5px;
+ border: 1px solid;
+ border-radius: 6px;
+ }
+
+ .status-running {
+ background: rgba(16, 185, 129, 0.1);
+ color: var(--status-success);
+ border-color: var(--status-success);
+ animation: pulse-green 2s infinite;
+ }
+
+ .status-stopped {
+ background: rgba(239, 68, 68, 0.1);
+ color: var(--status-error);
+ border-color: var(--status-error);
+ animation: pulse-red 2s infinite;
+ }
+
+ .status-warning {
+ background: rgba(245, 158, 11, 0.1);
+ color: var(--status-warning);
+ border-color: var(--status-warning);
+ animation: pulse-orange 2s infinite;
+ }
+
+ .status-normal {
+ background: rgba(14, 165, 233, 0.1);
+ color: var(--primary-blue);
+ border-color: var(--primary-blue);
+ }
+
+ @keyframes pulse-green {
+ 0%, 100% { opacity: 1; }
+ 50% { opacity: 0.7; }
+ }
+
+ @keyframes pulse-red {
+ 0%, 100% { opacity: 1; }
+ 50% { opacity: 0.7; }
+ }
+
+ @keyframes pulse-orange {
+ 0%, 100% { opacity: 1; }
+ 50% { opacity: 0.7; }
+ }
+
+ .kpi-subtitle {
+ font-size: 12px;
+ color: var(--text-secondary);
+ margin-top: 12px;
+ }
+
+ .fault-list {
+ margin-top: 20px;
+ }
+
+ .fault-item {
+ display: flex;
+ align-items: center;
+ gap: 12px;
+ padding: 12px 0;
+ border-bottom: 1px solid var(--border-color);
+ }
+
+ .fault-item:last-child {
+ border-bottom: none;
+ }
+
+ .fault-indicator {
+ width: 10px;
+ height: 10px;
+ background: var(--status-error);
+ border-radius: 50%;
+ flex-shrink: 0;
+ box-shadow: 0 0 10px var(--status-error);
+ }
+
+ .fault-text {
+ font-size: 13px;
+ color: var(--text-secondary);
+ }
+
+ .no-faults {
+ font-size: 13px;
+ color: var(--status-success);
+ font-weight: 700;
+ text-transform: uppercase;
+ letter-spacing: 1px;
+ }
+
+ /* ========== SCROLLBAR ========== */
+ ::-webkit-scrollbar {
+ width: 8px;
+ height: 8px;
+ }
+
+ ::-webkit-scrollbar-track {
+ background: var(--bg-darker);
+ }
+
+ ::-webkit-scrollbar-thumb {
+ background: var(--border-primary);
+ border-radius: 4px;
+ }
+
+ ::-webkit-scrollbar-thumb:hover {
+ background: var(--primary-blue);
+ }
+
+ /* ========== RESPONSIVE ========== */
+ @media (max-width: 768px) {
+ .sidebar {
+ width: 80px;
+ padding: 15px 10px;
+ }
+
+ .sidebar-header h2,
+ .sidebar-header p,
+ .sidebar-menu-link span:last-child {
+ display: none;
+ }
+
+ .main-content {
+ margin-left: 80px;
+ padding: 20px;
+ }
+
+ .sidebar-menu-link {
+ justify-content: center;
+ padding: 14px;
+ }
+
+ .dashboard-grid {
+ grid-template-columns: 1fr;
+ }
+
+ .scanlines::before {
+ display: none;
+ }
+ }
+
+ /* Reduced Motion */
+ @media (prefers-reduced-motion: reduce) {
+ * {
+ animation-duration: 0.01ms !important;
+ animation-iteration-count: 1 !important;
+ transition-duration: 0.01ms !important;
+ }
+ }
+ </style>
 </head>
 <body>
-    <!-- Cyberpunk Background Layers -->
-    <div class="cyber-bg">
-        <div class="cyber-gradient"></div>
-    </div>
-    <div class="grid-overlay">
-        <div class="grid-lines"></div>
-    </div>
-    <div class="orb orb1"></div>
-    <div class="orb orb2"></div>
-    <div class="scanlines"></div>
+ <!-- Animated Background -->
+ <div class="cyber-bg">
+ <div class="grid-network"></div>
+ <div class="gradient-orb orb-1"></div>
+ <div class="gradient-orb orb-2"></div>
+ <div class="gradient-orb orb-3"></div>
+ <div class="connection-nodes" id="connectionNodes"></div>
+ <div class="data-streams" id="dataStreams"></div>
+ </div>
 
-    <!-- Sidebar Navigation -->
-    <nav class="sidebar">
-        <div class="sidebar-header">
-            <h2>Smart Factory</h2>
-            <p>Control System</p>
-        </div>
-        <ul class="sidebar-menu">
-            <li class="sidebar-menu-item">
-                <a href="/" class="sidebar-menu-link">
-                    <span>&#127968;</span>
-                    <span>Home</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="/robot-arm.html" class="sidebar-menu-link">
-                    <span>&#129302;</span>
-                    <span>Robot Arm</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="/smart-factory.html" class="sidebar-menu-link active">
-                    <span>&#127981;</span>
-                    <span>Smart Factory</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="/vision-system.html" class="sidebar-menu-link">
-                    <span>&#128065;</span>
-                    <span>Vision System</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="/rfid.html" class="sidebar-menu-link">
-                    <span>&#128225;</span>
-                    <span>RFID</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="/digital-twin.html" class="sidebar-menu-link">
-                    <span>&#127757;</span>
-                    <span>Digital Twin</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
+ <!-- Sidebar Navigation -->
+ <nav class="sidebar">
+ <div class="sidebar-header">
+ <div class="logo-container">
+ <div class="logo-icon">SF</div>
+ <div class="logo-text">
+ <h2>Smart Factory</h2>
+ <p>IIoT Platform</p>
+ </div>
+ </div>
+ <div class="status-indicator">
+ <div class="status-dot"></div>
+ <span class="status-text">System Online</span>
+ </div>
+ </div>
+ <div class="sidebar-nav">
+ <nav class="nav-section">
+ <h3 class="nav-section-title">Navigation</h3>
+ <ul class="sidebar-menu">
+ <li class="sidebar-menu-item">
+ <a href="/" class="sidebar-menu-link">
+ <span class="nav-icon">🏠</span>
+ <span>Home</span>
+ </a>
+ </li>
+ <li class="sidebar-menu-item">
+ <a href="/robot-arm.html" class="sidebar-menu-link">
+ <span class="nav-icon">🤖</span>
+ <span>Robot Arm</span>
+ </a>
+ </li>
+ <li class="sidebar-menu-item">
+ <a href="/smart-factory.html" class="sidebar-menu-link active">
+ <span class="nav-icon">🏭</span>
+ <span>Smart Factory</span>
+ </a>
+ </li>
+ <li class="sidebar-menu-item">
+ <a href="/vision-system.html" class="sidebar-menu-link">
+ <span class="nav-icon">👁</span>
+ <span>Vision System</span>
+ </a>
+ </li>
+ <li class="sidebar-menu-item">
+ <a href="/rfid.html" class="sidebar-menu-link">
+ <span class="nav-icon">📡</span>
+ <span>RFID</span>
+ </a>
+ </li>
+ <li class="sidebar-menu-item">
+ <a href="/digital-twin.html" class="sidebar-menu-link">
+ <span class="nav-icon">🔄</span>
+ <span>Digital Twin</span>
+ </a>
+ </li>
+ </ul>
+ </nav>
+ </div>
+ </nav>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="container">
-            <div class="header">
-                <div class="header-content">
-                    <h1>&#127981; Smart Factory</h1>
-                </div>
-            </div>
+ <!-- Main Content -->
+ <div class="main-content">
+ <div class="container">
+ <div class="header">
+ <div class="header-content">
+ <h1>Smart Factory</h1>
+ </div>
+ </div>
 
-            <div class="content">
-                <h2>Smart Factory Dashboard</h2>
-                <p>Real-time monitoring and control of factory operations</p>
+ <div class="content">
+ <h2>Smart Factory Dashboard</h2>
+ <p>Real-time monitoring and control of factory operations</p>
 
-                <div class="dashboard-grid">
-                    <!-- Production Counter -->
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <h3 class="kpi-title">Production Counter</h3>
-                        </div>
-                        <div class="kpi-value" id="production-counter">0</div>
-                        <div class="kpi-status status-normal">Items Processed</div>
-                        <div class="kpi-subtitle">Since system start</div>
-                    </div>
+ <div class="dashboard-grid">
+ <!-- Production Counter -->
+ <div class="kpi-card">
+ <div class="kpi-header">
+ <h3 class="kpi-title">Production Counter</h3>
+ </div>
+ <div class="kpi-value" id="production-counter">0</div>
+ <div class="kpi-status status-normal">Items Processed</div>
+ <div class="kpi-subtitle">Since system start</div>
+ </div>
 
-                    <!-- Conveyor Status -->
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <h3 class="kpi-title">Conveyor System</h3>
-                        </div>
-                        <div class="kpi-value" id="conveyor-status">UNKNOWN</div>
-                        <div class="kpi-status" id="conveyor-status-badge">Unknown</div>
-                        <div class="kpi-subtitle" id="conveyor-subtitle">Status: Checking...</div>
-                    </div>
+ <!-- Conveyor Status -->
+ <div class="kpi-card">
+ <div class="kpi-header">
+ <h3 class="kpi-title">Conveyor System</h3>
+ </div>
+ <div class="kpi-value" id="conveyor-status">UNKNOWN</div>
+ <div class="kpi-status" id="conveyor-status-badge">Unknown</div>
+ <div class="kpi-subtitle" id="conveyor-subtitle">Status: Checking...</div>
+ </div>
 
-                    <!-- Gantry Status -->
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <h3 class="kpi-title">Gantry Robot</h3>
-                        </div>
-                        <div class="kpi-value" id="gantry-status">UNKNOWN</div>
-                        <div class="kpi-status" id="gantry-status-badge">Unknown</div>
-                        <div class="kpi-subtitle" id="gantry-subtitle">Status: Checking...</div>
-                    </div>
+ <!-- Gantry Status -->
+ <div class="kpi-card">
+ <div class="kpi-header">
+ <h3 class="kpi-title">Gantry Robot</h3>
+ </div>
+ <div class="kpi-value" id="gantry-status">UNKNOWN</div>
+ <div class="kpi-status" id="gantry-status-badge">Unknown</div>
+ <div class="kpi-subtitle" id="gantry-subtitle">Status: Checking...</div>
+ </div>
 
-                    <!-- System Uptime -->
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <h3 class="kpi-title">System Uptime</h3>
-                        </div>
-                        <div class="kpi-value" id="uptime">0%</div>
-                        <div class="kpi-status status-normal" id="uptime-duration">0h 0m</div>
-                        <div class="kpi-subtitle">PLC Connection Status</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="uptime-bar" style="width: 0%"></div>
-                        </div>
-                    </div>
+ <!-- System Uptime -->
+ <div class="kpi-card">
+ <div class="kpi-header">
+ <h3 class="kpi-title">System Uptime</h3>
+ </div>
+ <div class="kpi-value" id="uptime">0%</div>
+ <div class="kpi-status status-normal" id="uptime-duration">0h 0m</div>
+ <div class="kpi-subtitle">PLC Connection Status</div>
+ <div class="progress-bar">
+ <div class="progress-fill" id="uptime-bar" style="width: 0%"></div>
+ </div>
+ </div>
 
-                    <!-- Faults Detected -->
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <h3 class="kpi-title">Faults Detected</h3>
-                        </div>
-                        <div class="kpi-value" id="total-faults">0</div>
-                        <div class="kpi-status status-warning">Since Start</div>
-                        <div class="kpi-subtitle" id="fault-subtitle">Monitoring...</div>
-                    </div>
+ <!-- Faults Detected -->
+ <div class="kpi-card">
+ <div class="kpi-header">
+ <h3 class="kpi-title">Faults Detected</h3>
+ </div>
+ <div class="kpi-value" id="total-faults">0</div>
+ <div class="kpi-status status-warning">Since Start</div>
+ <div class="kpi-subtitle" id="fault-subtitle">Monitoring...</div>
+ </div>
 
-                    <!-- Current Faults -->
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <h3 class="kpi-title">Active Faults</h3>
-                        </div>
-                        <div class="kpi-value" id="active-faults">0</div>
-                        <div class="kpi-status" id="active-faults-badge">None</div>
-                        <div class="fault-list" id="fault-list">
-                            <div class="no-faults">No active faults</div>
-                        </div>
-                    </div>
+ <!-- Current Faults -->
+ <div class="kpi-card">
+ <div class="kpi-header">
+ <h3 class="kpi-title">Active Faults</h3>
+ </div>
+ <div class="kpi-value" id="active-faults">0</div>
+ <div class="kpi-status" id="active-faults-badge">None</div>
+ <div class="fault-list" id="fault-list">
+ <div class="no-faults">No active faults</div>
+ </div>
+ </div>
 
-                    <!-- Efficiency Rate -->
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <h3 class="kpi-title">Efficiency Rate</h3>
-                        </div>
-                        <div class="kpi-value" id="efficiency">0%</div>
-                        <div class="kpi-status status-normal">Target: 95%</div>
-                        <div class="kpi-subtitle">System Performance</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="efficiency-bar" style="width: 0%"></div>
-                        </div>
-                    </div>
+ <!-- Efficiency Rate -->
+ <div class="kpi-card">
+ <div class="kpi-header">
+ <h3 class="kpi-title">Efficiency Rate</h3>
+ </div>
+ <div class="kpi-value" id="efficiency">0%</div>
+ <div class="kpi-status status-normal">Target: 95%</div>
+ <div class="kpi-subtitle">System Performance</div>
+ <div class="progress-bar">
+ <div class="progress-fill" id="efficiency-bar" style="width: 0%"></div>
+ </div>
+ </div>
 
-                    <!-- Quality Control -->
-                    <div class="kpi-card">
-                        <div class="kpi-header">
-                            <h3 class="kpi-title">Quality Control</h3>
-                        </div>
-                        <div class="kpi-value" id="quality">0%</div>
-                        <div class="kpi-status status-normal">Pass Rate</div>
-                        <div class="kpi-subtitle" id="quality-subtitle">Defects: 0 items</div>
-                        <div class="progress-bar">
-                            <div class="progress-fill" id="quality-bar" style="width: 0%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+ <!-- Quality Control -->
+ <div class="kpi-card">
+ <div class="kpi-header">
+ <h3 class="kpi-title">Quality Control</h3>
+ </div>
+ <div class="kpi-value" id="quality">0%</div>
+ <div class="kpi-status status-normal">Pass Rate</div>
+ <div class="kpi-subtitle" id="quality-subtitle">Defects: 0 items</div>
+ <div class="progress-bar">
+ <div class="progress-fill" id="quality-bar" style="width: 0%"></div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
+ </div>
 
-    <script>
-        // Real-time dashboard updates from backend API
-        function updateKPIs() {
-            // Fetch real data from backend
-            fetch('/api/smart-factory')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // Update production counter
-                        const productionCounter = data.production_counter || 0;
-                        document.getElementById('production-counter').textContent = productionCounter.toLocaleString();
-                        
-                        // Update conveyor status
-                        const conveyorStatus = data.conveyor.status || 'UNKNOWN';
-                        const conveyorRunning = data.conveyor.running || false;
-                        document.getElementById('conveyor-status').textContent = conveyorStatus;
-                        const conveyorBadge = document.getElementById('conveyor-status-badge');
-                        conveyorBadge.textContent = conveyorRunning ? 'Active' : 'Inactive';
-                        conveyorBadge.className = 'kpi-status ' + (conveyorRunning ? 'status-running' : 'status-stopped');
-                        document.getElementById('conveyor-subtitle').textContent = 
-                            conveyorRunning ? 'System Active' : 'System Stopped';
-                        
-                        // Update gantry status
-                        const gantryStatus = data.gantry.status || 'UNKNOWN';
-                        const gantryRunning = data.gantry.running || false;
-                        const gantryConnected = data.gantry.connected || false;
-                        document.getElementById('gantry-status').textContent = gantryStatus;
-                        const gantryBadge = document.getElementById('gantry-status-badge');
-                        if (gantryRunning) {
-                            gantryBadge.textContent = 'Active';
-                            gantryBadge.className = 'kpi-status status-running';
-                        } else if (gantryConnected) {
-                            gantryBadge.textContent = 'Connected';
-                            gantryBadge.className = 'kpi-status status-normal';
-                        } else {
-                            gantryBadge.textContent = 'Disconnected';
-                            gantryBadge.className = 'kpi-status status-stopped';
-                        }
-                        document.getElementById('gantry-subtitle').textContent = 
-                            gantryRunning ? 'Cycle Active' : (gantryConnected ? 'Standby' : 'Not Connected');
-                        
-                        // Update uptime
-                        const uptimePercent = data.uptime.percent || 0;
-                        const uptimeDuration = data.uptime.duration || '0h 0m';
-                        document.getElementById('uptime').textContent = uptimePercent.toFixed(1) + '%';
-                        document.getElementById('uptime-duration').textContent = uptimeDuration;
-                        document.getElementById('uptime-bar').style.width = uptimePercent.toFixed(1) + '%';
-                        
-                        // Update faults
-                        const activeFaults = data.faults.active || 0;
-                        const totalFaults = data.faults.detected || 0;
-                        const faultDetected = data.faults.fault_detected || false;
-                        document.getElementById('total-faults').textContent = totalFaults;
-                        document.getElementById('active-faults').textContent = activeFaults;
-                        
-                        const activeFaultsBadge = document.getElementById('active-faults-badge');
-                        const faultList = document.getElementById('fault-list');
-                        
-                        if (activeFaults > 0 || faultDetected) {
-                            activeFaultsBadge.textContent = 'Critical';
-                            activeFaultsBadge.className = 'kpi-status status-stopped';
-                            faultList.innerHTML = '<div class="fault-item"><div class="fault-indicator"></div><div class="fault-text">Defect detected in production</div></div>';
-                        } else {
-                            activeFaultsBadge.textContent = 'None';
-                            activeFaultsBadge.className = 'kpi-status status-normal';
-                            faultList.innerHTML = '<div class="no-faults">No active faults</div>';
-                        }
-                        
-                        document.getElementById('fault-subtitle').textContent = 
-                            totalFaults > 0 ? `Total defects: ${totalFaults}` : 'No defects detected';
-                        
-                        // Update efficiency
-                        const efficiency = data.efficiency || 0;
-                        document.getElementById('efficiency').textContent = efficiency.toFixed(1) + '%';
-                        document.getElementById('efficiency-bar').style.width = efficiency.toFixed(1) + '%';
-                        
-                        // Update quality
-                        const quality = data.quality || 0;
-                        const defectCount = data.faults.detected || 0;
-                        document.getElementById('quality').textContent = quality.toFixed(1) + '%';
-                        document.getElementById('quality-bar').style.width = quality.toFixed(1) + '%';
-                        document.getElementById('quality-subtitle').textContent = `Defects: ${defectCount} items`;
-                    } else {
-                        console.error('Failed to fetch smart factory data:', data.error);
-                        // Show error state
-                        document.getElementById('production-counter').textContent = 'Error';
-                        document.getElementById('conveyor-status').textContent = 'ERROR';
-                        document.getElementById('gantry-status').textContent = 'ERROR';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error fetching smart factory data:', error);
-                    // Show error state
-                    document.getElementById('production-counter').textContent = 'Error';
-                    document.getElementById('conveyor-status').textContent = 'ERROR';
-                    document.getElementById('gantry-status').textContent = 'ERROR';
-                });
-        }
-        
-        // Update immediately on page load
-        updateKPIs();
-        
-        // Update every 2 seconds for real-time updates
-        setInterval(updateKPIs, 2000);
-    </script>
+ <script>
+ // Real-time dashboard updates from backend API
+ function updateKPIs() {
+ // Fetch real data from backend
+ fetch('/api/smart-factory')
+ .then(response => response.json())
+ .then(data => {
+ if (data.success) {
+ // Update production counter
+ const productionCounter = data.production_counter || 0;
+ document.getElementById('production-counter').textContent = productionCounter.toLocaleString();
+ 
+ // Update conveyor status
+ const conveyorStatus = data.conveyor.status || 'UNKNOWN';
+ const conveyorRunning = data.conveyor.running || false;
+ document.getElementById('conveyor-status').textContent = conveyorStatus;
+ const conveyorBadge = document.getElementById('conveyor-status-badge');
+ conveyorBadge.textContent = conveyorRunning ? 'Active' : 'Inactive';
+ conveyorBadge.className = 'kpi-status ' + (conveyorRunning ? 'status-running' : 'status-stopped');
+ document.getElementById('conveyor-subtitle').textContent = 
+ conveyorRunning ? 'System Active' : 'System Stopped';
+ 
+ // Update gantry status
+ const gantryStatus = data.gantry.status || 'UNKNOWN';
+ const gantryRunning = data.gantry.running || false;
+ const gantryConnected = data.gantry.connected || false;
+ document.getElementById('gantry-status').textContent = gantryStatus;
+ const gantryBadge = document.getElementById('gantry-status-badge');
+ if (gantryRunning) {
+ gantryBadge.textContent = 'Active';
+ gantryBadge.className = 'kpi-status status-running';
+ } else if (gantryConnected) {
+ gantryBadge.textContent = 'Connected';
+ gantryBadge.className = 'kpi-status status-normal';
+ } else {
+ gantryBadge.textContent = 'Disconnected';
+ gantryBadge.className = 'kpi-status status-stopped';
+ }
+ document.getElementById('gantry-subtitle').textContent = 
+ gantryRunning ? 'Cycle Active' : (gantryConnected ? 'Standby' : 'Not Connected');
+ 
+ // Update uptime
+ const uptimePercent = data.uptime.percent || 0;
+ const uptimeDuration = data.uptime.duration || '0h 0m';
+ document.getElementById('uptime').textContent = uptimePercent.toFixed(1) + '%';
+ document.getElementById('uptime-duration').textContent = uptimeDuration;
+ document.getElementById('uptime-bar').style.width = uptimePercent.toFixed(1) + '%';
+ 
+ // Update faults
+ const activeFaults = data.faults.active || 0;
+ const totalFaults = data.faults.detected || 0;
+ const faultDetected = data.faults.fault_detected || false;
+ document.getElementById('total-faults').textContent = totalFaults;
+ document.getElementById('active-faults').textContent = activeFaults;
+ 
+ const activeFaultsBadge = document.getElementById('active-faults-badge');
+ const faultList = document.getElementById('fault-list');
+ 
+ if (activeFaults > 0 || faultDetected) {
+ activeFaultsBadge.textContent = 'Critical';
+ activeFaultsBadge.className = 'kpi-status status-stopped';
+ faultList.innerHTML = '<div class="fault-item"><div class="fault-indicator"></div><div class="fault-text">Defect detected in production</div></div>';
+ } else {
+ activeFaultsBadge.textContent = 'None';
+ activeFaultsBadge.className = 'kpi-status status-normal';
+ faultList.innerHTML = '<div class="no-faults">No active faults</div>';
+ }
+ 
+ document.getElementById('fault-subtitle').textContent = 
+ totalFaults > 0 ? `Total defects: ${totalFaults}` : 'No defects detected';
+ 
+ // Update efficiency
+ const efficiency = data.efficiency || 0;
+ document.getElementById('efficiency').textContent = efficiency.toFixed(1) + '%';
+ document.getElementById('efficiency-bar').style.width = efficiency.toFixed(1) + '%';
+ 
+ // Update quality
+ const quality = data.quality || 0;
+ const defectCount = data.faults.detected || 0;
+ document.getElementById('quality').textContent = quality.toFixed(1) + '%';
+ document.getElementById('quality-bar').style.width = quality.toFixed(1) + '%';
+ document.getElementById('quality-subtitle').textContent = `Defects: ${defectCount} items`;
+ } else {
+ console.error('Failed to fetch smart factory data:', data.error);
+ // Show error state
+ document.getElementById('production-counter').textContent = 'Error';
+ document.getElementById('conveyor-status').textContent = 'ERROR';
+ document.getElementById('gantry-status').textContent = 'ERROR';
+ }
+ })
+ .catch(error => {
+ console.error('Error fetching smart factory data:', error);
+ // Show error state
+ document.getElementById('production-counter').textContent = 'Error';
+ document.getElementById('conveyor-status').textContent = 'ERROR';
+ document.getElementById('gantry-status').textContent = 'ERROR';
+ });
+ }
+ 
+ // Update immediately on page load
+ updateKPIs();
+
+ // Update every 2 seconds for real-time updates
+ setInterval(updateKPIs, 2000);
+
+ // ========== ANIMATED BACKGROUND INITIALIZATION ==========
+ // Generate animated connection nodes
+ function generateNodes() {
+ const container = document.getElementById('connectionNodes');
+ if (!container) return;
+
+ const nodeCount = 15;
+ for (let i = 0; i < nodeCount; i++) {
+ const node = document.createElement('div');
+ node.className = 'node';
+ node.style.left = `${Math.random() * 100}%`;
+ node.style.top = `${Math.random() * 100}%`;
+ node.style.animationDelay = `${Math.random() * 3}s`;
+ container.appendChild(node);
+ }
+ }
+
+ // Generate data stream lines
+ function generateDataStreams() {
+ const container = document.getElementById('dataStreams');
+ if (!container) return;
+
+ const streamCount = 8;
+ for (let i = 0; i < streamCount; i++) {
+ const stream = document.createElement('div');
+ stream.className = 'stream-line';
+ stream.style.top = `${(100 / streamCount) * i + Math.random() * 10}%`;
+ stream.style.width = `${200 + Math.random() * 300}px`;
+ stream.style.animationDelay = `${Math.random() * 4}s`;
+ stream.style.animationDuration = `${3 + Math.random() * 3}s`;
+ container.appendChild(stream);
+ }
+ }
+
+ // Initialize animated background
+ generateNodes();
+ generateDataStreams();
+
+ // Regenerate on resize (debounced)
+ let resizeTimer;
+ window.addEventListener('resize', () => {
+ clearTimeout(resizeTimer);
+ resizeTimer = setTimeout(() => {
+ const nodes = document.getElementById('connectionNodes');
+ const streams = document.getElementById('dataStreams');
+ if (nodes) nodes.innerHTML = '';
+ if (streams) streams.innerHTML = '';
+ generateNodes();
+ generateDataStreams();
+ }, 250);
+ });
+ </script>
 </body>
 </html>

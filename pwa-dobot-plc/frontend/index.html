@@ -3,32 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0f051a">
+    <meta name="theme-color" content="#0a1628">
     <meta name="description" content="Smart Factory Control System">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/png" href="/icon-192.png">
     <link rel="apple-touch-icon" href="/icon-512.png">
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <title>Smart Factory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Smart Factory - Industrial IoT Platform</title>
     <style>
-        /* ========== CSS VARIABLES - NEXUS FLOW ========== */
+        /* ========== PROFESSIONAL IIOT VARIABLES ========== */
         :root {
-            --primary-cyan: #00ffff;
-            --primary-pink: #ff00ff;
-            --primary-purple: #7c3aed;
-            --primary-orange: #f97316;
-            --secondary-amber: #fbbf24;
-            --dark-bg: #1a0b2e;
-            --darker-bg: #0f051a;
-            --card-bg: rgba(26, 11, 46, 0.85);
-            --border-color: rgba(0, 255, 255, 0.3);
-            --text-primary: #ffffff;
-            --text-secondary: #a1a1aa;
-            --accent-green: #10b981;
-            --accent-red: #ef4444;
-            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+            /* Primary Industrial Colors */
+            --primary-blue: #0ea5e9;
+            --primary-teal: #14b8a6;
+            --primary-indigo: #6366f1;
+            --accent-orange: #f97316;
+            --accent-amber: #fbbf24;
+
+            /* Status Colors */
+            --status-success: #10b981;
+            --status-warning: #f59e0b;
+            --status-error: #ef4444;
+            --status-info: #3b82f6;
+
+            /* Background & Surfaces */
+            --bg-dark: #0a1628;
+            --bg-darker: #050b16;
+            --surface-1: rgba(15, 23, 42, 0.85);
+            --surface-2: rgba(30, 41, 59, 0.7);
+            --surface-glass: rgba(255, 255, 255, 0.03);
+
+            /* Borders & Dividers */
+            --border-primary: rgba(14, 165, 233, 0.2);
+            --border-secondary: rgba(148, 163, 184, 0.15);
+            --border-glow: rgba(14, 165, 233, 0.4);
+
+            /* Text */
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-tertiary: #64748b;
+
+            /* Typography */
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         /* ========== RESET & BASE ========== */
@@ -39,277 +57,300 @@
         }
 
         body {
-            font-family: var(--font-mono);
-            background: var(--darker-bg);
+            font-family: var(--font-family);
+            background: var(--bg-darker);
             min-height: 100vh;
             color: var(--text-primary);
-            display: flex;
+            line-height: 1.6;
             overflow-x: hidden;
             position: relative;
-            line-height: 1.6;
         }
 
-        /* ========== CYBERPUNK BACKGROUND ========== */
-        .cyber-bg {
+        /* ========== ANIMATED BACKGROUND ========== */
+        .background-layer {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--darker-bg);
+            inset: 0;
+            z-index: -1;
             overflow: hidden;
-            z-index: -5;
         }
 
-        .cyber-gradient {
+        /* Animated Grid Network */
+        .grid-network {
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: 
-                radial-gradient(circle at 20% 30%, rgba(0, 255, 255, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(255, 0, 255, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 40% 80%, rgba(124, 58, 237, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 60% 20%, rgba(249, 115, 22, 0.15) 0%, transparent 50%);
-            animation: gradientRotate 30s linear infinite;
-            filter: blur(40px);
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(14, 165, 233, 0.03) 1.5px, transparent 1.5px),
+                linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1.5px, transparent 1.5px);
+            background-size: 80px 80px;
+            animation: gridFlow 20s linear infinite;
         }
 
-        @keyframes gradientRotate {
-            0% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(180deg) scale(1.2); }
-            100% { transform: rotate(360deg) scale(1); }
-        }
-
-        /* Matrix Rain Effect */
-        .matrix-rain {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            opacity: 0.15;
-        }
-
-        /* Grid Overlay */
-        .grid-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -2;
-        }
-
-        .grid-lines {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: gridMove 20s linear infinite;
-        }
-
-        @keyframes gridMove {
+        @keyframes gridFlow {
             0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
+            100% { transform: translate(80px, 80px); }
         }
 
-        /* Floating Particles */
-        .particles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            z-index: -3;
+        /* Animated Connection Nodes */
+        .connection-nodes {
+            position: absolute;
+            inset: 0;
         }
 
-        /* Glowing Orbs */
-        .orb {
-            position: fixed;
+        .node {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--primary-blue);
             border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.5;
-            animation: orbFloat 20s ease-in-out infinite;
-            pointer-events: none;
-            z-index: -4;
+            box-shadow: 0 0 20px var(--primary-blue), 0 0 40px var(--primary-blue);
+            animation: nodePulse 3s ease-in-out infinite;
         }
 
-        .orb1 {
-            width: 300px;
-            height: 300px;
-            background: var(--primary-cyan);
-            top: 10%;
-            left: -150px;
+        @keyframes nodePulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 0.7;
+            }
         }
 
-        .orb2 {
+        /* Data Flow Lines */
+        .data-streams {
+            position: absolute;
+            inset: 0;
+        }
+
+        .stream-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg,
+                transparent 0%,
+                var(--primary-blue) 50%,
+                transparent 100%
+            );
+            animation: streamFlow 4s linear infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes streamFlow {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(200%); }
+        }
+
+        /* Subtle Gradient Orbs */
+        .gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.15;
+            animation: orbFloat 25s ease-in-out infinite;
+        }
+
+        .gradient-orb.orb-1 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, var(--primary-blue), transparent);
+            top: -200px;
+            left: -200px;
+        }
+
+        .gradient-orb.orb-2 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--primary-teal), transparent);
+            bottom: -250px;
+            right: -250px;
+            animation-delay: 8s;
+        }
+
+        .gradient-orb.orb-3 {
             width: 400px;
             height: 400px;
-            background: var(--primary-pink);
-            bottom: 10%;
-            right: -200px;
-            animation-delay: 5s;
-        }
-
-        .orb3 {
-            width: 250px;
-            height: 250px;
-            background: var(--primary-purple);
-            top: 50%;
-            left: 50%;
-            animation-delay: 10s;
+            background: radial-gradient(circle, var(--primary-indigo), transparent);
+            top: 40%;
+            left: 60%;
+            animation-delay: 16s;
         }
 
         @keyframes orbFloat {
             0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(100px, -50px) scale(1.1); }
-            66% { transform: translate(-50px, 100px) scale(0.9); }
-        }
-
-        /* Scanlines */
-        .scanlines {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .scanlines::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(
-                transparent 0%,
-                rgba(0, 255, 255, 0.03) 50%,
-                transparent 100%
-            );
-            background-size: 100% 4px;
-            animation: scanline 8s linear infinite;
-        }
-
-        @keyframes scanline {
-            0% { transform: translateY(-100%); }
-            100% { transform: translateY(100%); }
+            33% { transform: translate(80px, -60px) scale(1.1); }
+            66% { transform: translate(-60px, 80px) scale(0.95); }
         }
 
         /* ========== SIDEBAR ========== */
         .sidebar {
             width: 280px;
-            background: var(--card-bg);
+            background: var(--surface-1);
             backdrop-filter: blur(20px);
-            border-right: 1px solid var(--border-color);
-            padding: 24px;
+            border-right: 1px solid var(--border-secondary);
             position: fixed;
             left: 0;
             top: 0;
             height: 100vh;
-            overflow-y: auto;
             z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
         }
 
         .sidebar-header {
-            margin-bottom: 40px;
-            padding-bottom: 24px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 32px 24px;
+            border-bottom: 1px solid var(--border-secondary);
         }
 
-        .sidebar-header h2 {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: var(--primary-cyan);
-            text-shadow: 0 0 20px var(--primary-cyan);
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
             margin-bottom: 8px;
-            letter-spacing: 1px;
         }
 
-        .sidebar-header h2::before {
-            content: '>';
-            margin-right: 0.5rem;
-            color: var(--primary-orange);
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-teal));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
         }
 
-        .sidebar-header h2::after {
-            content: '_';
-            animation: blink 1s infinite;
+        .logo-text h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
         }
 
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0; }
+        .logo-text p {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
         }
 
-        .sidebar-header p {
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: var(--surface-glass);
+            border: 1px solid var(--border-secondary);
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--status-success);
+            border-radius: 50%;
+            animation: statusPulse 2s ease-in-out infinite;
+            box-shadow: 0 0 12px var(--status-success);
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.2); }
+        }
+
+        .status-text {
             font-size: 12px;
             color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 2px;
+            font-weight: 500;
         }
 
-        .sidebar-menu {
+        .sidebar-nav {
+            flex: 1;
+            padding: 24px 16px;
+        }
+
+        .nav-section {
+            margin-bottom: 32px;
+        }
+
+        .nav-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-tertiary);
+            margin-bottom: 12px;
+            padding: 0 12px;
+        }
+
+        .nav-menu {
             list-style: none;
         }
 
-        .sidebar-menu-item {
-            margin-bottom: 8px;
+        .nav-item {
+            margin-bottom: 4px;
         }
 
-        .sidebar-menu-link {
+        .nav-link {
             display: flex;
             align-items: center;
-            gap: 14px;
-            padding: 14px 18px;
+            gap: 12px;
+            padding: 12px 16px;
             text-decoration: none;
             color: var(--text-secondary);
-            transition: all 0.3s ease;
+            border-radius: 8px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 14px;
             font-weight: 500;
-            letter-spacing: 1px;
-            border: 1px solid transparent;
-            clip-path: polygon(10px 0%, 100% 0%, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0% 100%, 0% 10px);
             position: relative;
+            overflow: hidden;
         }
 
-        .sidebar-menu-link:hover {
-            color: var(--primary-cyan);
-            border-color: var(--border-color);
-            background: rgba(0, 255, 255, 0.05);
-            text-shadow: 0 0 10px var(--primary-cyan);
+        .nav-link::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3px;
+            background: var(--primary-blue);
+            transform: scaleY(0);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .sidebar-menu-link.active {
-            background: rgba(0, 255, 255, 0.1);
-            color: var(--primary-cyan);
-            border-color: var(--primary-cyan);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+        .nav-link:hover {
+            color: var(--text-primary);
+            background: var(--surface-glass);
         }
 
-        .sidebar-menu-icon {
-            font-size: 20px;
-            width: 24px;
-            text-align: center;
+        .nav-link.active {
+            color: var(--primary-blue);
+            background: rgba(14, 165, 233, 0.1);
+        }
+
+        .nav-link.active::before {
+            transform: scaleY(1);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
         }
 
         /* ========== MAIN CONTENT ========== */
         .main-content {
-            flex: 1;
             margin-left: 280px;
-            padding: 32px;
             min-height: 100vh;
+            padding: 40px;
         }
 
         .container {
@@ -318,163 +359,263 @@
         }
 
         /* ========== HEADER ========== */
-        .header {
+        .page-header {
+            margin-bottom: 48px;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-title h1 {
+            font-size: 36px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -1px;
+        }
+
+        .header-badge {
+            padding: 6px 12px;
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-teal));
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-stat {
+            padding: 12px 20px;
+            background: var(--surface-1);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-secondary);
+            border-radius: 8px;
             text-align: center;
-            margin-bottom: 50px;
-            padding: 50px 30px;
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            position: relative;
-            clip-path: polygon(30px 0%, 100% 0%, 100% calc(100% - 30px), calc(100% - 30px) 100%, 0% 100%, 0% 30px);
         }
 
-        .header h1 {
-            font-size: clamp(2rem, 5vw, 3.5rem);
-            font-weight: 900;
-            letter-spacing: 3px;
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary-blue);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--text-tertiary);
             text-transform: uppercase;
-            margin-bottom: 15px;
-            position: relative;
+            letter-spacing: 1px;
+            font-weight: 600;
         }
 
-        .header-nexus {
-            background: linear-gradient(135deg, var(--primary-cyan), #00ccff);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: inline-block;
-            animation: cyanPulse 3s ease-in-out infinite;
-            filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.6));
-        }
-
-        .header-flow {
-            background: linear-gradient(135deg, var(--primary-purple), var(--primary-pink));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: inline-block;
-            animation: purplePulse 3s ease-in-out infinite;
-            animation-delay: 1.5s;
-            filter: drop-shadow(0 0 15px rgba(255, 0, 255, 0.6));
-        }
-
-        @keyframes cyanPulse {
-            0%, 100% { filter: brightness(1) drop-shadow(0 0 15px rgba(0, 255, 255, 0.6)); }
-            50% { filter: brightness(1.1) drop-shadow(0 0 25px rgba(0, 255, 255, 0.8)); }
-        }
-
-        @keyframes purplePulse {
-            0%, 100% { filter: brightness(1) drop-shadow(0 0 15px rgba(255, 0, 255, 0.6)); }
-            50% { filter: brightness(1.1) drop-shadow(0 0 25px rgba(255, 0, 255, 0.8)); }
-        }
-
-        .header p {
-            font-size: 1.1rem;
+        .header-description {
+            font-size: 16px;
             color: var(--text-secondary);
-            letter-spacing: 3px;
-            text-transform: uppercase;
+            max-width: 800px;
         }
 
-        /* ========== MENU GRID ========== */
-        .menu-grid {
+        /* ========== MODULE GRID ========== */
+        .module-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 28px;
-            margin-top: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 24px;
         }
 
-        .menu-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border-color);
-            padding: 36px;
+        .module-card {
+            background: var(--surface-1);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-secondary);
+            border-radius: 16px;
+            padding: 32px;
             text-decoration: none;
             color: inherit;
-            display: block;
+            display: flex;
+            flex-direction: column;
             position: relative;
             overflow: hidden;
-            transition: all 0.4s ease;
-            clip-path: polygon(20px 0%, 100% 0%, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0% 100%, 0% 20px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .menu-card::before {
+        .module-card::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, var(--primary-cyan), var(--primary-pink));
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: -1;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--primary-teal));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .menu-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 50px rgba(0, 255, 255, 0.2);
-            border-color: var(--primary-cyan);
-        }
-
-        .menu-card:hover::before {
-            opacity: 0.1;
-        }
-
-        .menu-card-icon {
-            font-size: 56px;
-            margin-bottom: 24px;
-            display: block;
-            filter: drop-shadow(0 0 15px rgba(0, 255, 255, 0.5));
-        }
-
-        .menu-card h2 {
-            font-size: 1.3rem;
-            margin-bottom: 14px;
-            color: var(--primary-cyan);
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            text-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
-        }
-
-        .menu-card p {
-            color: var(--text-secondary);
-            font-size: 14px;
-            line-height: 1.7;
-        }
-
-        .menu-card-arrow {
+        .module-card::after {
+            content: '';
             position: absolute;
-            top: 28px;
-            right: 28px;
-            font-size: 28px;
-            color: var(--primary-cyan);
-            opacity: 0.4;
-            transition: all 0.4s ease;
+            inset: 0;
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%),
+                rgba(14, 165, 233, 0.1) 0%,
+                transparent 50%
+            );
+            opacity: 0;
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .menu-card:hover .menu-card-arrow {
+        .module-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-glow);
+            box-shadow:
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                0 0 0 1px var(--border-primary);
+        }
+
+        .module-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .module-card:hover::after {
             opacity: 1;
-            transform: translateX(8px);
-            color: var(--primary-pink);
         }
 
-        /* Card accent colors */
-        .menu-card.robot-arm { border-left: 3px solid var(--primary-purple); }
-        .menu-card.robot-arm:hover { box-shadow: 0 20px 50px rgba(124, 58, 237, 0.3); }
-        
-        .menu-card.smart-factory { border-left: 3px solid var(--accent-green); }
-        .menu-card.smart-factory:hover { box-shadow: 0 20px 50px rgba(16, 185, 129, 0.3); }
-        
-        .menu-card.vision-system { border-left: 3px solid var(--primary-pink); }
-        .menu-card.vision-system:hover { box-shadow: 0 20px 50px rgba(255, 0, 255, 0.3); }
-        
-        .menu-card.rfid { border-left: 3px solid var(--primary-orange); }
-        .menu-card.rfid:hover { box-shadow: 0 20px 50px rgba(249, 115, 22, 0.3); }
-        
-        .menu-card.digital-twin { border-left: 3px solid var(--primary-cyan); }
-        .menu-card.digital-twin:hover { box-shadow: 0 20px 50px rgba(0, 255, 255, 0.3); }
+        .module-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .module-icon-wrapper {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg,
+                rgba(14, 165, 233, 0.15),
+                rgba(20, 184, 166, 0.15)
+            );
+            border: 1px solid var(--border-primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .module-card:hover .module-icon-wrapper {
+            background: linear-gradient(135deg,
+                rgba(14, 165, 233, 0.25),
+                rgba(20, 184, 166, 0.25)
+            );
+            box-shadow: 0 8px 24px rgba(14, 165, 233, 0.3);
+            transform: scale(1.05);
+        }
+
+        .module-status {
+            width: 8px;
+            height: 8px;
+            background: var(--status-success);
+            border-radius: 50%;
+            animation: statusPulse 2s ease-in-out infinite;
+            box-shadow: 0 0 12px var(--status-success);
+        }
+
+        .module-content {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .module-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .module-description {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .module-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-secondary);
+            position: relative;
+            z-index: 1;
+        }
+
+        .module-meta {
+            display: flex;
+            gap: 16px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        .meta-icon {
+            font-size: 14px;
+        }
+
+        .module-arrow {
+            width: 32px;
+            height: 32px;
+            background: rgba(14, 165, 233, 0.1);
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-blue);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .module-card:hover .module-arrow {
+            background: var(--primary-blue);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        /* Module Specific Colors */
+        .module-card.module-robot { --module-color: var(--primary-indigo); }
+        .module-card.module-factory { --module-color: var(--status-success); }
+        .module-card.module-vision { --module-color: var(--primary-teal); }
+        .module-card.module-rfid { --module-color: var(--accent-orange); }
+        .module-card.module-twin { --module-color: var(--primary-blue); }
+        .module-card.module-plc { --module-color: var(--accent-amber); }
+
+        .module-card.module-robot .module-status { background: var(--primary-indigo); box-shadow: 0 0 12px var(--primary-indigo); }
+        .module-card.module-factory .module-status { background: var(--status-success); box-shadow: 0 0 12px var(--status-success); }
+        .module-card.module-vision .module-status { background: var(--primary-teal); box-shadow: 0 0 12px var(--primary-teal); }
+        .module-card.module-rfid .module-status { background: var(--accent-orange); box-shadow: 0 0 12px var(--accent-orange); }
+        .module-card.module-twin .module-status { background: var(--primary-blue); box-shadow: 0 0 12px var(--primary-blue); }
+        .module-card.module-plc .module-status { background: var(--accent-amber); box-shadow: 0 0 12px var(--accent-amber); }
 
         /* ========== SCROLLBAR ========== */
         ::-webkit-scrollbar {
@@ -483,277 +624,433 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: var(--darker-bg);
+            background: var(--bg-darker);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: linear-gradient(var(--primary-cyan), var(--primary-pink));
+            background: var(--border-primary);
             border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(var(--primary-pink), var(--primary-cyan));
+            background: var(--primary-blue);
         }
 
         /* ========== RESPONSIVE ========== */
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .sidebar {
                 width: 80px;
-                padding: 15px 10px;
             }
 
-            .sidebar-header h2,
-            .sidebar-header p,
-            .sidebar-menu-link span:not(.sidebar-menu-icon) {
+            .logo-text,
+            .status-indicator,
+            .nav-section-title,
+            .nav-link span:not(.nav-icon) {
                 display: none;
+            }
+
+            .sidebar-header {
+                padding: 24px 16px;
+            }
+
+            .logo-icon {
+                margin: 0 auto;
+            }
+
+            .nav-link {
+                justify-content: center;
+                padding: 12px;
             }
 
             .main-content {
                 margin-left: 80px;
-                padding: 20px;
+                padding: 24px;
             }
 
-            .sidebar-menu-link {
-                justify-content: center;
-                padding: 14px;
-            }
-
-            .header h1 {
-                font-size: 1.8rem;
-                letter-spacing: 2px;
-            }
-
-            .menu-grid {
-                grid-template-columns: 1fr;
+            .header-top {
+                flex-direction: column;
+                align-items: flex-start;
                 gap: 20px;
             }
 
-            .menu-card {
-                padding: 28px;
-            }
-
-            /* Hide heavy animations on mobile */
-            .matrix-rain,
-            .scanlines::before {
-                display: none;
-            }
-
-            .orb {
-                filter: blur(100px);
-                opacity: 0.3;
+            .module-grid {
+                grid-template-columns: 1fr;
             }
         }
 
-        /* Reduced motion */
+        @media (max-width: 640px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.mobile-open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+            }
+
+            .header-title h1 {
+                font-size: 28px;
+            }
+
+            .header-actions {
+                flex-wrap: wrap;
+            }
+
+            .module-grid {
+                gap: 16px;
+            }
+
+            .module-card {
+                padding: 24px;
+            }
+        }
+
+        /* Reduced Motion */
         @media (prefers-reduced-motion: reduce) {
-            .cyber-gradient,
-            .grid-lines,
-            .orb,
-            .scanlines::before {
-                animation: none !important;
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Cyberpunk Background Layers -->
-    <div class="cyber-bg">
-        <div class="cyber-gradient"></div>
-        <div class="matrix-rain" id="matrixRain"></div>
+    <!-- Animated Background -->
+    <div class="background-layer">
+        <div class="grid-network"></div>
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+        <div class="connection-nodes" id="connectionNodes"></div>
+        <div class="data-streams" id="dataStreams"></div>
     </div>
-    <div class="grid-overlay">
-        <div class="grid-lines"></div>
-    </div>
-    <div class="particles" id="particlesContainer"></div>
-    <div class="orb orb1"></div>
-    <div class="orb orb2"></div>
-    <div class="orb orb3"></div>
-    <div class="scanlines"></div>
 
-    <!-- Sidebar Navigation -->
+    <!-- Sidebar -->
     <nav class="sidebar">
         <div class="sidebar-header">
-            <h2>Smart Factory</h2>
-            <p>Control System</p>
+            <div class="logo-container">
+                <div class="logo-icon">SF</div>
+                <div class="logo-text">
+                    <h2>Smart Factory</h2>
+                    <p>IIoT Platform</p>
+                </div>
+            </div>
+            <div class="status-indicator">
+                <div class="status-dot"></div>
+                <span class="status-text">System Online</span>
+            </div>
         </div>
-        <ul class="sidebar-menu">
-            <li class="sidebar-menu-item">
-                <a href="/" class="sidebar-menu-link active">
-                    <span class="sidebar-menu-icon">&#127968;</span>
-                    <span>Home</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="/robot-arm.html" class="sidebar-menu-link">
-                    <span class="sidebar-menu-icon">&#129302;</span>
-                    <span>Robot Arm</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="/smart-factory.html" class="sidebar-menu-link">
-                    <span class="sidebar-menu-icon">&#127981;</span>
-                    <span>Smart Factory</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="/vision-system.html" class="sidebar-menu-link">
-                    <span class="sidebar-menu-icon">&#128065;</span>
-                    <span>Vision System</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="/rfid.html" class="sidebar-menu-link">
-                    <span class="sidebar-menu-icon">&#128225;</span>
-                    <span>RFID</span>
-                </a>
-            </li>
-            <li class="sidebar-menu-item">
-                <a href="/digital-twin.html" class="sidebar-menu-link">
-                    <span class="sidebar-menu-icon">&#127757;</span>
-                    <span>Digital Twin</span>
-                </a>
-            </li>
-        </ul>
+
+        <div class="sidebar-nav">
+            <nav class="nav-section">
+                <h3 class="nav-section-title">Navigation</h3>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="/" class="nav-link active">
+                            <span class="nav-icon">🏠</span>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/robot-arm.html" class="nav-link">
+                            <span class="nav-icon">🤖</span>
+                            <span>Robot Arm</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/smart-factory.html" class="nav-link">
+                            <span class="nav-icon">🏭</span>
+                            <span>Smart Factory</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/vision-system.html" class="nav-link">
+                            <span class="nav-icon">👁</span>
+                            <span>Vision System</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/rfid.html" class="nav-link">
+                            <span class="nav-icon">📡</span>
+                            <span>RFID</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/digital-twin.html" class="nav-link">
+                            <span class="nav-icon">🔄</span>
+                            <span>Digital Twin</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/plc-diagnostics.html" class="nav-link">
+                            <span class="nav-icon">⚙️</span>
+                            <span>PLC Diagnostics</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
     </nav>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <main class="main-content">
         <div class="container">
-            <div class="header">
-                <h1>
-                    <span class="header-nexus">&#127981; Smart</span>
-                    <span class="header-flow">Factory</span>
-                </h1>
-                <p>Integrated Control System</p>
-            </div>
+            <!-- Page Header -->
+            <header class="page-header">
+                <div class="header-top">
+                    <div class="header-title">
+                        <h1>Control Dashboard</h1>
+                        <span class="header-badge">IIoT v4.5</span>
+                    </div>
+                    <div class="header-actions">
+                        <div class="header-stat">
+                            <span class="stat-value">6</span>
+                            <span class="stat-label">Modules</span>
+                        </div>
+                        <div class="header-stat">
+                            <span class="stat-value">●</span>
+                            <span class="stat-label">Online</span>
+                        </div>
+                    </div>
+                </div>
+                <p class="header-description">
+                    Integrated Industrial IoT platform for smart manufacturing. Monitor, control, and optimize your factory operations in real-time.
+                </p>
+            </header>
 
-            <div class="menu-grid">
-                <a href="/robot-arm.html" class="menu-card robot-arm">
-                    <span class="menu-card-icon">&#129302;</span>
-                    <h2>Robot Arm</h2>
-                    <p>Control and monitor the Dobot robotic arm. Manage PLC communication, position control, and end effector operations.</p>
-                    <span class="menu-card-arrow">&#8594;</span>
+            <!-- Module Grid -->
+            <div class="module-grid">
+                <!-- Robot Arm Module -->
+                <a href="/robot-arm.html" class="module-card module-robot">
+                    <div class="module-header">
+                        <div class="module-icon-wrapper">🤖</div>
+                        <div class="module-status"></div>
+                    </div>
+                    <div class="module-content">
+                        <h2 class="module-title">Robot Arm Control</h2>
+                        <p class="module-description">
+                            Precision control and monitoring of Dobot robotic arm. Manage PLC integration, coordinate positioning, and end effector operations with real-time feedback.
+                        </p>
+                    </div>
+                    <div class="module-footer">
+                        <div class="module-meta">
+                            <span class="meta-item">
+                                <span class="meta-icon">●</span>
+                                <span>Ready</span>
+                            </span>
+                            <span class="meta-item">
+                                <span class="meta-icon">⚡</span>
+                                <span>Active</span>
+                            </span>
+                        </div>
+                        <div class="module-arrow">→</div>
+                    </div>
                 </a>
 
-                <a href="/smart-factory.html" class="menu-card smart-factory">
-                    <span class="menu-card-icon">&#127981;</span>
-                    <h2>Smart Factory</h2>
-                    <p>Factory-wide monitoring and control. View production statistics, system status, and manage factory operations.</p>
-                    <span class="menu-card-arrow">&#8594;</span>
+                <!-- Smart Factory Module -->
+                <a href="/smart-factory.html" class="module-card module-factory">
+                    <div class="module-header">
+                        <div class="module-icon-wrapper">🏭</div>
+                        <div class="module-status"></div>
+                    </div>
+                    <div class="module-content">
+                        <h2 class="module-title">Smart Factory</h2>
+                        <p class="module-description">
+                            Factory-wide monitoring and control center. Track production metrics, system health, OEE analytics, and manage automated workflows across all operations.
+                        </p>
+                    </div>
+                    <div class="module-footer">
+                        <div class="module-meta">
+                            <span class="meta-item">
+                                <span class="meta-icon">●</span>
+                                <span>Running</span>
+                            </span>
+                            <span class="meta-item">
+                                <span class="meta-icon">📊</span>
+                                <span>Analytics</span>
+                            </span>
+                        </div>
+                        <div class="module-arrow">→</div>
+                    </div>
                 </a>
 
-                <a href="/vision-system.html" class="menu-card vision-system">
-                    <span class="menu-card-icon">&#128065;</span>
-                    <h2>Vision System</h2>
-                    <p>Computer vision and image processing. Monitor camera feeds, analyze images, and manage vision-based quality control.</p>
-                    <span class="menu-card-arrow">&#8594;</span>
+                <!-- Vision System Module -->
+                <a href="/vision-system.html" class="module-card module-vision">
+                    <div class="module-header">
+                        <div class="module-icon-wrapper">👁</div>
+                        <div class="module-status"></div>
+                    </div>
+                    <div class="module-content">
+                        <h2 class="module-title">Vision System</h2>
+                        <p class="module-description">
+                            AI-powered computer vision for quality inspection. Real-time image processing, defect detection, object recognition, and automated quality control analysis.
+                        </p>
+                    </div>
+                    <div class="module-footer">
+                        <div class="module-meta">
+                            <span class="meta-item">
+                                <span class="meta-icon">●</span>
+                                <span>Scanning</span>
+                            </span>
+                            <span class="meta-item">
+                                <span class="meta-icon">🎯</span>
+                                <span>98.5% Acc</span>
+                            </span>
+                        </div>
+                        <div class="module-arrow">→</div>
+                    </div>
                 </a>
 
-                <a href="/rfid.html" class="menu-card rfid">
-                    <span class="menu-card-icon">&#128225;</span>
-                    <h2>RFID</h2>
-                    <p>RFID tag management and tracking. Monitor RFID readers, track inventory, and manage product identification.</p>
-                    <span class="menu-card-arrow">&#8594;</span>
+                <!-- RFID Module -->
+                <a href="/rfid.html" class="module-card module-rfid">
+                    <div class="module-header">
+                        <div class="module-icon-wrapper">📡</div>
+                        <div class="module-status"></div>
+                    </div>
+                    <div class="module-content">
+                        <h2 class="module-title">RFID Tracking</h2>
+                        <p class="module-description">
+                            Asset and inventory management via RFID. Monitor tag readers, track product movement, manage inventory levels, and maintain full traceability.
+                        </p>
+                    </div>
+                    <div class="module-footer">
+                        <div class="module-meta">
+                            <span class="meta-item">
+                                <span class="meta-icon">●</span>
+                                <span>Connected</span>
+                            </span>
+                            <span class="meta-item">
+                                <span class="meta-icon">📦</span>
+                                <span>Tracking</span>
+                            </span>
+                        </div>
+                        <div class="module-arrow">→</div>
+                    </div>
                 </a>
 
-                <a href="/digital-twin.html" class="menu-card digital-twin">
-                    <span class="menu-card-icon">&#127757;</span>
-                    <h2>Digital Twin</h2>
-                    <p>3D factory visualization and real-time monitoring. Interactive digital representation of your smart factory systems.</p>
-                    <span class="menu-card-arrow">&#8594;</span>
+                <!-- Digital Twin Module -->
+                <a href="/digital-twin.html" class="module-card module-twin">
+                    <div class="module-header">
+                        <div class="module-icon-wrapper">🔄</div>
+                        <div class="module-status"></div>
+                    </div>
+                    <div class="module-content">
+                        <h2 class="module-title">Digital Twin</h2>
+                        <p class="module-description">
+                            3D virtualization of factory systems. Real-time synchronized digital replica, predictive simulation, and interactive monitoring of physical assets.
+                        </p>
+                    </div>
+                    <div class="module-footer">
+                        <div class="module-meta">
+                            <span class="meta-item">
+                                <span class="meta-icon">●</span>
+                                <span>Synced</span>
+                            </span>
+                            <span class="meta-item">
+                                <span class="meta-icon">🔄</span>
+                                <span>Real-time</span>
+                            </span>
+                        </div>
+                        <div class="module-arrow">→</div>
+                    </div>
+                </a>
+
+                <!-- PLC Diagnostics Module -->
+                <a href="/plc-diagnostics.html" class="module-card module-plc">
+                    <div class="module-header">
+                        <div class="module-icon-wrapper">⚙️</div>
+                        <div class="module-status"></div>
+                    </div>
+                    <div class="module-content">
+                        <h2 class="module-title">PLC Diagnostics</h2>
+                        <p class="module-description">
+                            Siemens PLC monitoring and diagnostics. View data blocks, monitor control bits, track communication status, and troubleshoot industrial automation systems.
+                        </p>
+                    </div>
+                    <div class="module-footer">
+                        <div class="module-meta">
+                            <span class="meta-item">
+                                <span class="meta-icon">●</span>
+                                <span>S7-1200</span>
+                            </span>
+                            <span class="meta-item">
+                                <span class="meta-icon">🔧</span>
+                                <span>Monitor</span>
+                            </span>
+                        </div>
+                        <div class="module-arrow">→</div>
+                    </div>
                 </a>
             </div>
         </div>
-    </div>
+    </main>
 
     <script>
-        // Generate Matrix Rain Effect
-        function generateMatrixRain() {
-            const matrixRain = document.getElementById('matrixRain');
-            if (!matrixRain) return;
-            const characters = '01アイウエオカキクケコサシスセソタチツテト';
-            const columns = Math.floor(window.innerWidth / 20);
-            
-            for (let i = 0; i < columns; i++) {
-                const column = document.createElement('div');
-                column.style.cssText = `
-                    position: absolute;
-                    top: -100vh;
-                    left: ${i * 20}px;
-                    font-family: 'Courier New', monospace;
-                    font-size: 14px;
-                    color: var(--primary-cyan);
-                    text-shadow: 0 0 5px var(--primary-cyan);
-                    animation: matrixFall ${Math.random() * 5 + 10}s linear infinite;
-                    animation-delay: ${Math.random() * 5}s;
-                    writing-mode: vertical-rl;
-                    text-orientation: upright;
-                `;
-                
-                let text = '';
-                const charCount = Math.floor(Math.random() * 20 + 10);
-                for (let j = 0; j < charCount; j++) {
-                    text += characters[Math.floor(Math.random() * characters.length)] + ' ';
-                }
-                column.textContent = text;
-                matrixRain.appendChild(column);
+        // Generate animated connection nodes
+        function generateNodes() {
+            const container = document.getElementById('connectionNodes');
+            if (!container) return;
+
+            const nodeCount = 15;
+            for (let i = 0; i < nodeCount; i++) {
+                const node = document.createElement('div');
+                node.className = 'node';
+                node.style.left = `${Math.random() * 100}%`;
+                node.style.top = `${Math.random() * 100}%`;
+                node.style.animationDelay = `${Math.random() * 3}s`;
+                container.appendChild(node);
             }
         }
 
-        // Generate Floating Particles
-        function generateParticles() {
-            const particlesContainer = document.getElementById('particlesContainer');
-            if (!particlesContainer) return;
-            const particleCount = 30;
-            
-            for (let i = 0; i < particleCount; i++) {
-                const particle = document.createElement('div');
-                particle.style.cssText = `
-                    position: absolute;
-                    width: 4px;
-                    height: 4px;
-                    background: ${i % 2 === 0 ? 'var(--primary-cyan)' : 'var(--primary-pink)'};
-                    border-radius: 50%;
-                    box-shadow: 0 0 10px ${i % 2 === 0 ? 'var(--primary-cyan)' : 'var(--primary-pink)'};
-                    left: ${Math.random() * 100}%;
-                    animation: float ${Math.random() * 10 + 20}s infinite;
-                    animation-delay: ${Math.random() * 20}s;
-                    opacity: 0;
-                `;
-                particlesContainer.appendChild(particle);
+        // Generate data stream lines
+        function generateDataStreams() {
+            const container = document.getElementById('dataStreams');
+            if (!container) return;
+
+            const streamCount = 8;
+            for (let i = 0; i < streamCount; i++) {
+                const stream = document.createElement('div');
+                stream.className = 'stream-line';
+                stream.style.top = `${(100 / streamCount) * i + Math.random() * 10}%`;
+                stream.style.width = `${200 + Math.random() * 300}px`;
+                stream.style.animationDelay = `${Math.random() * 4}s`;
+                stream.style.animationDuration = `${3 + Math.random() * 3}s`;
+                container.appendChild(stream);
             }
         }
 
-        // Add CSS animation for matrix fall and float
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes matrixFall {
-                0% { transform: translateY(0); }
-                100% { transform: translateY(200vh); }
-            }
-            @keyframes float {
-                0% { transform: translateY(100vh) translateX(0); opacity: 0; }
-                10% { opacity: 1; }
-                90% { opacity: 1; }
-                100% { transform: translateY(-100vh) translateX(100px); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
+        // Mouse follower effect on cards
+        document.querySelectorAll('.module-card').forEach(card => {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = ((e.clientX - rect.left) / rect.width) * 100;
+                const y = ((e.clientY - rect.top) / rect.height) * 100;
+                card.style.setProperty('--x', `${x}%`);
+                card.style.setProperty('--y', `${y}%`);
+            });
+        });
 
-        // Initialize effects
-        generateMatrixRain();
-        generateParticles();
+        // Initialize
+        generateNodes();
+        generateDataStreams();
 
-        // Regenerate matrix rain on window resize
+        // Regenerate on resize (debounced)
         let resizeTimer;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(() => {
-                const matrixRain = document.getElementById('matrixRain');
-                if (matrixRain) {
-                    matrixRain.innerHTML = '';
-                    generateMatrixRain();
-                }
+                const nodes = document.getElementById('connectionNodes');
+                const streams = document.getElementById('dataStreams');
+                if (nodes) nodes.innerHTML = '';
+                if (streams) streams.innerHTML = '';
+                generateNodes();
+                generateDataStreams();
             }, 250);
         });
     </script>
