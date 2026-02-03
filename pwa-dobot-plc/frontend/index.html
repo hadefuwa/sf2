@@ -49,6 +49,28 @@
       50% { opacity: 0.5; }
     }
 
+    /* Bold White Text Override */
+    body, .card-body, .card-title, .card-category, p, span, div, td, th, label {
+      color: #ffffff !important;
+      font-weight: 500 !important;
+    }
+
+    .card-header .card-title,
+    .card-header .card-category {
+      color: #ffffff !important;
+      font-weight: 600 !important;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      color: #ffffff !important;
+      font-weight: 700 !important;
+    }
+
+    .sidebar .nav li a p {
+      color: rgba(255, 255, 255, 0.95) !important;
+      font-weight: 500 !important;
+    }
+
     .card-category {
       font-size: 12px;
       text-transform: uppercase;
@@ -715,18 +737,8 @@
     }
 
     async function updateProductionStats() {
-      try {
-        const response = await fetch(`${API_BASE}/api/stats/production`);
-        const data = await response.json();
-        
-        document.getElementById('units-today').textContent = data.unitsProduced || 0;
-        document.getElementById('defects-today').textContent = data.defects || 0;
-        document.getElementById('quality-rate').textContent = 
-          `${data.qualityRate || 100}%`;
-        document.getElementById('uptime').textContent = `${data.uptime || 99.8}%`;
-      } catch (error) {
-        console.error('Failed to fetch production stats:', error);
-      }
+      // Stats are static - no backend endpoint yet
+      // Future: integrate with /api/smart-factory for real data
     }
 
     // Utility Functions
