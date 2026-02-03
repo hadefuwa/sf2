@@ -1,0 +1,289 @@
+/* Professional Muted Theme Override */
+/* Replaces bright colors with professional, muted tones */
+
+:root {
+  /* Professional color palette - muted and subdued */
+  --bg-primary: #1e1e1e;
+  --bg-secondary: #252525;
+  --bg-card: #2a2a2a;
+  --bg-card-hover: #2f2f2f;
+
+  --text-primary: #e8e8e8;
+  --text-secondary: #b8b8b8;
+  --text-muted: #888888;
+
+  --accent-primary: #4a5568;    /* Muted slate gray */
+  --accent-secondary: #5a6a7a;  /* Subtle blue-gray */
+  --border-color: #3a3a3a;
+
+  /* Status colors - much more subdued */
+  --status-success: #5a8a6f;    /* Muted green */
+  --status-warning: #9a8a5a;    /* Muted amber */
+  --status-danger: #9a5a5a;     /* Muted red */
+  --status-info: #5a7a9a;       /* Muted blue */
+}
+
+/* ============================================
+   CARD HEADERS - Remove all bright colors
+   ============================================ */
+.card-header-purple,
+.card-header-rose,
+.card-header-warning,
+.card-header-success,
+.card-header-info,
+.card-header-danger {
+  background: linear-gradient(60deg, var(--accent-primary), var(--accent-secondary)) !important;
+  box-shadow: 0 4px 10px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+.card-header-icon {
+  background: linear-gradient(60deg, var(--accent-primary), var(--accent-secondary)) !important;
+  box-shadow: 0 4px 10px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Card backgrounds */
+.card {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.card:hover {
+  background-color: var(--bg-card-hover) !important;
+  border: 1px solid #4a4a4a !important;
+}
+
+/* ============================================
+   TEXT VISIBILITY - Improved contrast
+   ============================================ */
+body,
+.card-body,
+.card-title,
+.card-category,
+p, span, div, td, th, label {
+  color: var(--text-primary) !important;
+  font-weight: 400 !important;  /* Reduced from 500 */
+}
+
+.card-category {
+  color: var(--text-secondary) !important;
+  font-weight: 400 !important;
+  opacity: 0.85 !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;  /* Reduced from 700 */
+}
+
+.card-header .card-title,
+.card-header .card-category {
+  color: #ffffff !important;
+  font-weight: 500 !important;  /* Reduced from 600 */
+}
+
+/* ============================================
+   SIDEBAR - Remove purple gradient
+   ============================================ */
+.sidebar[data-image]:after,
+.sidebar:after {
+  background: linear-gradient(135deg, #1e1e1e 0%, #252525 50%, #1e1e1e 100%) !important;
+  opacity: 1 !important;
+}
+
+.sidebar .nav li a p {
+  color: var(--text-secondary) !important;
+  font-weight: 400 !important;
+}
+
+.sidebar .nav li.active > a,
+.sidebar .nav li > a:hover {
+  background-color: rgba(74, 85, 104, 0.2) !important;
+}
+
+/* Remove purple particle animations */
+.factory-particle {
+  background: rgba(74, 85, 104, 0.15) !important;  /* Muted gray instead of purple */
+}
+
+.circuit-line {
+  background: linear-gradient(90deg, transparent, rgba(74, 85, 104, 0.15), transparent) !important;
+}
+
+/* ============================================
+   BUTTONS - Muted colors
+   ============================================ */
+.btn-primary {
+  background-color: var(--accent-secondary) !important;
+  border-color: var(--accent-secondary) !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+}
+
+.btn-primary:hover {
+  background-color: #6a7a8a !important;
+  border-color: #6a7a8a !important;
+}
+
+.btn-success {
+  background-color: var(--status-success) !important;
+  border-color: var(--status-success) !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+}
+
+.btn-success:hover {
+  background-color: #6a9a7f !important;
+}
+
+.btn-warning {
+  background-color: var(--status-warning) !important;
+  border-color: var(--status-warning) !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+}
+
+.btn-warning:hover {
+  background-color: #aa9a6a !important;
+}
+
+.btn-danger {
+  background-color: var(--status-danger) !important;
+  border-color: var(--status-danger) !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+}
+
+.btn-danger:hover {
+  background-color: #aa6a6a !important;
+}
+
+.btn-info {
+  background-color: var(--status-info) !important;
+  border-color: var(--status-info) !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+}
+
+.btn-info:hover {
+  background-color: #6a8aaa !important;
+}
+
+/* ============================================
+   STATUS TEXT - More subtle colors
+   ============================================ */
+.text-success {
+  color: var(--status-success) !important;
+}
+
+.text-warning {
+  color: var(--status-warning) !important;
+}
+
+.text-danger {
+  color: var(--status-danger) !important;
+}
+
+.text-info {
+  color: var(--status-info) !important;
+}
+
+/* ============================================
+   TABS - Remove bright purple
+   ============================================ */
+.nav-tabs .nav-link.active {
+  background-color: var(--accent-secondary) !important;
+  color: #ffffff !important;
+}
+
+.nav-tabs .nav-link:hover {
+  background-color: rgba(74, 85, 104, 0.3) !important;
+}
+
+/* ============================================
+   TABLES - Improve readability
+   ============================================ */
+.table {
+  color: var(--text-primary) !important;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(74, 85, 104, 0.1) !important;
+}
+
+/* ============================================
+   ICONS - Subdued status colors
+   ============================================ */
+.material-icons.text-success {
+  color: var(--status-success) !important;
+}
+
+.material-icons.text-warning {
+  color: var(--status-warning) !important;
+}
+
+.material-icons.text-danger {
+  color: var(--status-danger) !important;
+}
+
+.material-icons.text-info {
+  color: var(--status-info) !important;
+}
+
+/* ============================================
+   NAVBAR - Clean and professional
+   ============================================ */
+.navbar {
+  background-color: var(--bg-secondary) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* ============================================
+   LOADING SPINNER - Match theme
+   ============================================ */
+.spinner {
+  border: 4px solid rgba(255,255,255,0.1) !important;
+  border-left-color: var(--accent-secondary) !important;
+}
+
+/* ============================================
+   NOTIFICATIONS BADGE - Subtle
+   ============================================ */
+.notification {
+  background-color: var(--status-info) !important;
+}
+
+/* ============================================
+   SYSTEM STATUS BADGES - Muted
+   ============================================ */
+.system-status-badge.online {
+  background: var(--status-success) !important;
+  box-shadow: 0 0 8px rgba(90, 138, 111, 0.3) !important;
+}
+
+.system-status-badge.offline {
+  background: var(--status-danger) !important;
+  box-shadow: 0 0 8px rgba(154, 90, 90, 0.3) !important;
+}
+
+/* ============================================
+   MAIN PANEL BACKGROUND
+   ============================================ */
+.main-panel {
+  background-color: var(--bg-primary) !important;
+}
+
+.main-panel > .content {
+  background-color: var(--bg-primary) !important;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+.footer {
+  background-color: var(--bg-secondary) !important;
+  border-top: 1px solid var(--border-color) !important;
+  color: var(--text-secondary) !important;
+}
+
+.footer a {
+  color: var(--text-primary) !important;
+}
+
+.footer a:hover {
+  color: var(--accent-secondary) !important;
+}
