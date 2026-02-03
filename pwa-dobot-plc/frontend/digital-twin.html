@@ -1,22 +1,368 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
- <meta name="theme-color" content="#1c1b1f">
- <meta name="description" content="Digital Twin - Factory Visualization">
- <meta name="apple-mobile-web-app-capable" content="yes">
- <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
- <link rel="manifest" href="/manifest.json">
- <link rel="icon" type="image/png" href="/icon-192.png">
- <link rel="apple-touch-icon" href="/icon-512.png">
- <title>Digital Twin - Smart Factory</title>
- <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
- <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
- <style>
- /* ========== MATERIAL DESIGN 3 DARK THEME ========== */
- :root {
- /* Material Design 3 Color Tokens - Dark Theme */
+  <meta charset="utf-8" />
+  <link rel="apple-touch-icon" sizes="76x76" href="./assets/img/apple-icon.png">
+  <link rel="icon" type="image/png" href="./assets/img/favicon.png">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>Digital Twin - Smart Factory</title>
+  <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
+  
+  <!-- Fonts and icons -->
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
+  
+  <!-- CSS Files -->
+  <link href="./assets/css/material-dashboard.min.css?v=2.1.0" rel="stylesheet" />
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1c1b1f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <style>
+    /* Custom styles for 3D visualization */
+    .card:hover {
+      transform: translateY(-5px);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    #canvas-container {
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 200px);
+      min-height: 600px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #0f0e11;
+      border: 1px solid #44464f;
+    }
+
+    #dashboard {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 10;
+      background: rgba(36, 35, 42, 0.95);
+      backdrop-filter: blur(20px);
+      padding: 24px;
+      border-radius: 12px;
+      font-size: 13px;
+      width: 320px;
+      border: 1px solid #44464f;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    }
+
+    #dashboard h3 {
+      margin: 0 0 20px 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: #a8c7fa;
+      border-bottom: 1px solid #44464f;
+      padding-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+
+    .metric-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 10px 0;
+      padding: 12px 14px;
+      background: rgba(62, 61, 69, 0.5);
+      border-radius: 8px;
+      border: 1px solid #44464f;
+      transition: all 0.3s ease;
+    }
+
+    .metric-row:hover {
+      background: rgba(62, 61, 69, 0.8);
+      border-color: #8f9099;
+    }
+
+    .metric-label {
+      color: #c5c6d0;
+      font-size: 12px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .metric-value {
+      color: #e4e1e6;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .metric-value.good {
+      color: #4caf50;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 0;
+    }
+
+    .status-indicator.running {
+      background: #4caf50;
+      animation: pulse 2s infinite;
+      box-shadow: 0 0 12px #4caf50;
+    }
+
+    .status-indicator.idle {
+      background: #f59e0b;
+      box-shadow: 0 0 12px #f59e0b;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.2); }
+    }
+
+    .section {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #44464f;
+    }
+
+    .section > div:first-child {
+      font-size: 11px;
+      color: #8f9099;
+      margin-bottom: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .chart-mini {
+      height: 40px;
+      background: rgba(15, 14, 17, 0.5);
+      border: 1px solid #44464f;
+      border-radius: 8px;
+      margin-top: 8px;
+    }
+
+    .control-buttons {
+      position: absolute;
+      bottom: 30px;
+      left: 30px;
+      z-index: 10;
+      display: flex;
+      gap: 12px;
+    }
+
+    .control-buttons button {
+      background: linear-gradient(135deg, #9c27b0, #7b1fa2);
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(156, 39, 176, 0.4);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .control-buttons button:hover {
+      background: linear-gradient(135deg, #7b1fa2, #6a1b9a);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(156, 39, 176, 0.5);
+    }
+
+    .control-buttons button:active {
+      transform: translateY(0);
+    }
+  </style>
+</head>
+
+<body class="dark-edition">
+  <div class="wrapper">
+    <div class="sidebar" data-color="purple" data-background-color="black" data-image="./assets/img/sidebar-2.jpg">
+      <div class="logo">
+        <a href="/" class="simple-text logo-normal">
+          <i class="material-icons">factory</i>
+          Smart Factory
+        </a>
+      </div>
+      <div class="sidebar-wrapper">
+        <ul class="nav">
+          <li class="nav-item">
+            <a class="nav-link" href="/index.html">
+              <i class="material-icons">dashboard</i>
+              <p>Dashboard</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/robot-arm.html">
+              <i class="material-icons">precision_manufacturing</i>
+              <p>Robot Arm</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/vision-system.html">
+              <i class="material-icons">visibility</i>
+              <p>Vision System</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/smart-factory.html">
+              <i class="material-icons">settings</i>
+              <p>Factory Control</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/rfid.html">
+              <i class="material-icons">nfc</i>
+              <p>RFID Tracking</p>
+            </a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="/digital-twin.html">
+              <i class="material-icons">view_in_ar</i>
+              <p>Digital Twin</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/plc-diagnostics.html">
+              <i class="material-icons">analytics</i>
+              <p>PLC Diagnostics</p>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="main-panel">
+      <!-- Navbar -->
+      <nav class="navbar navbar-expand-lg navbar-transparent navbar-absolute fixed-top">
+        <div class="container-fluid">
+          <div class="navbar-wrapper">
+            <a class="navbar-brand" href="javascript:;">Digital Twin</a>
+          </div>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" aria-controls="navigation-index" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="navbar-toggler-icon icon-bar"></span>
+            <span class="navbar-toggler-icon icon-bar"></span>
+            <span class="navbar-toggler-icon icon-bar"></span>
+          </button>
+        </div>
+      </nav>
+      <!-- End Navbar -->
+
+      <div class="content">
+        <div class="container-fluid">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header card-header-primary">
+                  <h4 class="card-title">Factory Digital Twin - 3D Visualization</h4>
+                  <p class="card-category">Real-time 3D simulation of factory operations</p>
+                </div>
+                <div class="card-body">
+                  <!-- 3D Canvas Container -->
+                  <div id="canvas-container">
+                    <!-- Dashboard Overlay -->
+                    <div id="dashboard">
+                      <h3>Live Metrics</h3>
+
+                      <div class="metric-row">
+                        <span class="metric-label">Throughput</span>
+                        <span class="metric-value" id="throughput">0 boxes/min</span>
+                      </div>
+                      <div class="metric-row">
+                        <span class="metric-label">Boxes Processed</span>
+                        <span class="metric-value" id="boxesProcessed">0</span>
+                      </div>
+                      <div class="metric-row">
+                        <span class="metric-label">Avg Cycle Time</span>
+                        <span class="metric-value" id="cycleTime">0.0s</span>
+                      </div>
+
+                      <div class="section">
+                        <div>Equipment Status</div>
+                        <div class="metric-row">
+                          <span class="metric-label"><span class="status-indicator running" id="gantry-status"></span>Gantry</span>
+                          <span class="metric-value" id="gantry-state">Idle</span>
+                        </div>
+                        <div class="metric-row">
+                          <span class="metric-label"><span class="status-indicator running" id="conv1-status"></span>Conveyor 1</span>
+                          <span class="metric-value" id="conv1-state">Running</span>
+                        </div>
+                        <div class="metric-row">
+                          <span class="metric-label"><span class="status-indicator running" id="conv2-status"></span>Conveyor 2</span>
+                          <span class="metric-value" id="conv2-state">Running</span>
+                        </div>
+                        <div class="metric-row">
+                          <span class="metric-label"><span class="status-indicator idle" id="robot-status"></span>Robot</span>
+                          <span class="metric-value" id="robot-state">Ready</span>
+                        </div>
+                      </div>
+
+                      <div class="section">
+                        <div>Queue Status</div>
+                        <div class="metric-row">
+                          <span class="metric-label">Waiting to Release</span>
+                          <span class="metric-value" id="queueWaiting">0</span>
+                        </div>
+                        <div class="metric-row">
+                          <span class="metric-label">In Transit</span>
+                          <span class="metric-value" id="inTransit">0</span>
+                        </div>
+                        <div class="metric-row">
+                          <span class="metric-label">On Pallet</span>
+                          <span class="metric-value good" id="onPallet">0</span>
+                        </div>
+                      </div>
+
+                      <div class="section">
+                        <div>Production Rate (last 60s)</div>
+                        <canvas id="throughputChart" class="chart-mini" width="250" height="40"></canvas>
+                      </div>
+                    </div>
+
+                    <!-- Control Buttons -->
+                    <div class="control-buttons">
+                      <button id="reset">Reset Cycle</button>
+                      <button id="release">Release 1 Box</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core JS Files -->
+  <script src="./assets/js/core/jquery.min.js"></script>
+  <script src="./assets/js/core/popper.min.js"></script>
+  <script src="./assets/js/core/bootstrap-material-design.min.js"></script>
+  <script src="./assets/js/plugins/perfect-scrollbar.jquery.min.js"></script>
+  <script src="./assets/js/material-dashboard.min.js?v=2.1.0" type="text/javascript"></script>
+
+  <!-- Three.js Import Map and Main Script -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module">
+    import('./digital-twin-main.js').catch(err => {
+      console.error('Module load failed:', err);
+    });
+  </script>
+</body>
+</html>
  --md-sys-color-primary: #a8c7fa;
  --md-sys-color-on-primary: #0b3d8c;
  --md-sys-color-primary-container: #1e54a4;

@@ -1,1352 +1,808 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
- <meta name="theme-color" content="#1c1b1f">
- <meta name="description" content="RFID Control">
- <title>RFID - Smart Factory</title>
- <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
- <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
- <style>
- /* ========== MATERIAL DESIGN 3 DARK THEME ========== */
- :root {
- /* Material Design 3 Color Tokens - Dark Theme */
- --md-sys-color-primary: #a8c7fa;
- --md-sys-color-on-primary: #0b3d8c;
- --md-sys-color-primary-container: #1e54a4;
- --md-sys-color-on-primary-container: #d6e3ff;
-
- --md-sys-color-secondary: #bcc7dc;
- --md-sys-color-on-secondary: #263141;
- --md-sys-color-secondary-container: #3c4758;
- --md-sys-color-on-secondary-container: #d8e3f8;
-
- --md-sys-color-tertiary: #d7bce0;
- --md-sys-color-on-tertiary: #3b2948;
- --md-sys-color-tertiary-container: #533f5f;
- --md-sys-color-on-tertiary-container: #f3dafd;
-
- --md-sys-color-error: #ffb4ab;
- --md-sys-color-on-error: #690005;
- --md-sys-color-error-container: #93000a;
- --md-sys-color-on-error-container: #ffdad6;
-
- --md-sys-color-background: #1c1b1f;
- --md-sys-color-on-background: #e4e1e6;
- --md-sys-color-surface: #1c1b1f;
- --md-sys-color-on-surface: #e4e1e6;
- --md-sys-color-surface-variant: #44464f;
- --md-sys-color-on-surface-variant: #c5c6d0;
-
- --md-sys-color-outline: #8f9099;
- --md-sys-color-outline-variant: #44464f;
-
- --md-sys-color-surface-container-lowest: #0f0e11;
- --md-sys-color-surface-container-low: #24232a;
- --md-sys-color-surface-container: #282730;
- --md-sys-color-surface-container-high: #33323a;
- --md-sys-color-surface-container-highest: #3e3d45;
-
- /* Elevation Shadows */
- --md-sys-elevation-1: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
- --md-sys-elevation-2: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
- --md-sys-elevation-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px rgba(0, 0, 0, 0.3);
-
- /* Shape */
- --md-sys-shape-corner-small: 8px;
- --md-sys-shape-corner-medium: 12px;
- --md-sys-shape-corner-large: 16px;
-
- /* Legacy compat colors */
- --status-success: #4caf50;
- --status-warning: #f59e0b;
- --status-error: #ef4444;
-
- /* Typography */
- --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
- }
-
- /* ========== RESET & BASE ========== */
- * {
- margin: 0;
- padding: 0;
- box-sizing: border-box;
- }
-
- body {
- font-family: var(--font-family);
- background: var(--md-sys-color-background);
- min-height: 100vh;
- color: var(--md-sys-color-on-background);
- display: flex;
- overflow-x: hidden;
- position: relative;
- line-height: 1.6;
- }
-
- /* ========== ANIMATED BACKGROUND ========== */
- .background-layer {
- position: fixed;
- inset: 0;
- z-index: -1;
- overflow: hidden;
- }
-
- /* Animated Grid Network */
- .grid-network {
- position: absolute;
- inset: 0;
- background-image:
- linear-gradient(rgba(14, 165, 233, 0.03) 1.5px, transparent 1.5px),
- linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1.5px, transparent 1.5px);
- background-size: 80px 80px;
- animation: gridFlow 20s linear infinite;
- }
-
- @keyframes gridFlow {
- 0% { transform: translate(0, 0); }
- 100% { transform: translate(80px, 80px); }
- }
-
- /* Animated Connection Nodes */
- .connection-nodes {
- position: absolute;
- inset: 0;
- }
-
- .node {
- position: absolute;
- width: 8px;
- height: 8px;
- background: var(--md-sys-color-primary);
- border-radius: 50%;
- box-shadow: 0 0 20px var(--md-sys-color-primary), 0 0 40px var(--md-sys-color-primary);
- animation: nodePulse 3s ease-in-out infinite;
- }
-
- @keyframes nodePulse {
- 0%, 100% {
- transform: scale(1);
- opacity: 1;
- }
- 50% {
- transform: scale(1.5);
- opacity: 0.7;
- }
- }
-
- /* Data Flow Lines */
- .data-streams {
- position: absolute;
- inset: 0;
- }
-
- .stream-line {
- position: absolute;
- height: 2px;
- background: linear-gradient(90deg,
- transparent 0%,
- var(--md-sys-color-primary) 50%,
- transparent 100%
- );
- animation: streamFlow 4s linear infinite;
- opacity: 0.6;
- }
-
- @keyframes streamFlow {
- 0% { transform: translateX(-100%); }
- 100% { transform: translateX(200%); }
- }
-
- /* Subtle Gradient Orbs */
- .gradient-orb {
- position: absolute;
- border-radius: 50%;
- filter: blur(100px);
- opacity: 0.15;
- animation: orbFloat 25s ease-in-out infinite;
- }
-
- .gradient-orb.orb-1 {
- width: 500px;
- height: 500px;
- background: radial-gradient(circle, var(--md-sys-color-primary), transparent);
- top: -200px;
- left: -200px;
- }
-
- .gradient-orb.orb-2 {
- width: 600px;
- height: 600px;
- background: radial-gradient(circle, var(--md-sys-color-secondary), transparent);
- bottom: -250px;
- right: -250px;
- animation-delay: 8s;
- }
-
- .gradient-orb.orb-3 {
- width: 400px;
- height: 400px;
- background: radial-gradient(circle, var(--md-sys-color-tertiary), transparent);
- top: 40%;
- left: 60%;
- animation-delay: 16s;
- }
-
- @keyframes orbFloat {
- 0%, 100% { transform: translate(0, 0) scale(1); }
- 33% { transform: translate(80px, -60px) scale(1.1); }
- 66% { transform: translate(-60px, 80px) scale(0.95); }
- }
-
- /* ========== SIDEBAR ========== */
- .sidebar {
- width: 280px;
- background: var(--md-sys-color-surface-container-low);
- backdrop-filter: blur(20px);
- border-right: 1px solid var(--md-sys-color-outline-variant);
- position: fixed;
- left: 0;
- top: 0;
- height: 100vh;
- z-index: 1000;
- display: flex;
- flex-direction: column;
- overflow-y: auto;
- }
-
- .sidebar-header {
- padding: 32px 24px;
- border-bottom: 1px solid var(--md-sys-color-outline-variant);
- }
-
- .logo-container {
- display: flex;
- align-items: center;
- gap: 12px;
- margin-bottom: 8px;
- }
-
- .logo-icon {
- width: 40px;
- height: 40px;
- background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
- border-radius: 8px;
- display: flex;
- align-items: center;
- justify-content: center;
- font-size: 18px;
- font-weight: 700;
- color: white;
- box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
- }
-
- .logo-text h2 {
- font-size: 18px;
- font-weight: 700;
- color: var(--md-sys-color-on-surface);
- letter-spacing: -0.5px;
- }
-
- .logo-text p {
- font-size: 11px;
- color: var(--md-sys-color-outline);
- text-transform: uppercase;
- letter-spacing: 1.5px;
- font-weight: 600;
- }
-
- .status-indicator {
- display: flex;
- align-items: center;
- gap: 8px;
- padding: 12px 16px;
- background: var(--md-sys-color-surface-container-highest);
- border: 1px solid var(--md-sys-color-outline-variant);
- border-radius: 8px;
- margin-top: 16px;
- }
-
- .status-dot {
- width: 8px;
- height: 8px;
- background: var(--status-success);
- border-radius: 50%;
- animation: statusPulse 2s ease-in-out infinite;
- box-shadow: 0 0 12px var(--status-success);
- }
-
- @keyframes statusPulse {
- 0%, 100% { opacity: 1; transform: scale(1); }
- 50% { opacity: 0.6; transform: scale(1.2); }
- }
-
- .status-text {
- font-size: 12px;
- color: var(--md-sys-color-on-surface-variant);
- font-weight: 500;
- }
-
- .sidebar-nav {
- flex: 1;
- padding: 24px 16px;
- }
-
- .nav-section {
- margin-bottom: 32px;
- }
-
- .nav-section-title {
- font-size: 11px;
- font-weight: 700;
- text-transform: uppercase;
- letter-spacing: 1.5px;
- color: var(--md-sys-color-outline);
- margin-bottom: 12px;
- padding: 0 12px;
- }
-
- .nav-menu {
- list-style: none;
- }
-
- .nav-item {
- margin-bottom: 4px;
- }
-
- .nav-link {
- display: flex;
- align-items: center;
- gap: 12px;
- padding: 12px 16px;
- text-decoration: none;
- color: var(--md-sys-color-on-surface-variant);
- border-radius: 8px;
- transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
- font-size: 14px;
- font-weight: 500;
- position: relative;
- overflow: hidden;
- }
-
- .nav-link::before {
- content: '';
- position: absolute;
- left: 0;
- top: 0;
- height: 100%;
- width: 3px;
- background: var(--md-sys-color-primary);
- transform: scaleY(0);
- transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
- }
-
- .nav-link:hover {
- color: var(--md-sys-color-on-surface);
- background: var(--md-sys-color-surface-container-highest);
- }
-
- .nav-link.active {
- color: var(--md-sys-color-primary);
- background: rgba(14, 165, 233, 0.1);
- }
-
- .nav-link.active::before {
- transform: scaleY(1);
- }
-
- .nav-icon {
- width: 20px;
- height: 20px;
- display: flex;
- align-items: center;
- justify-content: center;
- font-size: 16px;
- }
-
- /* ========== MAIN CONTENT ========== */
- .main-content {
- flex: 1;
- margin-left: 280px;
- padding: 32px;
- min-height: 100vh;
- }
-
- .container {
- max-width: 1200px;
- margin: 0 auto;
- }
-
- /* ========== HEADER ========== */
- .header {
- background: var(--md-sys-color-surface-container-low);
- backdrop-filter: blur(20px);
- border: 1px solid var(--md-sys-color-outline-variant);
- border-radius: 16px;
- padding: 24px 32px;
- margin-bottom: 32px;
- }
-
- .header h1 {
- font-size: 2rem;
- font-weight: 700;
- letter-spacing: -0.5px;
- color: var(--md-sys-color-on-surface);
- }
-
- /* ========== CONTENT GRID ========== */
- .content-grid {
- display: grid;
- grid-template-columns: 1fr;
- gap: 24px;
- }
-
- /* ========== CONVEYOR SECTION ========== */
- .conveyor-section {
- background: var(--md-sys-color-surface-container-low);
- backdrop-filter: blur(20px);
- border: 1px solid var(--md-sys-color-outline-variant);
- border-radius: 16px;
- padding: 32px;
- margin-bottom: 24px;
- }
-
- .section-title {
- font-size: 1.2rem;
- font-weight: 700;
- color: var(--md-sys-color-on-surface);
- margin-bottom: 24px;
- letter-spacing: -0.5px;
- display: flex;
- align-items: center;
- gap: 12px;
- }
-
- .section-title::before {
- content: '';
- width: 4px;
- height: 24px;
- background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
- border-radius: 2px;
- }
-
- .conveyor-container {
- position: relative;
- width: 100%;
- height: 200px;
- background: linear-gradient(180deg, rgba(10, 22, 40, 0.8) 0%, rgba(15, 23, 42, 0.6) 50%, rgba(10, 22, 40, 0.8) 100%);
- border: 2px solid var(--md-sys-color-outline-variant);
- border-radius: 12px;
- overflow: hidden;
- }
-
- .conveyor-belt {
- position: absolute;
- top: 50%;
- left: 0;
- width: 100%;
- height: 60px;
- background: repeating-linear-gradient(
- 90deg,
- rgba(30, 41, 59, 0.8) 0px,
- rgba(30, 41, 59, 0.8) 20px,
- rgba(15, 23, 42, 0.6) 20px,
- rgba(15, 23, 42, 0.6) 40px
- );
- transform: translateY(-50%);
- animation: conveyorMove 3s linear infinite;
- }
-
- @keyframes conveyorMove {
- 0% { background-position: 0 0; }
- 100% { background-position: 40px 0; }
- }
-
- .rfid-tag {
- position: absolute;
- top: 50%;
- left: 20%;
- width: 80px;
- height: 50px;
- background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-tertiary));
- border: 2px solid var(--md-sys-color-primary);
- border-radius: 8px;
- transform: translateY(-50%);
- animation: tagMove 8s linear infinite;
- display: flex;
- align-items: center;
- justify-content: center;
- font-size: 24px;
- box-shadow: 0 0 20px rgba(14, 165, 233, 0.6);
- }
-
- @keyframes tagMove {
- 0% { left: -10%; }
- 100% { left: 110%; }
- }
-
- .rfid-reader {
- position: absolute;
- top: 20px;
- left: 50%;
- transform: translateX(-50%);
- width: 120px;
- height: 40px;
- background: var(--md-sys-color-surface-container-low);
- border: 2px solid var(--accent-orange);
- border-radius: 8px;
- display: flex;
- align-items: center;
- justify-content: center;
- color: var(--accent-orange);
- font-size: 12px;
- font-weight: 700;
- text-transform: uppercase;
- letter-spacing: 1px;
- box-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
- }
-
- .rfid-reader::before {
- content: '';
- position: absolute;
- bottom: -8px;
- left: 50%;
- transform: translateX(-50%);
- width: 0;
- height: 0;
- border-left: 6px solid transparent;
- border-right: 6px solid transparent;
- border-top: 8px solid var(--accent-orange);
- }
-
- .scan-beam {
- position: absolute;
- top: 60px;
- left: 50%;
- transform: translateX(-50%);
- width: 2px;
- height: 140px;
- background: linear-gradient(180deg, var(--md-sys-color-primary), transparent);
- opacity: 0;
- animation: scanBeam 2s ease-in-out infinite;
- }
-
- @keyframes scanBeam {
- 0%, 100% { opacity: 0; }
- 50% { opacity: 0.8; }
- }
-
- /* ========== INFO CARDS GRID ========== */
- .info-grid {
- display: grid;
- grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
- gap: 24px;
- margin-bottom: 24px;
- }
-
- .info-card {
- background: var(--md-sys-color-surface-container-low);
- backdrop-filter: blur(20px);
- border: 1px solid var(--md-sys-color-outline-variant);
- border-radius: 16px;
- padding: 24px;
- transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
- }
-
- .info-card:hover {
- border-color: var(--md-sys-color-primary);
- box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
- transform: translateY(-2px);
- }
-
- .info-card-header {
- display: flex;
- align-items: center;
- justify-content: space-between;
- margin-bottom: 16px;
- padding-bottom: 12px;
- border-bottom: 1px solid var(--md-sys-color-outline-variant);
- }
-
- .info-card-title {
- font-size: 0.9rem;
- font-weight: 600;
- color: var(--md-sys-color-on-surface);
- letter-spacing: -0.2px;
- }
-
- .info-card-icon {
- font-size: 20px;
- }
-
- .info-item {
- display: flex;
- justify-content: space-between;
- align-items: center;
- padding: 10px 0;
- border-bottom: 1px solid var(--md-sys-color-outline-variant);
- }
-
- .info-item:last-child {
- border-bottom: none;
- }
-
- .info-label {
- font-size: 0.85rem;
- color: var(--md-sys-color-on-surface-variant);
- letter-spacing: 0.2px;
- }
-
- .info-value {
- font-size: 0.9rem;
- color: var(--md-sys-color-on-surface);
- font-weight: 600;
- text-align: right;
- }
-
- .info-value.highlight {
- color: var(--md-sys-color-primary);
- }
-
- .status-badge {
- display: inline-block;
- padding: 4px 12px;
- font-size: 0.75rem;
- font-weight: 700;
- text-transform: uppercase;
- letter-spacing: 0.5px;
- border-radius: 6px;
- }
-
- .status-badge.active {
- background: rgba(16, 185, 129, 0.15);
- color: var(--status-success);
- border: 1px solid var(--status-success);
- }
-
- .status-badge.inactive {
- background: rgba(239, 68, 68, 0.15);
- color: var(--status-error);
- border: 1px solid var(--status-error);
- }
-
- /* ========== MAINTENANCE HISTORY ========== */
- .history-section {
- background: var(--md-sys-color-surface-container-low);
- backdrop-filter: blur(20px);
- border: 1px solid var(--md-sys-color-outline-variant);
- border-radius: 16px;
- padding: 32px;
- }
-
- .history-list {
- max-height: 400px;
- overflow-y: auto;
- }
-
- .history-item {
- display: grid;
- grid-template-columns: auto 1fr auto;
- gap: 16px;
- padding: 16px;
- margin-bottom: 12px;
- background: var(--md-sys-color-surface-container-highest);
- border: 1px solid var(--md-sys-color-outline-variant);
- border-radius: 12px;
- transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
- }
-
- .history-item:hover {
- background: rgba(14, 165, 233, 0.05);
- border-color: var(--md-sys-color-outline);
- }
-
- .history-icon {
- font-size: 24px;
- color: var(--accent-orange);
- }
-
- .history-content {
- display: flex;
- flex-direction: column;
- gap: 4px;
- }
-
- .history-action {
- font-size: 0.9rem;
- color: var(--md-sys-color-on-surface);
- font-weight: 600;
- }
-
- .history-details {
- font-size: 0.8rem;
- color: var(--md-sys-color-on-surface-variant);
- }
-
- .history-time {
- font-size: 0.75rem;
- color: var(--md-sys-color-outline);
- text-align: right;
- white-space: nowrap;
- }
-
- /* ========== STATISTICS ========== */
- .stats-grid {
- display: grid;
- grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
- gap: 16px;
- margin-top: 24px;
- }
-
- .stat-card {
- background: var(--md-sys-color-surface-container-highest);
- border: 1px solid var(--md-sys-color-outline-variant);
- border-radius: 12px;
- padding: 20px;
- text-align: center;
- transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
- }
-
- .stat-card:hover {
- border-color: var(--md-sys-color-outline);
- background: rgba(14, 165, 233, 0.05);
- }
-
- .stat-value {
- font-size: 2rem;
- font-weight: 700;
- color: var(--md-sys-color-primary);
- margin-bottom: 8px;
- }
-
- .stat-label {
- font-size: 0.75rem;
- color: var(--md-sys-color-on-surface-variant);
- text-transform: uppercase;
- letter-spacing: 0.5px;
- }
-
- /* ========== SCROLLBAR ========== */
- ::-webkit-scrollbar {
- width: 8px;
- height: 8px;
- }
-
- ::-webkit-scrollbar-track {
- background: var(--md-sys-color-background);
- }
-
- ::-webkit-scrollbar-thumb {
- background: var(--md-sys-color-outline);
- border-radius: 4px;
- }
-
- ::-webkit-scrollbar-thumb:hover {
- background: var(--md-sys-color-primary);
- }
-
- /* ========== RESPONSIVE ========== */
- @media (max-width: 1024px) {
- .sidebar {
- width: 80px;
- }
-
- .logo-text,
- .status-indicator,
- .nav-section-title,
- .nav-link span:not(.nav-icon) {
- display: none;
- }
-
- .sidebar-header {
- padding: 24px 16px;
- }
-
- .logo-icon {
- margin: 0 auto;
- }
-
- .nav-link {
- justify-content: center;
- padding: 12px;
- }
-
- .main-content {
- margin-left: 80px;
- padding: 24px;
- }
- }
-
- @media (max-width: 768px) {
- .main-content {
- padding: 20px;
- }
-
- .header h1 {
- font-size: 1.5rem;
- }
-
- .info-grid {
- grid-template-columns: 1fr;
- }
-
- .stats-grid {
- grid-template-columns: repeat(2, 1fr);
- }
-
- .conveyor-container {
- height: 150px;
- }
-
- .rfid-tag {
- width: 60px;
- height: 40px;
- font-size: 18px;
- }
-
- .rfid-reader {
- width: 100px;
- height: 35px;
- font-size: 10px;
- }
-
- .section-title {
- font-size: 1rem;
- }
-
- .info-card {
- padding: 16px;
- }
-
- .history-item {
- grid-template-columns: auto 1fr;
- gap: 12px;
- }
-
- .history-time {
- grid-column: 1 / -1;
- text-align: left;
- margin-top: 8px;
- padding-top: 8px;
- border-top: 1px solid var(--md-sys-color-outline-variant);
- }
- }
-
- @media (max-width: 640px) {
- .sidebar {
- transform: translateX(-100%);
- transition: transform 0.3s ease;
- }
-
- .sidebar.mobile-open {
- transform: translateX(0);
- }
-
- .main-content {
- margin-left: 0;
- padding: 20px;
- }
- }
-
- /* Reduced Motion */
- @media (prefers-reduced-motion: reduce) {
- * {
- animation-duration: 0.01ms !important;
- animation-iteration-count: 1 !important;
- transition-duration: 0.01ms !important;
- }
- }
- </style>
+  <meta charset="utf-8" />
+  <link rel="apple-touch-icon" sizes="76x76" href="./assets/img/apple-icon.png">
+  <link rel="icon" type="image/png" href="/icon-192.png">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>RFID Tracking - Smart Factory</title>
+  <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
+  
+  <!-- Fonts and icons -->
+  <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700|Roboto+Slab:400,700|Material+Icons" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css">
+  
+  <!-- CSS Files -->
+  <link href="./assets/css/material-dashboard.min.css?v=2.1.0" rel="stylesheet" />
+  <link href="./assets/demo/demo.css" rel="stylesheet" />
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#1c1b1f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <style>
+    /* Custom RFID Visualization Styles */
+    .conveyor-container {
+      position: relative;
+      width: 100%;
+      height: 200px;
+      background: linear-gradient(180deg, rgba(10, 22, 40, 0.8) 0%, rgba(15, 23, 42, 0.6) 50%, rgba(10, 22, 40, 0.8) 100%);
+      border: 2px solid rgba(148, 163, 184, 0.2);
+      border-radius: 12px;
+      overflow: hidden;
+      margin: 20px 0;
+    }
+
+    .conveyor-belt {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 100%;
+      height: 60px;
+      background: repeating-linear-gradient(
+        90deg,
+        rgba(30, 41, 59, 0.8) 0px,
+        rgba(30, 41, 59, 0.8) 20px,
+        rgba(15, 23, 42, 0.6) 20px,
+        rgba(15, 23, 42, 0.6) 40px
+      );
+      transform: translateY(-50%);
+      animation: conveyorMove 3s linear infinite;
+    }
+
+    @keyframes conveyorMove {
+      0% { background-position: 0 0; }
+      100% { background-position: 40px 0; }
+    }
+
+    .rfid-tag {
+      position: absolute;
+      top: 50%;
+      left: 20%;
+      width: 80px;
+      height: 50px;
+      background: linear-gradient(135deg, #9c27b0, #e91e63);
+      border: 2px solid #9c27b0;
+      border-radius: 8px;
+      transform: translateY(-50%);
+      animation: tagMove 8s linear infinite;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 0 20px rgba(156, 39, 176, 0.6);
+    }
+
+    @keyframes tagMove {
+      0% { left: -10%; }
+      100% { left: 110%; }
+    }
+
+    .rfid-reader {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 40px;
+      background: rgba(30, 30, 30, 0.9);
+      border: 2px solid #f97316;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #f97316;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 0 15px rgba(249, 115, 22, 0.5);
+    }
+
+    .rfid-reader::before {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 8px solid #f97316;
+    }
+
+    .scan-beam {
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 2px;
+      height: 140px;
+      background: linear-gradient(180deg, #9c27b0, transparent);
+      opacity: 0;
+      animation: scanBeam 2s ease-in-out infinite;
+    }
+
+    @keyframes scanBeam {
+      0%, 100% { opacity: 0; }
+      50% { opacity: 0.8; }
+    }
+
+    .info-value-highlight {
+      color: #9c27b0;
+      font-weight: 600;
+    }
+
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-badge.active {
+      background: rgba(16, 185, 129, 0.15);
+      color: #4caf50;
+      border: 1px solid #4caf50;
+    }
+
+    .status-badge.inactive {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border: 1px solid #ef4444;
+    }
+
+    .history-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .history-item:hover {
+      background: rgba(156, 39, 176, 0.1);
+      border-color: rgba(156, 39, 176, 0.3);
+    }
+
+    .history-icon {
+      font-size: 24px;
+      color: #f97316;
+    }
+
+    .history-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .history-action {
+      font-size: 0.9rem;
+      color: #e4e1e6;
+      font-weight: 600;
+    }
+
+    .history-details {
+      font-size: 0.8rem;
+      color: #c5c6d0;
+    }
+
+    .history-time {
+      font-size: 0.75rem;
+      color: #8f9099;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .stat-card {
+      background: rgba(156, 39, 176, 0.1);
+      border: 1px solid rgba(156, 39, 176, 0.2);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+      margin-bottom: 15px;
+    }
+
+    .stat-card:hover {
+      border-color: #9c27b0;
+      background: rgba(156, 39, 176, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #9c27b0;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #c5c6d0;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+  </style>
 </head>
-<body>
- <!-- Animated Background -->
- <div class="background-layer">
- <div class="grid-network"></div>
- <div class="gradient-orb orb-1"></div>
- <div class="gradient-orb orb-2"></div>
- <div class="gradient-orb orb-3"></div>
- <div class="connection-nodes" id="connectionNodes"></div>
- <div class="data-streams" id="dataStreams"></div>
- </div>
 
- <!-- Sidebar -->
- <nav class="sidebar">
- <div class="sidebar-header">
- <div class="logo-container">
- <div class="logo-icon">SF</div>
- <div class="logo-text">
- <h2>Smart Factory</h2>
- <p>IIoT Platform</p>
- </div>
- </div>
- <div class="status-indicator">
- <div class="status-dot"></div>
- <span class="status-text">System Online</span>
- </div>
- </div>
+<body class="dark-edition">
+  <div class="wrapper">
+    <!-- Sidebar -->
+    <div class="sidebar" data-color="purple" data-background-color="black" data-image="./assets/img/sidebar-2.jpg">
+      <div class="logo">
+        <a href="/" class="simple-text logo-normal">
+          <i class="material-icons">factory</i>
+          Smart Factory
+        </a>
+      </div>
+      <div class="sidebar-wrapper">
+        <ul class="nav">
+          <li class="nav-item">
+            <a class="nav-link" href="/index.html">
+              <i class="material-icons">dashboard</i>
+              <p>Dashboard</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/robot-arm.html">
+              <i class="material-icons">precision_manufacturing</i>
+              <p>Robot Arm</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/vision-system.html">
+              <i class="material-icons">visibility</i>
+              <p>Vision System</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/smart-factory.html">
+              <i class="material-icons">settings</i>
+              <p>Factory Control</p>
+            </a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="/rfid.html">
+              <i class="material-icons">nfc</i>
+              <p>RFID Tracking</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/digital-twin.html">
+              <i class="material-icons">view_in_ar</i>
+              <p>Digital Twin</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/plc-diagnostics.html">
+              <i class="material-icons">analytics</i>
+              <p>PLC Diagnostics</p>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
 
- <div class="sidebar-nav">
- <nav class="nav-section">
- <h3 class="nav-section-title">Navigation</h3>
- <ul class="nav-menu">
- <li class="nav-item">
- <a href="/" class="nav-link">
- <span class="nav-icon">ðŸ </span>
- <span>Dashboard</span>
- </a>
- </li>
- <li class="nav-item">
- <a href="/robot-arm.html" class="nav-link">
- <span class="nav-icon">ðŸ¤–</span>
- <span>Robot Arm</span>
- </a>
- </li>
- <li class="nav-item">
- <a href="/smart-factory.html" class="nav-link">
- <span class="nav-icon">ðŸ­</span>
- <span>Smart Factory</span>
- </a>
- </li>
- <li class="nav-item">
- <a href="/vision-system.html" class="nav-link">
- <span class="nav-icon">ðŸ‘</span>
- <span>Vision System</span>
- </a>
- </li>
- <li class="nav-item">
- <a href="/rfid.html" class="nav-link active">
- <span class="nav-icon">ðŸ“¡</span>
- <span>RFID</span>
- </a>
- </li>
- <li class="nav-item">
- <a href="/digital-twin.html" class="nav-link">
- <span class="nav-icon">ðŸ”„</span>
- <span>Digital Twin</span>
- </a>
- </li>
- </ul>
- </nav>
- </div>
- </nav>
+    <div class="main-panel">
+      <!-- Navbar -->
+      <nav class="navbar navbar-expand-lg navbar-transparent navbar-absolute fixed-top">
+        <div class="container-fluid">
+          <div class="navbar-wrapper">
+            <a class="navbar-brand" href="javascript:;">RFID Tracking System</a>
+          </div>
+        </div>
+      </nav>
 
- <!-- Main Content -->
- <div class="main-content">
- <div class="container">
- <div class="header">
- <div class="header-content">
- <h1>RFID</h1>
- </div>
- </div>
+      <!-- Content -->
+      <div class="content">
+        <div class="container-fluid">
+          <!-- Conveyor Visualization -->
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header card-header-primary">
+                  <h4 class="card-title">Conveyor System</h4>
+                  <p class="card-category">Real-time RFID tag tracking</p>
+                </div>
+                <div class="card-body">
+                  <div class="conveyor-container">
+                    <div class="rfid-reader">RFID Reader</div>
+                    <div class="scan-beam"></div>
+                    <div class="conveyor-belt"></div>
+                    <div class="rfid-tag">📡</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
- <div class="content-grid">
- <!-- Conveyor Section -->
- <div class="conveyor-section">
- <div class="section-title">Conveyor System</div>
- <div class="conveyor-container">
- <div class="rfid-reader">RFID Reader</div>
- <div class="scan-beam"></div>
- <div class="conveyor-belt"></div>
- <div class="rfid-tag"></div>
- </div>
- </div>
+          <!-- Information Cards -->
+          <div class="row">
+            <!-- Tag Information Card -->
+            <div class="col-lg-6 col-md-6">
+              <div class="card">
+                <div class="card-header card-header-info">
+                  <h4 class="card-title">Tag Information</h4>
+                  <p class="card-category">RFID Tag Details</p>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <tbody>
+                        <tr>
+                          <td><strong>Tag ID</strong></td>
+                          <td class="text-right"><span class="info-value-highlight" id="tagId">RF-2024-8472</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>Serial Number</strong></td>
+                          <td class="text-right" id="serialNumber">SN-847293847</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Frequency</strong></td>
+                          <td class="text-right">13.56 MHz</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Protocol</strong></td>
+                          <td class="text-right">ISO 15693</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Memory Size</strong></td>
+                          <td class="text-right">2 KB</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Status</strong></td>
+                          <td class="text-right"><span class="status-badge active" id="tagStatus">Active</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
 
- <!-- Information Cards Grid -->
- <div class="info-grid">
- <!-- Tag Information Card -->
- <div class="info-card">
- <div class="info-card-header">
- <div class="info-card-title">Tag Information</div>
- <div class="info-card-icon"></div>
- </div>
- <div class="info-item">
- <span class="info-label">Tag ID</span>
- <span class="info-value highlight" id="tagId">RF-2024-8472</span>
- </div>
- <div class="info-item">
- <span class="info-label">Serial Number</span>
- <span class="info-value" id="serialNumber">SN-847293847</span>
- </div>
- <div class="info-item">
- <span class="info-label">Frequency</span>
- <span class="info-value">13.56 MHz</span>
- </div>
- <div class="info-item">
- <span class="info-label">Protocol</span>
- <span class="info-value">ISO 15693</span>
- </div>
- <div class="info-item">
- <span class="info-label">Memory Size</span>
- <span class="info-value">2 KB</span>
- </div>
- <div class="info-item">
- <span class="info-label">Status</span>
- <span class="status-badge active" id="tagStatus">Active</span>
- </div>
- </div>
+            <!-- Product Information Card -->
+            <div class="col-lg-6 col-md-6">
+              <div class="card">
+                <div class="card-header card-header-success">
+                  <h4 class="card-title">Product Information</h4>
+                  <p class="card-category">Product Details</p>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <tbody>
+                        <tr>
+                          <td><strong>Product Name</strong></td>
+                          <td class="text-right"><span class="info-value-highlight" id="productName">Motor Assembly Unit</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>Part Number</strong></td>
+                          <td class="text-right">MAU-2024-001</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Batch Number</strong></td>
+                          <td class="text-right">BATCH-8472</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Manufacturing Date</strong></td>
+                          <td class="text-right" id="manufacturingDate">2024-03-15</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Location</strong></td>
+                          <td class="text-right">Conveyor Line 3</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Quality Status</strong></td>
+                          <td class="text-right"><span class="status-badge active">Passed</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
- <!-- Product Information Card -->
- <div class="info-card">
- <div class="info-card-header">
- <div class="info-card-title">Product Information</div>
- <div class="info-card-icon"></div>
- </div>
- <div class="info-item">
- <span class="info-label">Product Name</span>
- <span class="info-value highlight" id="productName">Motor Assembly Unit</span>
- </div>
- <div class="info-item">
- <span class="info-label">Part Number</span>
- <span class="info-value">MAU-2024-001</span>
- </div>
- <div class="info-item">
- <span class="info-label">Batch Number</span>
- <span class="info-value">BATCH-8472</span>
- </div>
- <div class="info-item">
- <span class="info-label">Manufacturing Date</span>
- <span class="info-value" id="manufacturingDate">2024-03-15</span>
- </div>
- <div class="info-item">
- <span class="info-label">Location</span>
- <span class="info-value">Conveyor Line 3</span>
- </div>
- <div class="info-item">
- <span class="info-label">Quality Status</span>
- <span class="status-badge active">Passed</span>
- </div>
- </div>
+          <!-- Engineer and Maintenance Info -->
+          <div class="row">
+            <!-- Engineer Information -->
+            <div class="col-lg-6 col-md-6">
+              <div class="card">
+                <div class="card-header card-header-warning">
+                  <h4 class="card-title">Engineer Information</h4>
+                  <p class="card-category">Reader Data</p>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <tbody>
+                        <tr>
+                          <td><strong>Last Read By</strong></td>
+                          <td class="text-right"><span class="info-value-highlight" id="lastEngineer">Sarah Chen</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>Engineer ID</strong></td>
+                          <td class="text-right">ENG-2024</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Last Read Time</strong></td>
+                          <td class="text-right" id="lastReadTime">2024-12-19 14:32:15</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Read Count</strong></td>
+                          <td class="text-right"><span class="info-value-highlight" id="readCount">247</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>Reader Device</strong></td>
+                          <td class="text-right">RFID-READER-03</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Signal Strength</strong></td>
+                          <td class="text-right"><span class="info-value-highlight">-42 dBm</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
 
- <!-- Engineer Information Card -->
- <div class="info-card">
- <div class="info-card-header">
- <div class="info-card-title">Engineer Information</div>
- <div class="info-card-icon"></div>
- </div>
- <div class="info-item">
- <span class="info-label">Last Read By</span>
- <span class="info-value highlight" id="lastEngineer">Sarah Chen</span>
- </div>
- <div class="info-item">
- <span class="info-label">Engineer ID</span>
- <span class="info-value">ENG-2024</span>
- </div>
- <div class="info-item">
- <span class="info-label">Last Read Time</span>
- <span class="info-value" id="lastReadTime">2024-12-19 14:32:15</span>
- </div>
- <div class="info-item">
- <span class="info-label">Read Count</span>
- <span class="info-value highlight" id="readCount">247</span>
- </div>
- <div class="info-item">
- <span class="info-label">Reader Device</span>
- <span class="info-value">RFID-READER-03</span>
- </div>
- <div class="info-item">
- <span class="info-label">Signal Strength</span>
- <span class="info-value highlight">-42 dBm</span>
- </div>
- </div>
+            <!-- Maintenance Information -->
+            <div class="col-lg-6 col-md-6">
+              <div class="card">
+                <div class="card-header card-header-danger">
+                  <h4 class="card-title">Maintenance History</h4>
+                  <p class="card-category">Service Records</p>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                      <tbody>
+                        <tr>
+                          <td><strong>Last Maintenance</strong></td>
+                          <td class="text-right" id="lastMaintenance">2024-12-10</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Maintained By</strong></td>
+                          <td class="text-right"><span class="info-value-highlight">Mike Johnson</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>Next Service</strong></td>
+                          <td class="text-right" id="nextService">2025-01-10</td>
+                        </tr>
+                        <tr>
+                          <td><strong>Service Count</strong></td>
+                          <td class="text-right"><span class="info-value-highlight">12</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>Warranty Status</strong></td>
+                          <td class="text-right"><span class="status-badge active">Valid</span></td>
+                        </tr>
+                        <tr>
+                          <td><strong>Days Since Install</strong></td>
+                          <td class="text-right"><span class="info-value-highlight" id="daysSinceInstall">279</span></td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
- <!-- Maintenance Information Card -->
- <div class="info-card">
- <div class="info-card-header">
- <div class="info-card-title">Maintenance History</div>
- <div class="info-card-icon"></div>
- </div>
- <div class="info-item">
- <span class="info-label">Last Maintenance</span>
- <span class="info-value" id="lastMaintenance">2024-12-10</span>
- </div>
- <div class="info-item">
- <span class="info-label">Maintained By</span>
- <span class="info-value highlight">Mike Johnson</span>
- </div>
- <div class="info-item">
- <span class="info-label">Next Service</span>
- <span class="info-value" id="nextService">2025-01-10</span>
- </div>
- <div class="info-item">
- <span class="info-label">Service Count</span>
- <span class="info-value highlight">12</span>
- </div>
- <div class="info-item">
- <span class="info-label">Warranty Status</span>
- <span class="status-badge active">Valid</span>
- </div>
- <div class="info-item">
- <span class="info-label">Days Since Install</span>
- <span class="info-value highlight" id="daysSinceInstall">279</span>
- </div>
- </div>
- </div>
+          <!-- Statistics -->
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header card-header-primary">
+                  <h4 class="card-title">Statistics</h4>
+                  <p class="card-category">RFID System Performance</p>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                      <div class="stat-card">
+                        <div class="stat-value" id="totalReads">1,247</div>
+                        <div class="stat-label">Total Reads</div>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                      <div class="stat-card">
+                        <div class="stat-value" id="avgReadTime">0.23s</div>
+                        <div class="stat-label">Avg Read Time</div>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                      <div class="stat-card">
+                        <div class="stat-value" id="successRate">99.8%</div>
+                        <div class="stat-label">Success Rate</div>
+                      </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                      <div class="stat-card">
+                        <div class="stat-value" id="uptime">99.2%</div>
+                        <div class="stat-label">Uptime</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
- <!-- Statistics Section -->
- <div class="conveyor-section">
- <div class="section-title">Statistics</div>
- <div class="stats-grid">
- <div class="stat-card">
- <div class="stat-value" id="totalReads">1,247</div>
- <div class="stat-label">Total Reads</div>
- </div>
- <div class="stat-card">
- <div class="stat-value" id="avgReadTime">0.23s</div>
- <div class="stat-label">Avg Read Time</div>
- </div>
- <div class="stat-card">
- <div class="stat-value" id="successRate">99.8%</div>
- <div class="stat-label">Success Rate</div>
- </div>
- <div class="stat-card">
- <div class="stat-value" id="uptime">99.2%</div>
- <div class="stat-label">Uptime</div>
- </div>
- </div>
- </div>
+          <!-- Activity Log -->
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header card-header-info">
+                  <h4 class="card-title">Recent Activity Log</h4>
+                  <p class="card-category">Live RFID tag tracking events</p>
+                </div>
+                <div class="card-body">
+                  <div id="historyList">
+                    <!-- History items populated by JavaScript -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
- <!-- Maintenance History Section -->
- <div class="history-section">
- <div class="section-title">Recent Activity Log</div>
- <div class="history-list" id="historyList">
- <!-- History items will be populated by JavaScript -->
- </div>
- </div>
- </div>
- </div>
- </div>
+      <!-- Footer -->
+      <footer class="footer">
+        <div class="container-fluid">
+          <div class="copyright float-right">
+            &copy; <script>document.write(new Date().getFullYear())</script> Smart Factory Control System
+          </div>
+        </div>
+      </footer>
+    </div>
+  </div>
 
- <script>
- // Simple JavaScript to simulate RFID tag data and updates
- 
- // List of engineer names for simulation
- const engineers = [
- 'Sarah Chen',
- 'Mike Johnson',
- 'David Rodriguez',
- 'Emily Watson',
- 'James Park',
- 'Lisa Anderson',
- 'Robert Kim',
- 'Jennifer Lee'
- ];
- 
- // List of actions for history log
- const actions = [
- 'Tag scanned successfully',
- 'Maintenance check performed',
- 'Data updated',
- 'Quality inspection completed',
- 'Tag read by engineer',
- 'System calibration',
- 'Signal strength check',
- 'Memory verification'
- ];
- 
- // Function to get current date and time formatted
- function getCurrentDateTime() {
- const now = new Date();
- const year = now.getFullYear();
- const month = String(now.getMonth() + 1).padStart(2, '0');
- const day = String(now.getDate()).padStart(2, '0');
- const hours = String(now.getHours()).padStart(2, '0');
- const minutes = String(now.getMinutes()).padStart(2, '0');
- const seconds = String(now.getSeconds()).padStart(2, '0');
- return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
- }
- 
- // Function to get a random item from an array
- function getRandomItem(array) {
- return array[Math.floor(Math.random() * array.length)];
- }
- 
- // Function to update last read time
- function updateLastReadTime() {
- const lastReadTimeElement = document.getElementById('lastReadTime');
- if (lastReadTimeElement) {
- lastReadTimeElement.textContent = getCurrentDateTime();
- }
- }
- 
- // Function to update last engineer
- function updateLastEngineer() {
- const lastEngineerElement = document.getElementById('lastEngineer');
- if (lastEngineerElement) {
- lastEngineerElement.textContent = getRandomItem(engineers);
- }
- }
- 
- // Function to increment read count
- function incrementReadCount() {
- const readCountElement = document.getElementById('readCount');
- if (readCountElement) {
- const currentCount = parseInt(readCountElement.textContent) || 0;
- readCountElement.textContent = currentCount + 1;
- }
- 
- const totalReadsElement = document.getElementById('totalReads');
- if (totalReadsElement) {
- const currentTotal = parseInt(totalReadsElement.textContent.replace(',', '')) || 0;
- totalReadsElement.textContent = (currentTotal + 1).toLocaleString();
- }
- }
- 
- // Function to add history item
- function addHistoryItem() {
- const historyList = document.getElementById('historyList');
- if (!historyList) return;
- 
- const historyItem = document.createElement('div');
- historyItem.className = 'history-item';
- 
- const icon = document.createElement('div');
- icon.className = 'history-icon';
- icon.textContent = '';
- 
- const content = document.createElement('div');
- content.className = 'history-content';
- 
- const action = document.createElement('div');
- action.className = 'history-action';
- action.textContent = getRandomItem(actions);
- 
- const details = document.createElement('div');
- details.className = 'history-details';
- details.textContent = `Engineer: ${getRandomItem(engineers)} | Device: RFID-READER-03`;
- 
- const time = document.createElement('div');
- time.className = 'history-time';
- time.textContent = getCurrentDateTime();
- 
- content.appendChild(action);
- content.appendChild(details);
- 
- historyItem.appendChild(icon);
- historyItem.appendChild(content);
- historyItem.appendChild(time);
- 
- // Add to top of list
- historyList.insertBefore(historyItem, historyList.firstChild);
- 
- // Keep only last 10 items
- while (historyList.children.length > 10) {
- historyList.removeChild(historyList.lastChild);
- }
- }
- 
- // Function to simulate tag scan
- function simulateTagScan() {
- updateLastReadTime();
- updateLastEngineer();
- incrementReadCount();
- addHistoryItem();
- }
- 
- // Initialize page with some history items
- function initializeHistory() {
- const historyList = document.getElementById('historyList');
- if (!historyList) return;
- 
- // Add 5 initial history items
- for (let i = 0; i < 5; i++) {
- setTimeout(() => {
- const now = new Date();
- now.setMinutes(now.getMinutes() - (5 - i));
- 
- const historyItem = document.createElement('div');
- historyItem.className = 'history-item';
- 
- const icon = document.createElement('div');
- icon.className = 'history-icon';
- icon.textContent = '';
- 
- const content = document.createElement('div');
- content.className = 'history-content';
- 
- const action = document.createElement('div');
- action.className = 'history-action';
- action.textContent = getRandomItem(actions);
- 
- const details = document.createElement('div');
- details.className = 'history-details';
- details.textContent = `Engineer: ${getRandomItem(engineers)} | Device: RFID-READER-03`;
- 
- const time = document.createElement('div');
- time.className = 'history-time';
- const timeStr = now.toISOString().slice(0, 19).replace('T', ' ');
- time.textContent = timeStr;
- 
- content.appendChild(action);
- content.appendChild(details);
- 
- historyItem.appendChild(icon);
- historyItem.appendChild(content);
- historyItem.appendChild(time);
- 
- historyList.appendChild(historyItem);
- }, i * 100);
- }
- }
- 
- // Update time display every second
- function updateTimeDisplay() {
- const lastReadTimeElement = document.getElementById('lastReadTime');
- if (lastReadTimeElement && Math.random() > 0.7) {
- // Occasionally update the time to show activity
- updateLastReadTime();
- }
- }
- 
- // Initialize page when loaded
- window.addEventListener('DOMContentLoaded', function() {
- initializeHistory();
+  <!-- Core JS Files -->
+  <script src="./assets/js/core/jquery.min.js"></script>
+  <script src="./assets/js/core/popper.min.js"></script>
+  <script src="./assets/js/core/bootstrap-material-design.min.js"></script>
+  <script src="./assets/js/plugins/perfect-scrollbar.jquery.min.js"></script>
+  <!-- Plugin for the momentJs  -->
+  <script src="./assets/js/plugins/moment.min.js"></script>
+  <!--  Plugin for Sweet Alert -->
+  <script src="./assets/js/plugins/sweetalert2.js"></script>
+  <!-- Forms Validations Plugin -->
+  <script src="./assets/js/plugins/jquery.validate.min.js"></script>
+  <!-- Plugin for the Wizard, full documentation here: https://github.com/VinceG/twitter-bootstrap-wizard -->
+  <script src="./assets/js/plugins/jquery.bootstrap-wizard.js"></script>
+  <!--	Plugin for Select, full documentation here: http://silviomoreto.github.io/bootstrap-select -->
+  <script src="./assets/js/plugins/bootstrap-selectpicker.js"></script>
+  <!--  Plugin for the DateTimePicker, full documentation here: https://eonasdan.github.io/bootstrap-datetimepicker/ -->
+  <script src="./assets/js/plugins/bootstrap-datetimepicker.min.js"></script>
+  <!--  DataTables.net Plugin, full documentation here: https://datatables.net/  -->
+  <script src="./assets/js/plugins/jquery.dataTables.min.js"></script>
+  <!--	Plugin for Tags, full documentation here: https://github.com/bootstrap-tagsinput/bootstrap-tagsinputs  -->
+  <script src="./assets/js/plugins/bootstrap-tagsinput.js"></script>
+  <!-- Plugin for Fileupload, full documentation here: http://www.jasny.net/bootstrap/javascript/#fileinput -->
+  <script src="./assets/js/plugins/jasny-bootstrap.min.js"></script>
+  <!--  Full Calendar Plugin, full documentation here: https://github.com/fullcalendar/fullcalendar    -->
+  <script src="./assets/js/plugins/fullcalendar.min.js"></script>
+  <!-- Vector Map plugin, full documentation here: http://jvectormap.com/documentation/ -->
+  <script src="./assets/js/plugins/jquery-jvectormap.js"></script>
+  <!--  Plugin for the Sliders, full documentation here: http://refreshless.com/nouislider/ -->
+  <script src="./assets/js/plugins/nouislider.min.js"></script>
+  <!-- Include a polyfill for ES6 Promises (optional) for IE11, UC Browser and Android browser support SweetAlert -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/core-js/2.4.1/core.js"></script>
+  <!-- Library for adding dinamically elements -->
+  <script src="./assets/js/plugins/arrive.min.js"></script>
+  <!-- Chartist JS -->
+  <script src="./assets/js/plugins/chartist.min.js"></script>
+  <!--  Notifications Plugin    -->
+  <script src="./assets/js/plugins/bootstrap-notify.js"></script>
+  <!-- Control Center for Material Dashboard: parallax effects, scripts for the example pages etc -->
+  <script src="./assets/js/material-dashboard.js?v=2.1.0" type="text/javascript"></script>
 
- // Simulate tag scan every 5-8 seconds
- setInterval(function() {
- simulateTagScan();
- }, 5000 + Math.random() * 3000);
+  <script>
+    // Simple JavaScript to simulate RFID tag data and updates
+    
+    // List of engineer names for simulation
+    const engineers = [
+      'Sarah Chen',
+      'Mike Johnson',
+      'David Rodriguez',
+      'Emily Watson',
+      'James Park',
+      'Lisa Anderson',
+      'Robert Kim',
+      'Jennifer Lee'
+    ];
+    
+    // List of actions for history log
+    const actions = [
+      'Tag scanned successfully',
+      'Maintenance check performed',
+      'Data updated',
+      'Quality inspection completed',
+      'Tag read by engineer',
+      'System calibration',
+      'Signal strength check',
+      'Memory verification'
+    ];
+    
+    // Function to get current date and time formatted
+    function getCurrentDateTime() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }
+    
+    // Function to get a random item from an array
+    function getRandomItem(array) {
+      return array[Math.floor(Math.random() * array.length)];
+    }
+    
+    // Function to update last read time
+    function updateLastReadTime() {
+      const lastReadTimeElement = document.getElementById('lastReadTime');
+      if (lastReadTimeElement) {
+        lastReadTimeElement.textContent = getCurrentDateTime();
+      }
+    }
+    
+    // Function to update last engineer
+    function updateLastEngineer() {
+      const lastEngineerElement = document.getElementById('lastEngineer');
+      if (lastEngineerElement) {
+        lastEngineerElement.textContent = getRandomItem(engineers);
+      }
+    }
+    
+    // Function to increment read count
+    function incrementReadCount() {
+      const readCountElement = document.getElementById('readCount');
+      if (readCountElement) {
+        const currentCount = parseInt(readCountElement.textContent) || 0;
+        readCountElement.textContent = currentCount + 1;
+      }
+      
+      const totalReadsElement = document.getElementById('totalReads');
+      if (totalReadsElement) {
+        const currentTotal = parseInt(totalReadsElement.textContent.replace(',', '')) || 0;
+        totalReadsElement.textContent = (currentTotal + 1).toLocaleString();
+      }
+    }
+    
+    // Function to add history item
+    function addHistoryItem() {
+      const historyList = document.getElementById('historyList');
+      if (!historyList) return;
+      
+      const historyItem = document.createElement('div');
+      historyItem.className = 'history-item';
+      
+      const icon = document.createElement('div');
+      icon.className = 'history-icon';
+      icon.textContent = '📡';
+      
+      const content = document.createElement('div');
+      content.className = 'history-content';
+      
+      const action = document.createElement('div');
+      action.className = 'history-action';
+      action.textContent = getRandomItem(actions);
+      
+      const details = document.createElement('div');
+      details.className = 'history-details';
+      details.textContent = `Engineer: ${getRandomItem(engineers)} | Device: RFID-READER-03`;
+      
+      const time = document.createElement('div');
+      time.className = 'history-time';
+      time.textContent = getCurrentDateTime();
+      
+      content.appendChild(action);
+      content.appendChild(details);
+      
+      historyItem.appendChild(icon);
+      historyItem.appendChild(content);
+      historyItem.appendChild(time);
+      
+      // Add to top of list
+      historyList.insertBefore(historyItem, historyList.firstChild);
+      
+      // Keep only last 10 items
+      while (historyList.children.length > 10) {
+        historyList.removeChild(historyList.lastChild);
+      }
+    }
+    
+    // Function to simulate tag scan
+    function simulateTagScan() {
+      updateLastReadTime();
+      updateLastEngineer();
+      incrementReadCount();
+      addHistoryItem();
+    }
+    
+    // Initialize page with some history items
+    function initializeHistory() {
+      const historyList = document.getElementById('historyList');
+      if (!historyList) return;
+      
+      // Add 5 initial history items
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => {
+          const now = new Date();
+          now.setMinutes(now.getMinutes() - (5 - i));
+          
+          const historyItem = document.createElement('div');
+          historyItem.className = 'history-item';
+          
+          const icon = document.createElement('div');
+          icon.className = 'history-icon';
+          icon.textContent = '📡';
+          
+          const content = document.createElement('div');
+          content.className = 'history-content';
+          
+          const action = document.createElement('div');
+          action.className = 'history-action';
+          action.textContent = getRandomItem(actions);
+          
+          const details = document.createElement('div');
+          details.className = 'history-details';
+          details.textContent = `Engineer: ${getRandomItem(engineers)} | Device: RFID-READER-03`;
+          
+          const time = document.createElement('div');
+          time.className = 'history-time';
+          const timeStr = now.toISOString().slice(0, 19).replace('T', ' ');
+          time.textContent = timeStr;
+          
+          content.appendChild(action);
+          content.appendChild(details);
+          
+          historyItem.appendChild(icon);
+          historyItem.appendChild(content);
+          historyItem.appendChild(time);
+          
+          historyList.appendChild(historyItem);
+        }, i * 100);
+      }
+    }
+    
+    // Update time display every second
+    function updateTimeDisplay() {
+      const lastReadTimeElement = document.getElementById('lastReadTime');
+      if (lastReadTimeElement && Math.random() > 0.7) {
+        // Occasionally update the time to show activity
+        updateLastReadTime();
+      }
+    }
+    
+    // Initialize page when loaded
+    $(document).ready(function() {
+      initializeHistory();
 
- // Update time display every second
- setInterval(updateTimeDisplay, 1000);
+      // Simulate tag scan every 5-8 seconds
+      setInterval(function() {
+        simulateTagScan();
+      }, 5000 + Math.random() * 3000);
 
- // Initialize animated background
- generateNodes();
- generateDataStreams();
- });
-
- // Generate animated connection nodes
- function generateNodes() {
- const container = document.getElementById('connectionNodes');
- if (!container) return;
-
- const nodeCount = 15;
- for (let i = 0; i < nodeCount; i++) {
- const node = document.createElement('div');
- node.className = 'node';
- node.style.left = `${Math.random() * 100}%`;
- node.style.top = `${Math.random() * 100}%`;
- node.style.animationDelay = `${Math.random() * 3}s`;
- container.appendChild(node);
- }
- }
-
- // Generate data stream lines
- function generateDataStreams() {
- const container = document.getElementById('dataStreams');
- if (!container) return;
-
- const streamCount = 8;
- for (let i = 0; i < streamCount; i++) {
- const stream = document.createElement('div');
- stream.className = 'stream-line';
- stream.style.top = `${(100 / streamCount) * i + Math.random() * 10}%`;
- stream.style.width = `${200 + Math.random() * 300}px`;
- stream.style.animationDelay = `${Math.random() * 4}s`;
- stream.style.animationDuration = `${3 + Math.random() * 3}s`;
- container.appendChild(stream);
- }
- }
- </script>
+      // Update time display every second
+      setInterval(updateTimeDisplay, 1000);
+    });
+  </script>
 </body>
 </html>
