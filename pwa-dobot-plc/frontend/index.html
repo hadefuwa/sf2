@@ -3,53 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0a1628">
+    <meta name="theme-color" content="#1c1b1f">
     <meta name="description" content="Smart Factory Control System">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/png" href="/icon-192.png">
     <link rel="apple-touch-icon" href="/icon-512.png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <title>Smart Factory - Industrial IoT Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <title>Smart Factory - Control Dashboard</title>
     <style>
-        /* ========== PROFESSIONAL IIOT VARIABLES ========== */
+        /* ========== MATERIAL DESIGN 3 DARK THEME ========== */
         :root {
-            /* Primary Industrial Colors */
-            --primary-blue: #0ea5e9;
-            --primary-teal: #14b8a6;
-            --primary-indigo: #6366f1;
-            --accent-orange: #f97316;
-            --accent-amber: #fbbf24;
+            /* Material Design 3 Color Tokens - Dark Theme */
+            --md-sys-color-primary: #a8c7fa;
+            --md-sys-color-on-primary: #0b3d8c;
+            --md-sys-color-primary-container: #1e54a4;
+            --md-sys-color-on-primary-container: #d6e3ff;
 
-            /* Status Colors */
-            --status-success: #10b981;
-            --status-warning: #f59e0b;
-            --status-error: #ef4444;
-            --status-info: #3b82f6;
+            --md-sys-color-secondary: #bcc7dc;
+            --md-sys-color-on-secondary: #263141;
+            --md-sys-color-secondary-container: #3c4758;
+            --md-sys-color-on-secondary-container: #d8e3f8;
 
-            /* Background & Surfaces */
-            --bg-dark: #0a1628;
-            --bg-darker: #050b16;
-            --surface-1: rgba(15, 23, 42, 0.85);
-            --surface-2: rgba(30, 41, 59, 0.7);
-            --surface-glass: rgba(255, 255, 255, 0.03);
+            --md-sys-color-tertiary: #d7bce0;
+            --md-sys-color-on-tertiary: #3b2948;
+            --md-sys-color-tertiary-container: #533f5f;
+            --md-sys-color-on-tertiary-container: #f3dafd;
 
-            /* Borders & Dividers */
-            --border-primary: rgba(14, 165, 233, 0.2);
-            --border-secondary: rgba(148, 163, 184, 0.15);
-            --border-glow: rgba(14, 165, 233, 0.4);
+            --md-sys-color-error: #ffb4ab;
+            --md-sys-color-on-error: #690005;
+            --md-sys-color-error-container: #93000a;
+            --md-sys-color-on-error-container: #ffdad6;
 
-            /* Text */
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --text-tertiary: #64748b;
+            --md-sys-color-background: #1c1b1f;
+            --md-sys-color-on-background: #e4e1e6;
+            --md-sys-color-surface: #1c1b1f;
+            --md-sys-color-on-surface: #e4e1e6;
+            --md-sys-color-surface-variant: #44464f;
+            --md-sys-color-on-surface-variant: #c5c6d0;
+
+            --md-sys-color-outline: #8f9099;
+            --md-sys-color-outline-variant: #44464f;
+
+            --md-sys-color-surface-container-lowest: #0f0e11;
+            --md-sys-color-surface-container-low: #24232a;
+            --md-sys-color-surface-container: #282730;
+            --md-sys-color-surface-container-high: #33323a;
+            --md-sys-color-surface-container-highest: #3e3d45;
+
+            /* Elevation Shadows */
+            --md-sys-elevation-0: none;
+            --md-sys-elevation-1: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+            --md-sys-elevation-2: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+            --md-sys-elevation-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px rgba(0, 0, 0, 0.3);
+            --md-sys-elevation-4: 0px 6px 10px 4px rgba(0, 0, 0, 0.15), 0px 2px 3px rgba(0, 0, 0, 0.3);
+            --md-sys-elevation-5: 0px 8px 12px 6px rgba(0, 0, 0, 0.15), 0px 4px 4px rgba(0, 0, 0, 0.3);
 
             /* Typography */
-            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --md-sys-typescale-display-large-font: 'Roboto', sans-serif;
+            --md-sys-typescale-display-large-size: 57px;
+            --md-sys-typescale-display-large-weight: 400;
+
+            --md-sys-typescale-headline-large-font: 'Roboto', sans-serif;
+            --md-sys-typescale-headline-large-size: 32px;
+            --md-sys-typescale-headline-large-weight: 400;
+
+            --md-sys-typescale-title-large-font: 'Roboto', sans-serif;
+            --md-sys-typescale-title-large-size: 22px;
+            --md-sys-typescale-title-large-weight: 500;
+
+            --md-sys-typescale-body-large-font: 'Roboto', sans-serif;
+            --md-sys-typescale-body-large-size: 16px;
+            --md-sys-typescale-body-large-weight: 400;
+
+            --md-sys-typescale-label-large-font: 'Roboto', sans-serif;
+            --md-sys-typescale-label-large-size: 14px;
+            --md-sys-typescale-label-large-weight: 500;
+
+            /* Shape */
+            --md-sys-shape-corner-none: 0px;
+            --md-sys-shape-corner-extra-small: 4px;
+            --md-sys-shape-corner-small: 8px;
+            --md-sys-shape-corner-medium: 12px;
+            --md-sys-shape-corner-large: 16px;
+            --md-sys-shape-corner-extra-large: 28px;
+
+            /* State Layers */
+            --md-sys-state-hover-opacity: 0.08;
+            --md-sys-state-focus-opacity: 0.12;
+            --md-sys-state-pressed-opacity: 0.12;
         }
 
-        /* ========== RESET & BASE ========== */
+        /* ========== BASE STYLES ========== */
         * {
             margin: 0;
             padding: 0;
@@ -57,256 +104,129 @@
         }
 
         body {
-            font-family: var(--font-family);
-            background: var(--bg-darker);
+            font-family: var(--md-sys-typescale-body-large-font);
+            font-size: var(--md-sys-typescale-body-large-size);
+            font-weight: var(--md-sys-typescale-body-large-weight);
+            background: var(--md-sys-color-background);
+            color: var(--md-sys-color-on-background);
             min-height: 100vh;
-            color: var(--text-primary);
-            line-height: 1.6;
-            overflow-x: hidden;
-            position: relative;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* ========== ANIMATED BACKGROUND ========== */
-        .background-layer {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            overflow: hidden;
-        }
-
-        /* Animated Grid Network */
-        .grid-network {
-            position: absolute;
-            inset: 0;
-            background-image:
-                linear-gradient(rgba(14, 165, 233, 0.03) 1.5px, transparent 1.5px),
-                linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1.5px, transparent 1.5px);
-            background-size: 80px 80px;
-            animation: gridFlow 20s linear infinite;
-        }
-
-        @keyframes gridFlow {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(80px, 80px); }
-        }
-
-        /* Animated Connection Nodes */
-        .connection-nodes {
-            position: absolute;
-            inset: 0;
-        }
-
-        .node {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background: var(--primary-blue);
-            border-radius: 50%;
-            box-shadow: 0 0 20px var(--primary-blue), 0 0 40px var(--primary-blue);
-            animation: nodePulse 3s ease-in-out infinite;
-        }
-
-        @keyframes nodePulse {
-            0%, 100% {
-                transform: scale(1);
-                opacity: 1;
-            }
-            50% {
-                transform: scale(1.5);
-                opacity: 0.7;
-            }
-        }
-
-        /* Data Flow Lines */
-        .data-streams {
-            position: absolute;
-            inset: 0;
-        }
-
-        .stream-line {
-            position: absolute;
-            height: 2px;
-            background: linear-gradient(90deg,
-                transparent 0%,
-                var(--primary-blue) 50%,
-                transparent 100%
-            );
-            animation: streamFlow 4s linear infinite;
-            opacity: 0.6;
-        }
-
-        @keyframes streamFlow {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(200%); }
-        }
-
-        /* Subtle Gradient Orbs */
-        .gradient-orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(100px);
-            opacity: 0.15;
-            animation: orbFloat 25s ease-in-out infinite;
-        }
-
-        .gradient-orb.orb-1 {
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, var(--primary-blue), transparent);
-            top: -200px;
-            left: -200px;
-        }
-
-        .gradient-orb.orb-2 {
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, var(--primary-teal), transparent);
-            bottom: -250px;
-            right: -250px;
-            animation-delay: 8s;
-        }
-
-        .gradient-orb.orb-3 {
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, var(--primary-indigo), transparent);
-            top: 40%;
-            left: 60%;
-            animation-delay: 16s;
-        }
-
-        @keyframes orbFloat {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(80px, -60px) scale(1.1); }
-            66% { transform: translate(-60px, 80px) scale(0.95); }
-        }
-
-        /* ========== SIDEBAR ========== */
-        .sidebar {
-            width: 280px;
-            background: var(--surface-1);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid var(--border-secondary);
+        /* ========== NAVIGATION DRAWER ========== */
+        .md-navigation-drawer {
+            width: 360px;
+            height: 100vh;
+            background: var(--md-sys-color-surface-container-low);
             position: fixed;
             left: 0;
             top: 0;
-            height: 100vh;
             z-index: 1000;
             display: flex;
             flex-direction: column;
             overflow-y: auto;
         }
 
-        .sidebar-header {
-            padding: 32px 24px;
-            border-bottom: 1px solid var(--border-secondary);
+        .drawer-header {
+            padding: 24px 28px;
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
         }
 
-        .logo-container {
+        .drawer-header-content {
             display: flex;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 8px;
+            gap: 16px;
+            margin-bottom: 16px;
         }
 
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--primary-blue), var(--primary-teal));
-            border-radius: 8px;
+        .app-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+            border-radius: var(--md-sys-shape-corner-large);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            font-weight: 700;
-            color: white;
-            box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
+            font-size: 28px;
+            font-weight: 500;
+            box-shadow: var(--md-sys-elevation-1);
         }
 
-        .logo-text h2 {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-primary);
-            letter-spacing: -0.5px;
+        .app-title {
+            flex: 1;
         }
 
-        .logo-text p {
-            font-size: 11px;
-            color: var(--text-tertiary);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            font-weight: 600;
+        .app-title h1 {
+            font-size: 22px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+            margin-bottom: 4px;
         }
 
-        .status-indicator {
-            display: flex;
+        .app-title p {
+            font-size: 14px;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        .status-chip {
+            display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 12px 16px;
-            background: var(--surface-glass);
-            border: 1px solid var(--border-secondary);
-            border-radius: 8px;
-            margin-top: 16px;
+            padding: 6px 16px;
+            background: var(--md-sys-color-surface-container-highest);
+            border-radius: var(--md-sys-shape-corner-small);
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface-variant);
         }
 
         .status-dot {
             width: 8px;
             height: 8px;
-            background: var(--status-success);
+            background: #4caf50;
             border-radius: 50%;
-            animation: statusPulse 2s ease-in-out infinite;
-            box-shadow: 0 0 12px var(--status-success);
+            animation: pulse 2s ease-in-out infinite;
         }
 
-        @keyframes statusPulse {
+        @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.6; transform: scale(1.2); }
+            50% { opacity: 0.7; transform: scale(1.1); }
         }
 
-        .status-text {
-            font-size: 12px;
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        .sidebar-nav {
+        .drawer-nav {
             flex: 1;
-            padding: 24px 16px;
+            padding: 8px;
         }
 
-        .nav-section {
-            margin-bottom: 32px;
-        }
-
-        .nav-section-title {
+        .nav-section-label {
+            padding: 8px 28px;
             font-size: 11px;
-            font-weight: 700;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface-variant);
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: var(--text-tertiary);
-            margin-bottom: 12px;
-            padding: 0 12px;
-        }
-
-        .nav-menu {
-            list-style: none;
+            letter-spacing: 0.5px;
+            margin-top: 16px;
         }
 
         .nav-item {
-            margin-bottom: 4px;
+            list-style: none;
+            margin: 4px 12px;
         }
 
         .nav-link {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 12px 16px;
+            padding: 16px;
+            border-radius: var(--md-sys-shape-corner-extra-large);
             text-decoration: none;
-            color: var(--text-secondary);
-            border-radius: 8px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--md-sys-color-on-surface-variant);
             font-size: 14px;
             font-weight: 500;
+            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
             position: relative;
             overflow: hidden;
         }
@@ -314,399 +234,414 @@
         .nav-link::before {
             content: '';
             position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 3px;
-            background: var(--primary-blue);
-            transform: scaleY(0);
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            inset: 0;
+            background: var(--md-sys-color-on-surface);
+            opacity: 0;
+            transition: opacity 0.2s;
         }
 
-        .nav-link:hover {
-            color: var(--text-primary);
-            background: var(--surface-glass);
+        .nav-link:hover::before {
+            opacity: var(--md-sys-state-hover-opacity);
         }
 
         .nav-link.active {
-            color: var(--primary-blue);
-            background: rgba(14, 165, 233, 0.1);
-        }
-
-        .nav-link.active::before {
-            transform: scaleY(1);
+            background: var(--md-sys-color-secondary-container);
+            color: var(--md-sys-color-on-secondary-container);
         }
 
         .nav-icon {
-            width: 20px;
-            height: 20px;
+            font-family: 'Material Icons';
+            font-size: 24px;
+            width: 24px;
+            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
         }
 
         /* ========== MAIN CONTENT ========== */
         .main-content {
-            margin-left: 280px;
+            margin-left: 360px;
             min-height: 100vh;
-            padding: 40px;
+            background: var(--md-sys-color-background);
         }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        /* ========== HEADER ========== */
-        .page-header {
-            margin-bottom: 48px;
-        }
-
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .header-title {
+        /* Top App Bar */
+        .md-top-app-bar {
+            height: 64px;
+            background: var(--md-sys-color-surface);
+            padding: 0 24px;
             display: flex;
             align-items: center;
             gap: 16px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--md-sys-elevation-2);
         }
 
-        .header-title h1 {
-            font-size: 36px;
-            font-weight: 700;
-            color: var(--text-primary);
-            letter-spacing: -1px;
+        .top-app-bar-title {
+            flex: 1;
+            font-size: 22px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
         }
 
-        .header-badge {
-            padding: 6px 12px;
-            background: linear-gradient(135deg, var(--primary-blue), var(--primary-teal));
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
-        }
-
-        .header-actions {
+        .md-icon-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: transparent;
+            color: var(--md-sys-color-on-surface-variant);
+            cursor: pointer;
             display: flex;
-            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s;
         }
 
-        .header-stat {
-            padding: 12px 20px;
-            background: var(--surface-1);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-secondary);
-            border-radius: 8px;
-            text-align: center;
+        .md-icon-button::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: var(--md-sys-color-on-surface);
+            opacity: 0;
+            transition: opacity 0.2s;
         }
 
-        .stat-value {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--primary-blue);
-            display: block;
+        .md-icon-button:hover::before {
+            opacity: var(--md-sys-state-hover-opacity);
+        }
+
+        .md-icon-button .material-icons {
+            font-size: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Content Container */
+        .content-container {
+            padding: 24px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Page Header */
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-header h1 {
+            font-size: 32px;
+            font-weight: 400;
+            color: var(--md-sys-color-on-background);
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            font-size: 16px;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: var(--md-sys-color-surface-container-high);
+            border-radius: var(--md-sys-shape-corner-large);
+            padding: 20px;
+            box-shadow: var(--md-sys-elevation-1);
+            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+        }
+
+        .stat-card:hover {
+            box-shadow: var(--md-sys-elevation-2);
         }
 
         .stat-label {
-            font-size: 11px;
-            color: var(--text-tertiary);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
+            font-size: 14px;
+            color: var(--md-sys-color-on-surface-variant);
+            margin-bottom: 8px;
+            display: block;
         }
 
-        .header-description {
-            font-size: 16px;
-            color: var(--text-secondary);
-            max-width: 800px;
+        .stat-value {
+            font-size: 32px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
         }
 
-        /* ========== MODULE GRID ========== */
+        /* Module Cards Grid */
         .module-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-            gap: 24px;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 16px;
         }
 
-        .module-card {
-            background: var(--surface-1);
-            backdrop-filter: blur(20px);
-            border: 1px solid var(--border-secondary);
-            border-radius: 16px;
-            padding: 32px;
+        .md-card {
+            background: var(--md-sys-color-surface-container);
+            border-radius: var(--md-sys-shape-corner-large);
+            overflow: hidden;
+            box-shadow: var(--md-sys-elevation-1);
+            transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+            position: relative;
             text-decoration: none;
             color: inherit;
             display: flex;
             flex-direction: column;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .module-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary-blue), var(--primary-teal));
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .module-card::after {
+        .md-card::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%),
-                rgba(14, 165, 233, 0.1) 0%,
-                transparent 50%
-            );
+            background: var(--md-sys-color-on-surface);
             opacity: 0;
-            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 0.2s;
+            pointer-events: none;
         }
 
-        .module-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--border-glow);
-            box-shadow:
-                0 20px 40px rgba(0, 0, 0, 0.4),
-                0 0 0 1px var(--border-primary);
+        .md-card:hover {
+            box-shadow: var(--md-sys-elevation-3);
         }
 
-        .module-card:hover::before {
-            transform: scaleX(1);
+        .md-card:hover::before {
+            opacity: var(--md-sys-state-hover-opacity);
         }
 
-        .module-card:hover::after {
-            opacity: 1;
-        }
-
-        .module-header {
+        .card-header {
+            padding: 20px;
             display: flex;
             align-items: flex-start;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            position: relative;
-            z-index: 1;
+            gap: 16px;
         }
 
-        .module-icon-wrapper {
-            width: 56px;
-            height: 56px;
-            background: linear-gradient(135deg,
-                rgba(14, 165, 233, 0.15),
-                rgba(20, 184, 166, 0.15)
-            );
-            border: 1px solid var(--border-primary);
-            border-radius: 12px;
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--md-sys-shape-corner-medium);
+            background: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 24px;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            flex-shrink: 0;
         }
 
-        .module-card:hover .module-icon-wrapper {
-            background: linear-gradient(135deg,
-                rgba(14, 165, 233, 0.25),
-                rgba(20, 184, 166, 0.25)
-            );
-            box-shadow: 0 8px 24px rgba(14, 165, 233, 0.3);
-            transform: scale(1.05);
-        }
-
-        .module-status {
-            width: 8px;
-            height: 8px;
-            background: var(--status-success);
-            border-radius: 50%;
-            animation: statusPulse 2s ease-in-out infinite;
-            box-shadow: 0 0 12px var(--status-success);
-        }
-
-        .module-content {
+        .card-header-content {
             flex: 1;
-            position: relative;
-            z-index: 1;
         }
 
-        .module-title {
+        .card-title {
             font-size: 22px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-            letter-spacing: -0.5px;
+            font-weight: 500;
+            color: var(--md-sys-color-on-surface);
+            margin-bottom: 4px;
         }
 
-        .module-description {
+        .card-subtitle {
             font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.6;
-            margin-bottom: 20px;
+            color: var(--md-sys-color-on-surface-variant);
         }
 
-        .module-footer {
+        .card-content {
+            padding: 0 20px 20px;
+            flex: 1;
+        }
+
+        .card-description {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--md-sys-color-on-surface-variant);
+        }
+
+        .card-actions {
+            padding: 8px 12px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding-top: 20px;
-            border-top: 1px solid var(--border-secondary);
-            position: relative;
-            z-index: 1;
+            border-top: 1px solid var(--md-sys-color-outline-variant);
         }
 
-        .module-meta {
+        .card-meta {
             display: flex;
             gap: 16px;
+            align-items: center;
         }
 
         .meta-item {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 4px;
             font-size: 12px;
-            color: var(--text-tertiary);
+            color: var(--md-sys-color-on-surface-variant);
         }
 
-        .meta-icon {
-            font-size: 14px;
+        .meta-item .material-icons {
+            font-size: 16px;
         }
 
-        .module-arrow {
-            width: 32px;
-            height: 32px;
-            background: rgba(14, 165, 233, 0.1);
-            border: 1px solid var(--border-primary);
-            border-radius: 8px;
+        /* Material Button */
+        .md-button {
+            height: 40px;
+            padding: 0 24px;
+            border: none;
+            border-radius: var(--md-sys-shape-corner-extra-large);
+            font-family: var(--md-sys-typescale-label-large-font);
+            font-size: var(--md-sys-typescale-label-large-size);
+            font-weight: var(--md-sys-typescale-label-large-weight);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .md-button-filled {
+            background: var(--md-sys-color-primary);
+            color: var(--md-sys-color-on-primary);
+            box-shadow: var(--md-sys-elevation-1);
+        }
+
+        .md-button-filled:hover {
+            box-shadow: var(--md-sys-elevation-2);
+        }
+
+        .md-button-text {
+            background: transparent;
+            color: var(--md-sys-color-primary);
+        }
+
+        .md-button-text::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--md-sys-color-primary);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .md-button-text:hover::before {
+            opacity: var(--md-sys-state-hover-opacity);
+        }
+
+        /* Card Variants */
+        .md-card.card-robot .card-icon {
+            background: #e8def8;
+            color: #381e72;
+        }
+
+        .md-card.card-factory .card-icon {
+            background: #c8e6c9;
+            color: #1b5e20;
+        }
+
+        .md-card.card-vision .card-icon {
+            background: #b3e5fc;
+            color: #01579b;
+        }
+
+        .md-card.card-rfid .card-icon {
+            background: #ffe0b2;
+            color: #e65100;
+        }
+
+        .md-card.card-twin .card-icon {
+            background: #f0f4c3;
+            color: #827717;
+        }
+
+        .md-card.card-plc .card-icon {
+            background: #ffccbc;
+            color: #bf360c;
+        }
+
+        /* FAB (Floating Action Button) */
+        .md-fab {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--md-sys-shape-corner-large);
+            background: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+            border: none;
+            box-shadow: var(--md-sys-elevation-3);
+            cursor: pointer;
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--primary-blue);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
         }
 
-        .module-card:hover .module-arrow {
-            background: var(--primary-blue);
-            color: white;
-            transform: translateX(4px);
+        .md-fab:hover {
+            box-shadow: var(--md-sys-elevation-4);
         }
 
-        /* Module Specific Colors */
-        .module-card.module-robot { --module-color: var(--primary-indigo); }
-        .module-card.module-factory { --module-color: var(--status-success); }
-        .module-card.module-vision { --module-color: var(--primary-teal); }
-        .module-card.module-rfid { --module-color: var(--accent-orange); }
-        .module-card.module-twin { --module-color: var(--primary-blue); }
-        .module-card.module-plc { --module-color: var(--accent-amber); }
+        .md-fab .material-icons {
+            font-size: 24px;
+        }
 
-        .module-card.module-robot .module-status { background: var(--primary-indigo); box-shadow: 0 0 12px var(--primary-indigo); }
-        .module-card.module-factory .module-status { background: var(--status-success); box-shadow: 0 0 12px var(--status-success); }
-        .module-card.module-vision .module-status { background: var(--primary-teal); box-shadow: 0 0 12px var(--primary-teal); }
-        .module-card.module-rfid .module-status { background: var(--accent-orange); box-shadow: 0 0 12px var(--accent-orange); }
-        .module-card.module-twin .module-status { background: var(--primary-blue); box-shadow: 0 0 12px var(--primary-blue); }
-        .module-card.module-plc .module-status { background: var(--accent-amber); box-shadow: 0 0 12px var(--accent-amber); }
-
-        /* ========== SCROLLBAR ========== */
+        /* Scrollbar */
         ::-webkit-scrollbar {
             width: 8px;
             height: 8px;
         }
 
         ::-webkit-scrollbar-track {
-            background: var(--bg-darker);
+            background: var(--md-sys-color-surface);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: var(--border-primary);
+            background: var(--md-sys-color-outline-variant);
             border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-blue);
+            background: var(--md-sys-color-outline);
         }
 
         /* ========== RESPONSIVE ========== */
         @media (max-width: 1024px) {
-            .sidebar {
-                width: 80px;
-            }
-
-            .logo-text,
-            .status-indicator,
-            .nav-section-title,
-            .nav-link span:not(.nav-icon) {
-                display: none;
-            }
-
-            .sidebar-header {
-                padding: 24px 16px;
-            }
-
-            .logo-icon {
-                margin: 0 auto;
-            }
-
-            .nav-link {
-                justify-content: center;
-                padding: 12px;
+            .md-navigation-drawer {
+                width: 280px;
             }
 
             .main-content {
-                margin-left: 80px;
-                padding: 24px;
-            }
-
-            .header-top {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 20px;
-            }
-
-            .module-grid {
-                grid-template-columns: 1fr;
+                margin-left: 280px;
             }
         }
 
-        @media (max-width: 640px) {
-            .sidebar {
+        @media (max-width: 768px) {
+            .md-navigation-drawer {
                 transform: translateX(-100%);
-                transition: transform 0.3s ease;
+                transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1);
             }
 
-            .sidebar.mobile-open {
+            .md-navigation-drawer.open {
                 transform: translateX(0);
             }
 
             .main-content {
                 margin-left: 0;
-                padding: 20px;
-            }
-
-            .header-title h1 {
-                font-size: 28px;
-            }
-
-            .header-actions {
-                flex-wrap: wrap;
             }
 
             .module-grid {
-                gap: 16px;
-            }
-
-            .module-card {
-                padding: 24px;
+                grid-template-columns: 1fr;
             }
         }
 
@@ -721,338 +656,342 @@
     </style>
 </head>
 <body>
-    <!-- Animated Background -->
-    <div class="background-layer">
-        <div class="grid-network"></div>
-        <div class="gradient-orb orb-1"></div>
-        <div class="gradient-orb orb-2"></div>
-        <div class="gradient-orb orb-3"></div>
-        <div class="connection-nodes" id="connectionNodes"></div>
-        <div class="data-streams" id="dataStreams"></div>
-    </div>
-
-    <!-- Sidebar -->
-    <nav class="sidebar">
-        <div class="sidebar-header">
-            <div class="logo-container">
-                <div class="logo-icon">SF</div>
-                <div class="logo-text">
-                    <h2>Smart Factory</h2>
-                    <p>IIoT Platform</p>
+    <!-- Navigation Drawer -->
+    <nav class="md-navigation-drawer">
+        <div class="drawer-header">
+            <div class="drawer-header-content">
+                <div class="app-icon">SF</div>
+                <div class="app-title">
+                    <h1>Smart Factory</h1>
+                    <p>Control System</p>
                 </div>
             </div>
-            <div class="status-indicator">
-                <div class="status-dot"></div>
-                <span class="status-text">System Online</span>
+            <div class="status-chip">
+                <span class="status-dot"></span>
+                <span>System Online</span>
             </div>
         </div>
 
-        <div class="sidebar-nav">
-            <nav class="nav-section">
-                <h3 class="nav-section-title">Navigation</h3>
-                <ul class="nav-menu">
-                    <li class="nav-item">
-                        <a href="/" class="nav-link active">
-                            <span class="nav-icon">🏠</span>
-                            <span>Dashboard</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/robot-arm.html" class="nav-link">
-                            <span class="nav-icon">🤖</span>
-                            <span>Robot Arm</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/smart-factory.html" class="nav-link">
-                            <span class="nav-icon">🏭</span>
-                            <span>Smart Factory</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/vision-system.html" class="nav-link">
-                            <span class="nav-icon">👁</span>
-                            <span>Vision System</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/rfid.html" class="nav-link">
-                            <span class="nav-icon">📡</span>
-                            <span>RFID</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/digital-twin.html" class="nav-link">
-                            <span class="nav-icon">🔄</span>
-                            <span>Digital Twin</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="/plc-diagnostics.html" class="nav-link">
-                            <span class="nav-icon">⚙️</span>
-                            <span>PLC Diagnostics</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+        <div class="drawer-nav">
+            <div class="nav-section-label">Navigation</div>
+            <ul>
+                <li class="nav-item">
+                    <a href="/" class="nav-link active">
+                        <span class="nav-icon material-icons">dashboard</span>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/robot-arm.html" class="nav-link">
+                        <span class="nav-icon material-icons">precision_manufacturing</span>
+                        <span>Robot Arm</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/smart-factory.html" class="nav-link">
+                        <span class="nav-icon material-icons">factory</span>
+                        <span>Smart Factory</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/vision-system.html" class="nav-link">
+                        <span class="nav-icon material-icons">visibility</span>
+                        <span>Vision System</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/rfid.html" class="nav-link">
+                        <span class="nav-icon material-icons">nfc</span>
+                        <span>RFID</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/digital-twin.html" class="nav-link">
+                        <span class="nav-icon material-icons">view_in_ar</span>
+                        <span>Digital Twin</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="/plc-diagnostics.html" class="nav-link">
+                        <span class="nav-icon material-icons">settings</span>
+                        <span>PLC Diagnostics</span>
+                    </a>
+                </li>
+            </ul>
         </div>
     </nav>
 
     <!-- Main Content -->
     <main class="main-content">
-        <div class="container">
-            <!-- Page Header -->
-            <header class="page-header">
-                <div class="header-top">
-                    <div class="header-title">
-                        <h1>Control Dashboard</h1>
-                        <span class="header-badge">IIoT v4.5</span>
-                    </div>
-                    <div class="header-actions">
-                        <div class="header-stat">
-                            <span class="stat-value">6</span>
-                            <span class="stat-label">Modules</span>
-                        </div>
-                        <div class="header-stat">
-                            <span class="stat-value">●</span>
-                            <span class="stat-label">Online</span>
-                        </div>
-                    </div>
-                </div>
-                <p class="header-description">
-                    Integrated Industrial IoT platform for smart manufacturing. Monitor, control, and optimize your factory operations in real-time.
-                </p>
-            </header>
+        <!-- Top App Bar -->
+        <div class="md-top-app-bar">
+            <button class="md-icon-button" id="menuButton">
+                <span class="material-icons">menu</span>
+            </button>
+            <h2 class="top-app-bar-title">Control Dashboard</h2>
+            <button class="md-icon-button">
+                <span class="material-icons">notifications</span>
+            </button>
+            <button class="md-icon-button">
+                <span class="material-icons">account_circle</span>
+            </button>
+        </div>
 
-            <!-- Module Grid -->
+        <!-- Content -->
+        <div class="content-container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1>Welcome to Smart Factory</h1>
+                <p>Monitor and control your industrial operations in real-time</p>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <span class="stat-label">Active Modules</span>
+                    <div class="stat-value">6</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">System Status</span>
+                    <div class="stat-value">Online</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Uptime</span>
+                    <div class="stat-value">99.8%</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Active Tasks</span>
+                    <div class="stat-value">12</div>
+                </div>
+            </div>
+
+            <!-- Module Cards -->
             <div class="module-grid">
-                <!-- Robot Arm Module -->
-                <a href="/robot-arm.html" class="module-card module-robot">
-                    <div class="module-header">
-                        <div class="module-icon-wrapper">🤖</div>
-                        <div class="module-status"></div>
+                <!-- Robot Arm -->
+                <a href="/robot-arm.html" class="md-card card-robot">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <span class="material-icons">precision_manufacturing</span>
+                        </div>
+                        <div class="card-header-content">
+                            <div class="card-title">Robot Arm Control</div>
+                            <div class="card-subtitle">Dobot Magician</div>
+                        </div>
                     </div>
-                    <div class="module-content">
-                        <h2 class="module-title">Robot Arm Control</h2>
-                        <p class="module-description">
+                    <div class="card-content">
+                        <p class="card-description">
                             Precision control and monitoring of Dobot robotic arm. Manage PLC integration, coordinate positioning, and end effector operations with real-time feedback.
                         </p>
                     </div>
-                    <div class="module-footer">
-                        <div class="module-meta">
+                    <div class="card-actions">
+                        <div class="card-meta">
                             <span class="meta-item">
-                                <span class="meta-icon">●</span>
+                                <span class="material-icons">fiber_manual_record</span>
                                 <span>Ready</span>
                             </span>
                             <span class="meta-item">
-                                <span class="meta-icon">⚡</span>
+                                <span class="material-icons">bolt</span>
                                 <span>Active</span>
                             </span>
                         </div>
-                        <div class="module-arrow">→</div>
+                        <button class="md-icon-button">
+                            <span class="material-icons">arrow_forward</span>
+                        </button>
                     </div>
                 </a>
 
-                <!-- Smart Factory Module -->
-                <a href="/smart-factory.html" class="module-card module-factory">
-                    <div class="module-header">
-                        <div class="module-icon-wrapper">🏭</div>
-                        <div class="module-status"></div>
+                <!-- Smart Factory -->
+                <a href="/smart-factory.html" class="md-card card-factory">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <span class="material-icons">factory</span>
+                        </div>
+                        <div class="card-header-content">
+                            <div class="card-title">Smart Factory</div>
+                            <div class="card-subtitle">Operations Center</div>
+                        </div>
                     </div>
-                    <div class="module-content">
-                        <h2 class="module-title">Smart Factory</h2>
-                        <p class="module-description">
+                    <div class="card-content">
+                        <p class="card-description">
                             Factory-wide monitoring and control center. Track production metrics, system health, OEE analytics, and manage automated workflows across all operations.
                         </p>
                     </div>
-                    <div class="module-footer">
-                        <div class="module-meta">
+                    <div class="card-actions">
+                        <div class="card-meta">
                             <span class="meta-item">
-                                <span class="meta-icon">●</span>
+                                <span class="material-icons">fiber_manual_record</span>
                                 <span>Running</span>
                             </span>
                             <span class="meta-item">
-                                <span class="meta-icon">📊</span>
+                                <span class="material-icons">analytics</span>
                                 <span>Analytics</span>
                             </span>
                         </div>
-                        <div class="module-arrow">→</div>
+                        <button class="md-icon-button">
+                            <span class="material-icons">arrow_forward</span>
+                        </button>
                     </div>
                 </a>
 
-                <!-- Vision System Module -->
-                <a href="/vision-system.html" class="module-card module-vision">
-                    <div class="module-header">
-                        <div class="module-icon-wrapper">👁</div>
-                        <div class="module-status"></div>
+                <!-- Vision System -->
+                <a href="/vision-system.html" class="md-card card-vision">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <span class="material-icons">visibility</span>
+                        </div>
+                        <div class="card-header-content">
+                            <div class="card-title">Vision System</div>
+                            <div class="card-subtitle">AI Quality Control</div>
+                        </div>
                     </div>
-                    <div class="module-content">
-                        <h2 class="module-title">Vision System</h2>
-                        <p class="module-description">
+                    <div class="card-content">
+                        <p class="card-description">
                             AI-powered computer vision for quality inspection. Real-time image processing, defect detection, object recognition, and automated quality control analysis.
                         </p>
                     </div>
-                    <div class="module-footer">
-                        <div class="module-meta">
+                    <div class="card-actions">
+                        <div class="card-meta">
                             <span class="meta-item">
-                                <span class="meta-icon">●</span>
+                                <span class="material-icons">fiber_manual_record</span>
                                 <span>Scanning</span>
                             </span>
                             <span class="meta-item">
-                                <span class="meta-icon">🎯</span>
+                                <span class="material-icons">verified</span>
                                 <span>98.5% Acc</span>
                             </span>
                         </div>
-                        <div class="module-arrow">→</div>
+                        <button class="md-icon-button">
+                            <span class="material-icons">arrow_forward</span>
+                        </button>
                     </div>
                 </a>
 
-                <!-- RFID Module -->
-                <a href="/rfid.html" class="module-card module-rfid">
-                    <div class="module-header">
-                        <div class="module-icon-wrapper">📡</div>
-                        <div class="module-status"></div>
+                <!-- RFID -->
+                <a href="/rfid.html" class="md-card card-rfid">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <span class="material-icons">nfc</span>
+                        </div>
+                        <div class="card-header-content">
+                            <div class="card-title">RFID Tracking</div>
+                            <div class="card-subtitle">Asset Management</div>
+                        </div>
                     </div>
-                    <div class="module-content">
-                        <h2 class="module-title">RFID Tracking</h2>
-                        <p class="module-description">
+                    <div class="card-content">
+                        <p class="card-description">
                             Asset and inventory management via RFID. Monitor tag readers, track product movement, manage inventory levels, and maintain full traceability.
                         </p>
                     </div>
-                    <div class="module-footer">
-                        <div class="module-meta">
+                    <div class="card-actions">
+                        <div class="card-meta">
                             <span class="meta-item">
-                                <span class="meta-icon">●</span>
+                                <span class="material-icons">fiber_manual_record</span>
                                 <span>Connected</span>
                             </span>
                             <span class="meta-item">
-                                <span class="meta-icon">📦</span>
+                                <span class="material-icons">inventory</span>
                                 <span>Tracking</span>
                             </span>
                         </div>
-                        <div class="module-arrow">→</div>
+                        <button class="md-icon-button">
+                            <span class="material-icons">arrow_forward</span>
+                        </button>
                     </div>
                 </a>
 
-                <!-- Digital Twin Module -->
-                <a href="/digital-twin.html" class="module-card module-twin">
-                    <div class="module-header">
-                        <div class="module-icon-wrapper">🔄</div>
-                        <div class="module-status"></div>
+                <!-- Digital Twin -->
+                <a href="/digital-twin.html" class="md-card card-twin">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <span class="material-icons">view_in_ar</span>
+                        </div>
+                        <div class="card-header-content">
+                            <div class="card-title">Digital Twin</div>
+                            <div class="card-subtitle">3D Visualization</div>
+                        </div>
                     </div>
-                    <div class="module-content">
-                        <h2 class="module-title">Digital Twin</h2>
-                        <p class="module-description">
+                    <div class="card-content">
+                        <p class="card-description">
                             3D virtualization of factory systems. Real-time synchronized digital replica, predictive simulation, and interactive monitoring of physical assets.
                         </p>
                     </div>
-                    <div class="module-footer">
-                        <div class="module-meta">
+                    <div class="card-actions">
+                        <div class="card-meta">
                             <span class="meta-item">
-                                <span class="meta-icon">●</span>
+                                <span class="material-icons">fiber_manual_record</span>
                                 <span>Synced</span>
                             </span>
                             <span class="meta-item">
-                                <span class="meta-icon">🔄</span>
+                                <span class="material-icons">sync</span>
                                 <span>Real-time</span>
                             </span>
                         </div>
-                        <div class="module-arrow">→</div>
+                        <button class="md-icon-button">
+                            <span class="material-icons">arrow_forward</span>
+                        </button>
                     </div>
                 </a>
 
-                <!-- PLC Diagnostics Module -->
-                <a href="/plc-diagnostics.html" class="module-card module-plc">
-                    <div class="module-header">
-                        <div class="module-icon-wrapper">⚙️</div>
-                        <div class="module-status"></div>
+                <!-- PLC Diagnostics -->
+                <a href="/plc-diagnostics.html" class="md-card card-plc">
+                    <div class="card-header">
+                        <div class="card-icon">
+                            <span class="material-icons">settings</span>
+                        </div>
+                        <div class="card-header-content">
+                            <div class="card-title">PLC Diagnostics</div>
+                            <div class="card-subtitle">Siemens S7-1200</div>
+                        </div>
                     </div>
-                    <div class="module-content">
-                        <h2 class="module-title">PLC Diagnostics</h2>
-                        <p class="module-description">
+                    <div class="card-content">
+                        <p class="card-description">
                             Siemens PLC monitoring and diagnostics. View data blocks, monitor control bits, track communication status, and troubleshoot industrial automation systems.
                         </p>
                     </div>
-                    <div class="module-footer">
-                        <div class="module-meta">
+                    <div class="card-actions">
+                        <div class="card-meta">
                             <span class="meta-item">
-                                <span class="meta-icon">●</span>
+                                <span class="material-icons">fiber_manual_record</span>
                                 <span>S7-1200</span>
                             </span>
                             <span class="meta-item">
-                                <span class="meta-icon">🔧</span>
+                                <span class="material-icons">monitor_heart</span>
                                 <span>Monitor</span>
                             </span>
                         </div>
-                        <div class="module-arrow">→</div>
+                        <button class="md-icon-button">
+                            <span class="material-icons">arrow_forward</span>
+                        </button>
                     </div>
                 </a>
             </div>
         </div>
     </main>
 
+    <!-- FAB -->
+    <button class="md-fab">
+        <span class="material-icons">add</span>
+    </button>
+
     <script>
-        // Generate animated connection nodes
-        function generateNodes() {
-            const container = document.getElementById('connectionNodes');
-            if (!container) return;
+        // Mobile menu toggle
+        const menuButton = document.getElementById('menuButton');
+        const drawer = document.querySelector('.md-navigation-drawer');
 
-            const nodeCount = 15;
-            for (let i = 0; i < nodeCount; i++) {
-                const node = document.createElement('div');
-                node.className = 'node';
-                node.style.left = `${Math.random() * 100}%`;
-                node.style.top = `${Math.random() * 100}%`;
-                node.style.animationDelay = `${Math.random() * 3}s`;
-                container.appendChild(node);
-            }
-        }
-
-        // Generate data stream lines
-        function generateDataStreams() {
-            const container = document.getElementById('dataStreams');
-            if (!container) return;
-
-            const streamCount = 8;
-            for (let i = 0; i < streamCount; i++) {
-                const stream = document.createElement('div');
-                stream.className = 'stream-line';
-                stream.style.top = `${(100 / streamCount) * i + Math.random() * 10}%`;
-                stream.style.width = `${200 + Math.random() * 300}px`;
-                stream.style.animationDelay = `${Math.random() * 4}s`;
-                stream.style.animationDuration = `${3 + Math.random() * 3}s`;
-                container.appendChild(stream);
-            }
-        }
-
-        // Mouse follower effect on cards
-        document.querySelectorAll('.module-card').forEach(card => {
-            card.addEventListener('mousemove', (e) => {
-                const rect = card.getBoundingClientRect();
-                const x = ((e.clientX - rect.left) / rect.width) * 100;
-                const y = ((e.clientY - rect.top) / rect.height) * 100;
-                card.style.setProperty('--x', `${x}%`);
-                card.style.setProperty('--y', `${y}%`);
+        if (menuButton && drawer) {
+            menuButton.addEventListener('click', () => {
+                drawer.classList.toggle('open');
             });
-        });
+        }
 
-        // Initialize
-        generateNodes();
-        generateDataStreams();
-
-        // Regenerate on resize (debounced)
-        let resizeTimer;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                const nodes = document.getElementById('connectionNodes');
-                const streams = document.getElementById('dataStreams');
-                if (nodes) nodes.innerHTML = '';
-                if (streams) streams.innerHTML = '';
-                generateNodes();
-                generateDataStreams();
-            }, 250);
-        });
+        // Close drawer when clicking outside on mobile
+        if (window.innerWidth <= 768) {
+            document.addEventListener('click', (e) => {
+                if (!drawer.contains(e.target) && !menuButton.contains(e.target)) {
+                    drawer.classList.remove('open');
+                }
+            });
+        }
     </script>
 </body>
 </html>

@@ -3,54 +3,80 @@
 <head>
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
- <meta name="theme-color" content="#0b1220">
+ <meta name="theme-color" content="#1c1b1f">
  <meta name="description" content="Smart Factory Control">
  <title>Smart Factory - Control System</title>
- <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+ <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+ <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
  <style>
- /* ========== PROFESSIONAL IIOT VARIABLES ========== */
+ /* ========== MATERIAL DESIGN 3 DARK THEME ========== */
  :root {
- /* Primary Industrial Colors */
- --primary-blue: #0ea5e9;
- --primary-teal: #14b8a6;
- --primary-indigo: #6366f1;
- --accent-orange: #f97316;
- --accent-amber: #fbbf24;
+ /* Material Design 3 Color Tokens - Dark Theme */
+ --md-sys-color-primary: #a8c7fa;
+ --md-sys-color-on-primary: #0b3d8c;
+ --md-sys-color-primary-container: #1e54a4;
+ --md-sys-color-on-primary-container: #d6e3ff;
+
+ --md-sys-color-secondary: #bcc7dc;
+ --md-sys-color-on-secondary: #263141;
+ --md-sys-color-secondary-container: #3c4758;
+ --md-sys-color-on-secondary-container: #d8e3f8;
+
+ --md-sys-color-tertiary: #d7bce0;
+ --md-sys-color-on-tertiary: #3b2948;
+ --md-sys-color-tertiary-container: #533f5f;
+ --md-sys-color-on-tertiary-container: #f3dafd;
+
+ --md-sys-color-error: #ffb4ab;
+ --md-sys-color-on-error: #690005;
+ --md-sys-color-error-container: #93000a;
+ --md-sys-color-on-error-container: #ffdad6;
+
+ --md-sys-color-background: #1c1b1f;
+ --md-sys-color-on-background: #e4e1e6;
+ --md-sys-color-surface: #1c1b1f;
+ --md-sys-color-on-surface: #e4e1e6;
+ --md-sys-color-surface-variant: #44464f;
+ --md-sys-color-on-surface-variant: #c5c6d0;
+
+ --md-sys-color-outline: #8f9099;
+ --md-sys-color-outline-variant: #44464f;
+
+ --md-sys-color-surface-container-lowest: #0f0e11;
+ --md-sys-color-surface-container-low: #24232a;
+ --md-sys-color-surface-container: #282730;
+ --md-sys-color-surface-container-high: #33323a;
+ --md-sys-color-surface-container-highest: #3e3d45;
+
+ /* Elevation Shadows */
+ --md-sys-elevation-0: none;
+ --md-sys-elevation-1: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+ --md-sys-elevation-2: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+ --md-sys-elevation-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px rgba(0, 0, 0, 0.3);
+ --md-sys-elevation-4: 0px 6px 10px 4px rgba(0, 0, 0, 0.15), 0px 2px 3px rgba(0, 0, 0, 0.3);
+ --md-sys-elevation-5: 0px 8px 12px 6px rgba(0, 0, 0, 0.15), 0px 4px 4px rgba(0, 0, 0, 0.3);
 
  /* Status Colors */
- --status-success: #10b981;
- --status-warning: #f59e0b;
- --status-error: #ef4444;
- --status-info: #3b82f6;
+ --status-success: #4caf50;
+ --status-warning: #ff9800;
+ --status-error: #f44336;
+ --status-info: #2196f3;
 
- /* Background & Surfaces */
- --bg-dark: #0a1628;
- --bg-darker: #050b16;
- --surface-1: rgba(15, 23, 42, 0.85);
- --surface-2: rgba(30, 41, 59, 0.7);
- --surface-glass: rgba(255, 255, 255, 0.03);
+ /* Shape */
+ --md-sys-shape-corner-none: 0px;
+ --md-sys-shape-corner-extra-small: 4px;
+ --md-sys-shape-corner-small: 8px;
+ --md-sys-shape-corner-medium: 12px;
+ --md-sys-shape-corner-large: 16px;
+ --md-sys-shape-corner-extra-large: 28px;
 
- /* Borders & Dividers */
- --border-primary: rgba(14, 165, 233, 0.2);
- --border-secondary: rgba(148, 163, 184, 0.15);
- --border-glow: rgba(14, 165, 233, 0.4);
-
- /* Text */
- --text-primary: #f8fafc;
- --text-secondary: #94a3b8;
- --text-tertiary: #64748b;
+ /* State Layers */
+ --md-sys-state-hover-opacity: 0.08;
+ --md-sys-state-focus-opacity: 0.12;
+ --md-sys-state-pressed-opacity: 0.12;
 
  /* Typography */
- --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-
- /* Legacy aliases for backwards compatibility */
- --primary-cyan: #0ea5e9;
- --primary-pink: #14b8a6;
- --darker-bg: #050b16;
- --card-bg: rgba(15, 23, 42, 0.85);
- --border-color: rgba(148, 163, 184, 0.15);
- --accent-green: #10b981;
- --accent-red: #ef4444;
+ --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
  }
 
  /* ========== RESET & BASE ========== */
@@ -61,10 +87,10 @@
  }
 
  body {
- font-family: var(--font-family);
- background: var(--bg-darker);
+ font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+ background: var(--md-sys-color-background);
  min-height: 100vh;
- color: var(--text-primary);
+ color: var(--md-sys-color-on-background);
  display: flex;
  overflow-x: hidden;
  position: relative;
@@ -78,7 +104,7 @@
  left: 0;
  width: 100%;
  height: 100%;
- background: var(--bg-darker);
+ background: var(--md-sys-color-background);
  overflow: hidden;
  z-index: -5;
  }
@@ -109,9 +135,9 @@
  position: absolute;
  width: 8px;
  height: 8px;
- background: var(--primary-blue);
+ background: var(--md-sys-color-primary);
  border-radius: 50%;
- box-shadow: 0 0 20px var(--primary-blue), 0 0 40px var(--primary-blue);
+ box-shadow: 0 0 20px var(--md-sys-color-primary), 0 0 40px var(--md-sys-color-primary);
  animation: nodePulse 3s ease-in-out infinite;
  }
 
@@ -137,7 +163,7 @@
  height: 2px;
  background: linear-gradient(90deg,
  transparent 0%,
- var(--primary-blue) 50%,
+ var(--md-sys-color-primary) 50%,
  transparent 100%
  );
  animation: streamFlow 4s linear infinite;
@@ -161,7 +187,7 @@
  .gradient-orb.orb-1 {
  width: 500px;
  height: 500px;
- background: radial-gradient(circle, var(--primary-blue), transparent);
+ background: radial-gradient(circle, var(--md-sys-color-primary), transparent);
  top: -200px;
  left: -200px;
  }
@@ -169,7 +195,7 @@
  .gradient-orb.orb-2 {
  width: 600px;
  height: 600px;
- background: radial-gradient(circle, var(--primary-teal), transparent);
+ background: radial-gradient(circle, var(--md-sys-color-secondary), transparent);
  bottom: -250px;
  right: -250px;
  animation-delay: 8s;
@@ -178,7 +204,7 @@
  .gradient-orb.orb-3 {
  width: 400px;
  height: 400px;
- background: radial-gradient(circle, var(--primary-indigo), transparent);
+ background: radial-gradient(circle, var(--md-sys-color-tertiary), transparent);
  top: 40%;
  left: 60%;
  animation-delay: 16s;
@@ -202,9 +228,9 @@
  /* ========== SIDEBAR ========== */
  .sidebar {
  width: 280px;
- background: var(--surface-1);
+ background: var(--md-sys-color-surface-container-low);
  backdrop-filter: blur(20px);
- border-right: 1px solid var(--border-secondary);
+ border-right: 1px solid var(--md-sys-color-outline-variant);
  position: fixed;
  left: 0;
  top: 0;
@@ -217,7 +243,7 @@
 
  .sidebar-header {
  padding: 32px 24px;
- border-bottom: 1px solid var(--border-secondary);
+ border-bottom: 1px solid var(--md-sys-color-outline-variant);
  }
 
  .logo-container {
@@ -230,7 +256,7 @@
  .logo-icon {
  width: 40px;
  height: 40px;
- background: linear-gradient(135deg, var(--primary-blue), var(--primary-teal));
+ background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
  border-radius: 8px;
  display: flex;
  align-items: center;
@@ -238,20 +264,20 @@
  font-size: 18px;
  font-weight: 700;
  color: white;
- box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
+ box-shadow: var(--md-sys-elevation-2);
  }
 
  .logo-text h2 {
  font-size: 18px;
  font-weight: 700;
- color: var(--text-primary);
+ color: var(--md-sys-color-on-surface);
  letter-spacing: -0.5px;
  margin-bottom: 0;
  }
 
  .logo-text p {
  font-size: 11px;
- color: var(--text-tertiary);
+ color: var(--md-sys-color-on-surface-variant);
  text-transform: uppercase;
  letter-spacing: 1.5px;
  font-weight: 600;
@@ -263,8 +289,8 @@
  align-items: center;
  gap: 8px;
  padding: 12px 16px;
- background: var(--surface-glass);
- border: 1px solid var(--border-secondary);
+ background: var(--md-sys-color-surface-container-highest);
+ border: 1px solid var(--md-sys-color-outline-variant);
  border-radius: 8px;
  margin-top: 16px;
  }
@@ -285,7 +311,7 @@
 
  .status-text {
  font-size: 12px;
- color: var(--text-secondary);
+ color: var(--md-sys-color-on-surface-variant);
  font-weight: 500;
  }
 
@@ -303,7 +329,7 @@
  font-weight: 700;
  text-transform: uppercase;
  letter-spacing: 1.5px;
- color: var(--text-tertiary);
+ color: var(--md-sys-color-on-surface-variant);
  margin-bottom: 12px;
  padding: 0 12px;
  }
@@ -326,7 +352,7 @@
  gap: 12px;
  padding: 12px 16px;
  text-decoration: none;
- color: var(--text-secondary);
+ color: var(--md-sys-color-on-surface-variant);
  border-radius: 8px;
  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
  font-size: 14px;
@@ -342,19 +368,19 @@
  top: 0;
  height: 100%;
  width: 3px;
- background: var(--primary-blue);
+ background: var(--md-sys-color-primary);
  transform: scaleY(0);
  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
  }
 
  .sidebar-menu-link:hover, .nav-link:hover {
- color: var(--text-primary);
- background: var(--surface-glass);
+ color: var(--md-sys-color-on-surface);
+ background: var(--md-sys-color-surface-container-highest);
  }
 
  .sidebar-menu-link.active, .nav-link.active {
- color: var(--primary-blue);
- background: rgba(14, 165, 233, 0.1);
+ color: var(--md-sys-color-on-secondary-container);
+ background: var(--md-sys-color-secondary-container);
  }
 
  .sidebar-menu-link.active::before, .nav-link.active::before {
@@ -385,42 +411,44 @@
 
  /* ========== HEADER ========== */
  .header {
- background: var(--surface-1);
+ background: var(--md-sys-color-surface-container);
  backdrop-filter: blur(20px);
- border: 1px solid var(--border-secondary);
+ border: 1px solid var(--md-sys-color-outline-variant);
  border-radius: 16px;
  padding: 32px;
  margin-bottom: 32px;
+ box-shadow: var(--md-sys-elevation-1);
  }
 
  .header h1 {
  font-size: 2rem;
  font-weight: 700;
  letter-spacing: -0.5px;
- color: var(--text-primary);
+ color: var(--md-sys-color-on-surface);
  margin: 0;
  }
 
  /* ========== CONTENT ========== */
  .content {
- background: var(--surface-1);
+ background: var(--md-sys-color-surface-container);
  backdrop-filter: blur(20px);
- border: 1px solid var(--border-secondary);
+ border: 1px solid var(--md-sys-color-outline-variant);
  border-radius: 16px;
  padding: 48px;
+ box-shadow: var(--md-sys-elevation-1);
  }
 
  .content h2 {
  font-size: 1.5rem;
  margin-bottom: 12px;
- color: var(--text-primary);
+ color: var(--md-sys-color-on-surface);
  font-weight: 700;
  letter-spacing: -0.5px;
  }
 
  .content p {
  font-size: 16px;
- color: var(--text-secondary);
+ color: var(--md-sys-color-on-surface-variant);
  line-height: 1.6;
  }
 
@@ -433,9 +461,9 @@
  }
 
  .kpi-card {
- background: var(--surface-1);
+ background: var(--md-sys-color-surface-container);
  backdrop-filter: blur(20px);
- border: 1px solid var(--border-secondary);
+ border: 1px solid var(--md-sys-color-outline-variant);
  border-radius: 16px;
  padding: 28px;
  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -444,6 +472,7 @@
  transform: translateY(20px);
  position: relative;
  overflow: hidden;
+ box-shadow: var(--md-sys-elevation-1);
  }
 
  .kpi-card:nth-child(1) { animation-delay: 0.1s; }
@@ -464,10 +493,8 @@
 
  .kpi-card:hover {
  transform: translateY(-4px);
- border-color: var(--border-glow);
- box-shadow:
- 0 20px 40px rgba(0, 0, 0, 0.4),
- 0 0 0 1px var(--border-primary);
+ border-color: var(--md-sys-color-primary);
+ box-shadow: var(--md-sys-elevation-3);
  }
 
  .kpi-header {
@@ -476,13 +503,13 @@
  justify-content: center;
  margin-bottom: 20px;
  padding-bottom: 16px;
- border-bottom: 1px solid var(--border-color);
+ border-bottom: 1px solid var(--md-sys-color-outline-variant);
  }
 
  .kpi-title {
  font-size: 12px;
  font-weight: 600;
- color: var(--primary-blue);
+ color: var(--md-sys-color-primary);
  margin: 0;
  text-transform: uppercase;
  letter-spacing: 1.5px;
@@ -491,7 +518,7 @@
  .kpi-value {
  font-size: 2.5rem;
  font-weight: 700;
- color: var(--text-primary);
+ color: var(--md-sys-color-on-surface);
  margin: 12px 0;
  letter-spacing: -1px;
  }
@@ -499,7 +526,7 @@
  .progress-bar {
  width: 100%;
  height: 8px;
- background: var(--surface-glass);
+ background: var(--md-sys-color-surface-container-highest);
  border-radius: 4px;
  margin-top: 16px;
  overflow: hidden;
@@ -507,7 +534,7 @@
 
  .progress-fill {
  height: 100%;
- background: linear-gradient(90deg, var(--primary-blue), var(--primary-teal));
+ background: linear-gradient(90deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
  position: relative;
  border-radius: 4px;
@@ -564,9 +591,9 @@
  }
 
  .status-normal {
- background: rgba(14, 165, 233, 0.1);
- color: var(--primary-blue);
- border-color: var(--primary-blue);
+ background: rgba(168, 199, 250, 0.1);
+ color: var(--md-sys-color-primary);
+ border-color: var(--md-sys-color-primary);
  }
 
  @keyframes pulse-green {
@@ -586,7 +613,7 @@
 
  .kpi-subtitle {
  font-size: 12px;
- color: var(--text-secondary);
+ color: var(--md-sys-color-on-surface-variant);
  margin-top: 12px;
  }
 
@@ -599,7 +626,7 @@
  align-items: center;
  gap: 12px;
  padding: 12px 0;
- border-bottom: 1px solid var(--border-color);
+ border-bottom: 1px solid var(--md-sys-color-outline-variant);
  }
 
  .fault-item:last-child {
@@ -617,7 +644,7 @@
 
  .fault-text {
  font-size: 13px;
- color: var(--text-secondary);
+ color: var(--md-sys-color-on-surface-variant);
  }
 
  .no-faults {
@@ -635,16 +662,16 @@
  }
 
  ::-webkit-scrollbar-track {
- background: var(--bg-darker);
+ background: var(--md-sys-color-surface);
  }
 
  ::-webkit-scrollbar-thumb {
- background: var(--border-primary);
+ background: var(--md-sys-color-outline-variant);
  border-radius: 4px;
  }
 
  ::-webkit-scrollbar-thumb:hover {
- background: var(--primary-blue);
+ background: var(--md-sys-color-outline);
  }
 
  /* ========== RESPONSIVE ========== */

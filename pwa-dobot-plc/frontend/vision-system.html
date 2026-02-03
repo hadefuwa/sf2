@@ -1,61 +1,70 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
- <meta name="theme-color" content="#0a1628">
+ <meta name="theme-color" content="#1c1b1f">
  <meta name="description" content="Vision System Control">
  <title>Vision System - Smart Factory</title>
- <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+ <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+ <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
  <style>
- /* ========== PROFESSIONAL IIOT VARIABLES ========== */
+ /* ========== MATERIAL DESIGN 3 DARK THEME ========== */
  :root {
- /* Primary Industrial Colors */
- --primary-blue: #0ea5e9;
- --primary-teal: #14b8a6;
- --primary-indigo: #6366f1;
- --accent-orange: #f97316;
- --accent-amber: #fbbf24;
+ /* Material Design 3 Color Tokens - Dark Theme */
+ --md-sys-color-primary: #a8c7fa;
+ --md-sys-color-on-primary: #0b3d8c;
+ --md-sys-color-primary-container: #1e54a4;
+ --md-sys-color-on-primary-container: #d6e3ff;
 
- /* Status Colors */
- --status-success: #10b981;
+ --md-sys-color-secondary: #bcc7dc;
+ --md-sys-color-on-secondary: #263141;
+ --md-sys-color-secondary-container: #3c4758;
+ --md-sys-color-on-secondary-container: #d8e3f8;
+
+ --md-sys-color-tertiary: #d7bce0;
+ --md-sys-color-on-tertiary: #3b2948;
+ --md-sys-color-tertiary-container: #533f5f;
+ --md-sys-color-on-tertiary-container: #f3dafd;
+
+ --md-sys-color-error: #ffb4ab;
+ --md-sys-color-on-error: #690005;
+ --md-sys-color-error-container: #93000a;
+ --md-sys-color-on-error-container: #ffdad6;
+
+ --md-sys-color-background: #1c1b1f;
+ --md-sys-color-on-background: #e4e1e6;
+ --md-sys-color-surface: #1c1b1f;
+ --md-sys-color-on-surface: #e4e1e6;
+ --md-sys-color-surface-variant: #44464f;
+ --md-sys-color-on-surface-variant: #c5c6d0;
+
+ --md-sys-color-outline: #8f9099;
+ --md-sys-color-outline-variant: #44464f;
+
+ --md-sys-color-surface-container-lowest: #0f0e11;
+ --md-sys-color-surface-container-low: #24232a;
+ --md-sys-color-surface-container: #282730;
+ --md-sys-color-surface-container-high: #33323a;
+ --md-sys-color-surface-container-highest: #3e3d45;
+
+ /* Elevation Shadows */
+ --md-sys-elevation-1: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+ --md-sys-elevation-2: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+ --md-sys-elevation-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px rgba(0, 0, 0, 0.3);
+
+ /* Shape */
+ --md-sys-shape-corner-small: 8px;
+ --md-sys-shape-corner-medium: 12px;
+ --md-sys-shape-corner-large: 16px;
+
+ /* Legacy compat colors */
+ --status-success: #4caf50;
  --status-warning: #f59e0b;
  --status-error: #ef4444;
- --status-info: #3b82f6;
-
- /* Background & Surfaces */
- --bg-dark: #0a1628;
- --bg-darker: #050b16;
- --surface-1: rgba(15, 23, 42, 0.85);
- --surface-2: rgba(30, 41, 59, 0.7);
- --surface-glass: rgba(255, 255, 255, 0.03);
-
- /* Borders & Dividers */
- --border-primary: rgba(14, 165, 233, 0.2);
- --border-secondary: rgba(148, 163, 184, 0.15);
- --border-glow: rgba(14, 165, 233, 0.4);
-
- /* Text */
- --text-primary: #f8fafc;
- --text-secondary: #94a3b8;
- --text-tertiary: #64748b;
 
  /* Typography */
- --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-
- /* Legacy compatibility mappings */
- --primary-cyan: var(--primary-blue);
- --primary-pink: var(--primary-teal);
- --primary-purple: var(--primary-indigo);
- --primary-orange: var(--accent-orange);
- --dark-bg: var(--bg-dark);
- --darker-bg: var(--bg-darker);
- --card-bg: var(--surface-1);
- --bg-panel: var(--surface-2);
- --border-color: var(--border-secondary);
- --text-muted: var(--text-tertiary);
- --accent-green: var(--status-success);
- --accent-red: var(--status-error);
+ --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
  }
 
  /* ========== RESET & BASE ========== */
@@ -67,9 +76,9 @@
 
  body {
  font-family: var(--font-family);
- background: var(--bg-darker);
+ background: var(--md-sys-color-background);
  min-height: 100vh;
- color: var(--text-primary);
+ color: var(--md-sys-color-on-background);
  line-height: 1.6;
  overflow-x: hidden;
  position: relative;
@@ -109,9 +118,9 @@
  position: absolute;
  width: 8px;
  height: 8px;
- background: var(--primary-blue);
+ background: var(--md-sys-color-primary);
  border-radius: 50%;
- box-shadow: 0 0 20px var(--primary-blue), 0 0 40px var(--primary-blue);
+ box-shadow: 0 0 20px var(--md-sys-color-primary), 0 0 40px var(--md-sys-color-primary);
  animation: nodePulse 3s ease-in-out infinite;
  }
 
@@ -137,7 +146,7 @@
  height: 2px;
  background: linear-gradient(90deg,
  transparent 0%,
- var(--primary-blue) 50%,
+ var(--md-sys-color-primary) 50%,
  transparent 100%
  );
  animation: streamFlow 4s linear infinite;
@@ -161,7 +170,7 @@
  .gradient-orb.orb-1 {
  width: 500px;
  height: 500px;
- background: radial-gradient(circle, var(--primary-blue), transparent);
+ background: radial-gradient(circle, var(--md-sys-color-primary), transparent);
  top: -200px;
  left: -200px;
  }
@@ -169,7 +178,7 @@
  .gradient-orb.orb-2 {
  width: 600px;
  height: 600px;
- background: radial-gradient(circle, var(--primary-teal), transparent);
+ background: radial-gradient(circle, var(--md-sys-color-secondary), transparent);
  bottom: -250px;
  right: -250px;
  animation-delay: 8s;
@@ -178,7 +187,7 @@
  .gradient-orb.orb-3 {
  width: 400px;
  height: 400px;
- background: radial-gradient(circle, var(--primary-indigo), transparent);
+ background: radial-gradient(circle, var(--md-sys-color-tertiary), transparent);
  top: 40%;
  left: 60%;
  animation-delay: 16s;
@@ -193,9 +202,9 @@
  /* ========== SIDEBAR ========== */
  .sidebar {
  width: 280px;
- background: var(--surface-1);
+ background: var(--md-sys-color-surface-container-low);
  backdrop-filter: blur(20px);
- border-right: 1px solid var(--border-secondary);
+ border-right: 1px solid var(--md-sys-color-outline-variant);
  position: fixed;
  left: 0;
  top: 0;
@@ -208,7 +217,7 @@
 
  .sidebar-header {
  padding: 32px 24px;
- border-bottom: 1px solid var(--border-secondary);
+ border-bottom: 1px solid var(--md-sys-color-outline-variant);
  }
 
  .logo-container {
@@ -221,7 +230,7 @@
  .logo-icon {
  width: 40px;
  height: 40px;
- background: linear-gradient(135deg, var(--primary-blue), var(--primary-teal));
+ background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
  border-radius: 8px;
  display: flex;
  align-items: center;
@@ -235,13 +244,13 @@
  .logo-text h2 {
  font-size: 18px;
  font-weight: 700;
- color: var(--text-primary);
+ color: var(--md-sys-color-on-surface);
  letter-spacing: -0.5px;
  }
 
  .logo-text p {
  font-size: 11px;
- color: var(--text-tertiary);
+ color: var(--md-sys-color-outline);
  text-transform: uppercase;
  letter-spacing: 1.5px;
  font-weight: 600;
@@ -252,8 +261,8 @@
  align-items: center;
  gap: 8px;
  padding: 12px 16px;
- background: var(--surface-glass);
- border: 1px solid var(--border-secondary);
+ background: var(--md-sys-color-surface-container-highest);
+ border: 1px solid var(--md-sys-color-outline-variant);
  border-radius: 8px;
  margin-top: 16px;
  }
@@ -274,7 +283,7 @@
 
  .sidebar-header .status-text {
  font-size: 12px;
- color: var(--text-secondary);
+ color: var(--md-sys-color-on-surface-variant);
  font-weight: 500;
  }
 
@@ -292,7 +301,7 @@
  font-weight: 700;
  text-transform: uppercase;
  letter-spacing: 1.5px;
- color: var(--text-tertiary);
+ color: var(--md-sys-color-outline);
  margin-bottom: 12px;
  padding: 0 12px;
  }
@@ -311,7 +320,7 @@
  gap: 12px;
  padding: 12px 16px;
  text-decoration: none;
- color: var(--text-secondary);
+ color: var(--md-sys-color-on-surface-variant);
  border-radius: 8px;
  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
  font-size: 14px;
@@ -327,18 +336,18 @@
  top: 0;
  height: 100%;
  width: 3px;
- background: var(--primary-blue);
+ background: var(--md-sys-color-primary);
  transform: scaleY(0);
  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
  }
 
  .sidebar-menu-link:hover {
- color: var(--text-primary);
- background: var(--surface-glass);
+ color: var(--md-sys-color-on-surface);
+ background: var(--md-sys-color-surface-container-highest);
  }
 
  .sidebar-menu-link.active {
- color: var(--primary-blue);
+ color: var(--md-sys-color-primary);
  background: rgba(14, 165, 233, 0.1);
  }
 
@@ -382,15 +391,15 @@
  .header h1 {
  font-size: 36px;
  font-weight: 700;
- color: var(--text-primary);
+ color: var(--md-sys-color-on-surface);
  letter-spacing: -1px;
  }
 
  /* ========== CONTENT ========== */
  .content {
- background: var(--surface-1);
+ background: var(--md-sys-color-surface-container-low);
  backdrop-filter: blur(20px);
- border: 1px solid var(--border-secondary);
+ border: 1px solid var(--md-sys-color-outline-variant);
  border-radius: 16px;
  padding: 32px;
  }
@@ -409,15 +418,15 @@
  }
 
  .camera-viewer {
- background: var(--surface-2);
+ background: var(--md-sys-color-surface-container);
  backdrop-filter: blur(20px);
  padding: 24px;
- border: 1px solid var(--border-secondary);
+ border: 1px solid var(--md-sys-color-outline-variant);
  border-radius: 12px;
  }
 
  .camera-viewer h3 {
- color: var(--primary-blue);
+ color: var(--md-sys-color-primary);
  margin-bottom: 16px;
  font-size: 14px;
  font-weight: 700;
@@ -433,7 +442,7 @@
  gap: 10px;
  margin-bottom: 16px;
  font-size: 13px;
- color: var(--text-secondary);
+ color: var(--md-sys-color-on-surface-variant);
  }
 
  .camera-status .status-indicator {
@@ -460,7 +469,7 @@
  max-width: 100%;
  height: auto;
  background: #000;
- border: 1px solid var(--border-secondary);
+ border: 1px solid var(--md-sys-color-outline-variant);
  border-radius: 8px;
  min-height: 300px;
  object-fit: contain;
@@ -491,9 +500,9 @@
  }
 
  .btn-primary {
- background: linear-gradient(135deg, var(--primary-blue), var(--primary-teal));
+ background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
  color: white;
- border-color: var(--primary-blue);
+ border-color: var(--md-sys-color-primary);
  }
 
  .btn-primary:hover {
@@ -532,15 +541,15 @@
  /* ========== PANELS ========== */
  .panel {
  padding: 20px;
- background: var(--surface-2);
+ background: var(--md-sys-color-surface-container);
  backdrop-filter: blur(20px);
- border: 1px solid var(--border-secondary);
+ border: 1px solid var(--md-sys-color-outline-variant);
  border-radius: 12px;
  margin-top: 20px;
  }
 
  .panel h4 {
- color: var(--primary-blue);
+ color: var(--md-sys-color-primary);
  font-size: 13px;
  margin-bottom: 14px;
  letter-spacing: 0.5px;
@@ -549,16 +558,16 @@
  }
 
  .info-panel {
- background: var(--surface-2);
+ background: var(--md-sys-color-surface-container);
  backdrop-filter: blur(20px);
  padding: 24px;
  margin-top: 24px;
- border: 1px solid var(--border-secondary);
+ border: 1px solid var(--md-sys-color-outline-variant);
  border-radius: 12px;
  }
 
  .info-panel h3 {
- color: var(--primary-blue);
+ color: var(--md-sys-color-primary);
  margin-bottom: 16px;
  display: flex;
  align-items: center;
@@ -572,7 +581,7 @@
  /* ========== SERIAL LOG ========== */
  #serialLog {
  background: rgba(5, 11, 22, 0.95) !important;
- border: 1px solid var(--border-secondary);
+ border: 1px solid var(--md-sys-color-outline-variant);
  border-radius: 8px;
  padding: 16px;
  font-family: 'JetBrains Mono', 'Fira Code', monospace;
@@ -590,8 +599,8 @@
  -webkit-appearance: none;
  appearance: none;
  height: 6px;
- background: var(--surface-glass);
- border: 1px solid var(--border-secondary);
+ background: var(--md-sys-color-surface-container-highest);
+ border: 1px solid var(--md-sys-color-outline-variant);
  border-radius: 3px;
  outline: none;
  cursor: pointer;
@@ -602,7 +611,7 @@
  appearance: none;
  width: 18px;
  height: 18px;
- background: linear-gradient(135deg, var(--primary-blue), var(--primary-teal));
+ background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
  border-radius: 50%;
  cursor: pointer;
  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -621,16 +630,16 @@
  }
 
  ::-webkit-scrollbar-track {
- background: var(--bg-darker);
+ background: var(--md-sys-color-background);
  }
 
  ::-webkit-scrollbar-thumb {
- background: var(--border-primary);
+ background: var(--md-sys-color-outline);
  border-radius: 4px;
  }
 
  ::-webkit-scrollbar-thumb:hover {
- background: var(--primary-blue);
+ background: var(--md-sys-color-primary);
  }
 
  /* ========== RESPONSIVE ========== */
@@ -740,37 +749,37 @@
  <ul class="sidebar-menu">
  <li class="sidebar-menu-item">
  <a href="/" class="sidebar-menu-link">
- <span class="sidebar-menu-icon">🏠</span>
+ <span class="sidebar-menu-icon">ðŸ </span>
  <span>Home</span>
  </a>
  </li>
  <li class="sidebar-menu-item">
  <a href="/robot-arm.html" class="sidebar-menu-link">
- <span class="sidebar-menu-icon">🤖</span>
+ <span class="sidebar-menu-icon">ðŸ¤–</span>
  <span>Robot Arm</span>
  </a>
  </li>
  <li class="sidebar-menu-item">
  <a href="/smart-factory.html" class="sidebar-menu-link">
- <span class="sidebar-menu-icon">🏭</span>
+ <span class="sidebar-menu-icon">ðŸ­</span>
  <span>Smart Factory</span>
  </a>
  </li>
  <li class="sidebar-menu-item">
  <a href="/vision-system.html" class="sidebar-menu-link active">
- <span class="sidebar-menu-icon">👁️</span>
+ <span class="sidebar-menu-icon">ðŸ‘ï¸</span>
  <span>Vision System</span>
  </a>
  </li>
  <li class="sidebar-menu-item">
  <a href="/rfid.html" class="sidebar-menu-link">
- <span class="sidebar-menu-icon">📡</span>
+ <span class="sidebar-menu-icon">ðŸ“¡</span>
  <span>RFID</span>
  </a>
  </li>
  <li class="sidebar-menu-item">
  <a href="/digital-twin.html" class="sidebar-menu-link">
- <span class="sidebar-menu-icon">🔄</span>
+ <span class="sidebar-menu-icon">ðŸ”„</span>
  <span>Digital Twin</span>
  </a>
  </li>
@@ -792,20 +801,20 @@
  <div class="content" style="margin-bottom: 24px; padding: 20px 24px;">
  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
  <!-- PLC Connection Status -->
- <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--surface-2); border: 1px solid var(--border-secondary); border-radius: 8px;">
+ <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
  <span class="status-indicator" id="plcConnectionIndicator"></span>
  <div>
  <div style="color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">PLC CONNECTION</div>
- <div id="plcConnectionText" style="color: var(--text-secondary); font-size: 12px; font-weight: 600;">Loading...</div>
+ <div id="plcConnectionText" style="color: var(--md-sys-color-on-surface-variant); font-size: 12px; font-weight: 600;">Loading...</div>
  </div>
  </div>
 
  <!-- DB123.40.0 Vision Start Bit Status -->
- <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--surface-2); border: 1px solid var(--border-secondary); border-radius: 8px;">
+ <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
  <span class="status-indicator" id="db40StartIndicator"></span>
  <div>
  <div style="color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">DB123.DBX40.0 VISION START</div>
- <div id="db40StartText" style="color: var(--text-secondary); font-size: 12px; font-weight: 600;">Loading...</div>
+ <div id="db40StartText" style="color: var(--md-sys-color-on-surface-variant); font-size: 12px; font-weight: 600;">Loading...</div>
  </div>
  </div>
  </div>
@@ -822,7 +831,7 @@
  <span id="cameraStatusText">Disconnected</span>
  </div>
  <img id="cameraFrame" class="camera-frame" src="" alt="Camera Feed" style="display: none;">
- <div id="cameraPlaceholder" style="min-height: 300px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-direction: column; gap: 10px; background: rgba(10, 22, 40, 0.8); border: 1px solid var(--border-secondary); border-radius: 8px;">
+ <div id="cameraPlaceholder" style="min-height: 300px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-direction: column; gap: 10px; background: rgba(10, 22, 40, 0.8); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
  <div style="font-size: 48px;">CAM</div>
  <div>Camera not connected</div>
  </div>
@@ -839,6 +848,10 @@
  <span>SNAP</span>
  <span>Capture</span>
  </button>
+ <button class="btn btn-primary" id="processFrameBtn" onclick="processFrame()" disabled>
+    <span>PROC</span>
+    <span>Process Frame</span>
+ </button>
  <button class="btn btn-primary" id="fullscreenBtn" onclick="toggleFullscreen()" disabled>
  <span>CROP</span>
  <span>Fullscreen</span>
@@ -854,12 +867,12 @@
  <h4>Image Adjustments</h4>
  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
  <div>
- <label style="display: block; color: var(--text-secondary); font-size: 11px; margin-bottom: 6px;">Brightness</label>
+ <label style="display: block; color: var(--md-sys-color-on-surface-variant); font-size: 11px; margin-bottom: 6px;">Brightness</label>
  <input type="range" id="brightnessSlider" min="-100" max="100" value="0" style="width: 100%;" oninput="updateImageAdjustments()">
  <span id="brightnessValue" style="color: var(--text-muted); font-size: 10px;">0</span>
  </div>
  <div>
- <label style="display: block; color: var(--text-secondary); font-size: 11px; margin-bottom: 6px;">Contrast</label>
+ <label style="display: block; color: var(--md-sys-color-on-surface-variant); font-size: 11px; margin-bottom: 6px;">Contrast</label>
  <input type="range" id="contrastSlider" min="-100" max="100" value="0" style="width: 100%;" oninput="updateImageAdjustments()">
  <span id="contrastValue" style="color: var(--text-muted); font-size: 10px;">0</span>
  </div>
@@ -870,36 +883,36 @@
  </div>
  
  <!-- Camera Crop/Zoom Controls -->
- <div style="margin-top: 20px; padding: 16px; background: var(--surface-2); border: 1px solid var(--border-secondary); border-radius: 8px;">
- <h5 style="color: var(--primary-blue); font-size: 12px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">
+ <div style="margin-top: 20px; padding: 16px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
+ <h5 style="color: var(--md-sys-color-primary); font-size: 12px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">
  Camera Crop/Zoom
  </h5>
  <div style="margin-bottom: 12px;">
- <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 11px; cursor: pointer;">
+ <label style="display: flex; align-items: center; gap: 8px; color: var(--md-sys-color-on-surface-variant); font-size: 11px; cursor: pointer;">
  <input type="checkbox" id="cropEnabled" onchange="toggleCrop()" style="cursor: pointer;">
  <span>Enable Crop/Zoom</span>
  </label>
  </div>
  <div id="cropControls" style="display: none; grid-template-columns: 1fr 1fr; gap: 12px;">
  <div>
- <label style="display: block; color: var(--text-secondary); font-size: 10px; margin-bottom: 4px;">X Position (%)</label>
+ <label style="display: block; color: var(--md-sys-color-on-surface-variant); font-size: 10px; margin-bottom: 4px;">X Position (%)</label>
  <input type="range" id="cropX" min="0" max="100" value="0" step="1" oninput="updateCropPreview()" style="width: 100%;">
- <div style="text-align: center; font-size: 10px; color: var(--primary-blue); margin-top: 4px;" id="cropXValue">0%</div>
+ <div style="text-align: center; font-size: 10px; color: var(--md-sys-color-primary); margin-top: 4px;" id="cropXValue">0%</div>
  </div>
  <div>
- <label style="display: block; color: var(--text-secondary); font-size: 10px; margin-bottom: 4px;">Y Position (%)</label>
+ <label style="display: block; color: var(--md-sys-color-on-surface-variant); font-size: 10px; margin-bottom: 4px;">Y Position (%)</label>
  <input type="range" id="cropY" min="0" max="100" value="0" step="1" oninput="updateCropPreview()" style="width: 100%;">
- <div style="text-align: center; font-size: 10px; color: var(--primary-blue); margin-top: 4px;" id="cropYValue">0%</div>
+ <div style="text-align: center; font-size: 10px; color: var(--md-sys-color-primary); margin-top: 4px;" id="cropYValue">0%</div>
  </div>
  <div>
- <label style="display: block; color: var(--text-secondary); font-size: 10px; margin-bottom: 4px;">Width (%)</label>
+ <label style="display: block; color: var(--md-sys-color-on-surface-variant); font-size: 10px; margin-bottom: 4px;">Width (%)</label>
  <input type="range" id="cropWidth" min="1" max="100" value="100" step="1" oninput="updateCropPreview()" style="width: 100%;">
- <div style="text-align: center; font-size: 10px; color: var(--primary-blue); margin-top: 4px;" id="cropWidthValue">100%</div>
+ <div style="text-align: center; font-size: 10px; color: var(--md-sys-color-primary); margin-top: 4px;" id="cropWidthValue">100%</div>
  </div>
  <div>
- <label style="display: block; color: var(--text-secondary); font-size: 10px; margin-bottom: 4px;">Height (%)</label>
+ <label style="display: block; color: var(--md-sys-color-on-surface-variant); font-size: 10px; margin-bottom: 4px;">Height (%)</label>
  <input type="range" id="cropHeight" min="1" max="100" value="100" step="1" oninput="updateCropPreview()" style="width: 100%;">
- <div style="text-align: center; font-size: 10px; color: var(--primary-blue); margin-top: 4px;" id="cropHeightValue">100%</div>
+ <div style="text-align: center; font-size: 10px; color: var(--md-sys-color-primary); margin-top: 4px;" id="cropHeightValue">100%</div>
  </div>
  </div>
  <div style="margin-top: 12px;">
@@ -918,7 +931,7 @@
  <span id="analyzedStatusText">No analysis yet</span>
  </div>
  <img id="analyzedImage" class="camera-frame" src="" alt="Analyzed Image" style="display: none;">
- <div id="analyzedPlaceholder" style="min-height: 300px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-direction: column; gap: 10px; background: rgba(10, 22, 40, 0.8); border: 1px solid var(--border-secondary); border-radius: 8px;">
+ <div id="analyzedPlaceholder" style="min-height: 300px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-direction: column; gap: 10px; background: rgba(10, 22, 40, 0.8); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
  <div style="font-size: 48px;">SCAN</div>
  <div>Analysis results will appear here</div>
  </div>
@@ -931,11 +944,11 @@
  <div id="objectDetectionStats" class="panel" style="display: block;">
  <h4>Detection Results</h4>
  <div style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: center;">
- <span style="color: var(--text-secondary); font-size: 13px; font-weight: 600;">Objects Detected:</span>
+ <span style="color: var(--md-sys-color-on-surface-variant); font-size: 13px; font-weight: 600;">Objects Detected:</span>
  <span id="currentObjectCount" style="color: var(--accent-green); font-weight: 700; font-size: 20px;">0</span>
  </div>
  <div style="display: flex; justify-content: space-between; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-color);">
- <span style="color: var(--text-secondary); font-size: 10px;">Last Updated:</span>
+ <span style="color: var(--md-sys-color-on-surface-variant); font-size: 10px;">Last Updated:</span>
  <span id="lastDetectionTime" style="color: var(--text-muted); font-size: 10px;">Never</span>
  </div>
  </div>
@@ -975,7 +988,7 @@
  SCAN Analyze All
  </button>
  </div>
- <div style="color: var(--text-secondary); font-size: 11px; margin-bottom: 12px;">
+ <div style="color: var(--md-sys-color-on-surface-variant); font-size: 11px; margin-bottom: 12px;">
  Analyzes saved counter images to detect color changes on the counter surface
  </div>
  <div id="defectResultsList" style="max-height: 300px; overflow-y: auto;">
@@ -991,27 +1004,27 @@
  Save Settings
  </button>
  </div>
- <div style="color: var(--text-secondary); font-size: 11px; margin-bottom: 16px;">
+ <div style="color: var(--md-sys-color-on-surface-variant); font-size: 11px; margin-bottom: 16px;">
  Configure how vision detection results are written to Siemens PLC DB123 tags
  </div>
  
  <div style="margin-bottom: 16px;">
- <label style="display: flex; align-items: center; gap: 10px; color: var(--text-secondary); font-size: 12px; cursor: pointer;">
- <input type="checkbox" id="db123Enabled" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-blue);">
+ <label style="display: flex; align-items: center; gap: 10px; color: var(--md-sys-color-on-surface-variant); font-size: 12px; cursor: pointer;">
+ <input type="checkbox" id="db123Enabled" style="width: 16px; height: 16px; cursor: pointer; accent-color: var(--md-sys-color-primary);">
  <span>Enable DB123 Communication</span>
  </label>
  </div>
 
  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
  <div>
- <label style="display: block; color: var(--text-secondary); font-size: 11px; margin-bottom: 6px;">DB Number</label>
- <input type="number" id="db123Number" value="123" min="1" max="65535" style="width: 100%; padding: 8px; background: var(--bg-panel); border: 1px solid var(--border-color); color: var(--text-primary); font-family: var(--font-mono); font-size: 12px;">
+ <label style="display: block; color: var(--md-sys-color-on-surface-variant); font-size: 11px; margin-bottom: 6px;">DB Number</label>
+ <input type="number" id="db123Number" value="123" min="1" max="65535" style="width: 100%; padding: 8px; background: var(--bg-panel); border: 1px solid var(--border-color); color: var(--md-sys-color-on-surface); font-family: var(--font-mono); font-size: 12px;">
  </div>
  </div>
 
  <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
- <h5 style="color: var(--primary-blue); font-size: 11px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">Tag Addresses (Read-Only Reference)</h5>
- <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 10px; color: var(--text-secondary);">
+ <h5 style="color: var(--md-sys-color-primary); font-size: 11px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">Tag Addresses (Read-Only Reference)</h5>
+ <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 10px; color: var(--md-sys-color-on-surface-variant);">
  <div>Start: DB123.DBX40.0</div>
  <div>Connected: DB123.DBX40.1</div>
  <div>Busy: DB123.DBX40.2</div>
@@ -1026,7 +1039,7 @@
 
  <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
- <h5 style="color: var(--primary-blue); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 0;">Current Tag Status</h5>
+ <h5 style="color: var(--md-sys-color-primary); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin: 0;">Current Tag Status</h5>
  <button class="btn btn-primary" onclick="refreshPlcTags()" style="font-size: 9px; padding: 4px 8px;">
  REFRESH Refresh
  </button>
@@ -1037,8 +1050,8 @@
  </div>
 
  <div style="margin-top: 16px; padding: 12px; background: rgba(0, 255, 255, 0.05); border: 1px solid var(--border-color); border-radius: 4px;">
- <div style="color: var(--primary-blue); font-size: 10px; font-weight: 700; margin-bottom: 6px;">Status:</div>
- <div id="db123Status" style="color: var(--text-secondary); font-size: 10px;">Loading...</div>
+ <div style="color: var(--md-sys-color-primary); font-size: 10px; font-weight: 700; margin-bottom: 6px;">Status:</div>
+ <div id="db123Status" style="color: var(--md-sys-color-on-surface-variant); font-size: 10px;">Loading...</div>
  <div style="margin-top: 12px;">
  <button class="btn btn-primary" onclick="connectToPLC()" style="font-size: 10px; padding: 6px 12px; width: 100%;">
  Connect to PLC
@@ -1047,20 +1060,20 @@
  </div>
  
  <!-- Single Counter Detection Settings -->
- <div style="margin-top: 20px; padding: 16px; background: var(--surface-2); border: 1px solid var(--border-secondary); border-radius: 8px;">
- <h5 style="color: var(--primary-blue); font-size: 12px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">
+ <div style="margin-top: 20px; padding: 16px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
+ <h5 style="color: var(--md-sys-color-primary); font-size: 12px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">
  Single Counter Detection
  </h5>
  <div style="margin-bottom: 12px;">
- <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 11px; cursor: pointer;">
+ <label style="display: flex; align-items: center; gap: 8px; color: var(--md-sys-color-on-surface-variant); font-size: 11px; cursor: pointer;">
  <input type="checkbox" id="singleCounterEnabled" onchange="toggleSingleCounterSettings()" style="cursor: pointer;">
  <span>Enable Single Counter Mode (process only 1 counter when multiple detected)</span>
  </label>
  </div>
  <div id="singleCounterControls" style="display: none;">
  <div style="margin-bottom: 12px;">
- <label style="display: block; color: var(--text-secondary); font-size: 10px; margin-bottom: 6px;">Selection Method</label>
- <select id="counterSelectionMethod" style="width: 100%; padding: 6px; background: var(--darker-bg); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 11px; border-radius: 4px;">
+ <label style="display: block; color: var(--md-sys-color-on-surface-variant); font-size: 10px; margin-bottom: 6px;">Selection Method</label>
+ <select id="counterSelectionMethod" style="width: 100%; padding: 6px; background: var(--darker-bg); border: 1px solid var(--border-color); color: var(--md-sys-color-on-surface); font-size: 11px; border-radius: 4px;">
  <option value="most_central">Most Central (closest to center)</option>
  <option value="largest">Largest (biggest area)</option>
  <option value="smallest">Smallest (smallest area)</option>
@@ -1071,8 +1084,8 @@
  </select>
  </div>
  <div style="margin-bottom: 12px;">
- <label style="display: block; color: var(--text-secondary); font-size: 10px; margin-bottom: 4px;">Position Matching Threshold (pixels)</label>
- <input type="number" id="positionThreshold" min="10" max="500" value="100" step="10" style="width: 100%; padding: 6px; background: var(--darker-bg); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 11px; border-radius: 4px;">
+ <label style="display: block; color: var(--md-sys-color-on-surface-variant); font-size: 10px; margin-bottom: 4px;">Position Matching Threshold (pixels)</label>
+ <input type="number" id="positionThreshold" min="10" max="500" value="100" step="10" style="width: 100%; padding: 6px; background: var(--darker-bg); border: 1px solid var(--border-color); color: var(--md-sys-color-on-surface); font-size: 11px; border-radius: 4px;">
  <div style="font-size: 9px; color: var(--text-muted); margin-top: 4px;">Distance threshold for matching counters to existing positions</div>
  </div>
  </div>
@@ -1105,12 +1118,12 @@
  <div style="color: var(--text-muted);">Waiting for camera events...</div>
  </div>
  <div style="margin-top: 10px; display: flex; gap: 12px;">
- <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 11px; cursor: pointer;">
- <input type="checkbox" id="autoScrollLog" checked style="width: 14px; height: 14px; cursor: pointer; accent-color: var(--primary-blue);">
+ <label style="display: flex; align-items: center; gap: 8px; color: var(--md-sys-color-on-surface-variant); font-size: 11px; cursor: pointer;">
+ <input type="checkbox" id="autoScrollLog" checked style="width: 14px; height: 14px; cursor: pointer; accent-color: var(--md-sys-color-primary);">
  <span>Auto-scroll</span>
  </label>
- <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 11px; cursor: pointer;">
- <input type="checkbox" id="timestampLog" checked style="width: 14px; height: 14px; cursor: pointer; accent-color: var(--primary-blue);">
+ <label style="display: flex; align-items: center; gap: 8px; color: var(--md-sys-color-on-surface-variant); font-size: 11px; cursor: pointer;">
+ <input type="checkbox" id="timestampLog" checked style="width: 14px; height: 14px; cursor: pointer; accent-color: var(--md-sys-color-primary);">
  <span>Show timestamps</span>
  </label>
  </div>
@@ -1124,7 +1137,7 @@
  <span>How the Vision System Works</span>
  </h3>
  <div id="infoContent" style="display: none;">
- <div style="color: var(--text-secondary); line-height: 1.8; font-size: 13px;">
+ <div style="color: var(--md-sys-color-on-surface-variant); line-height: 1.8; font-size: 13px;">
  <p style="margin-bottom: 16px;">
  Every second the camera grabs a snapshot, the YOLO microservice finds circular counters,
  the backend saves any new counters with a tight crop, and defect detection runs instantly.
@@ -1142,7 +1155,7 @@
  <ol style="margin-left: 24px; margin-bottom: 16px;">
  <li><strong>YOLO Detection:</strong> Snapshot goes to the vision microservice (15% confidence, 0.45 IOU)</li>
  <li><strong>Position Matching:</strong> Each detection is compared with the last seen position so counters keep their number</li>
- <li><strong>Saving:</strong> New numbers trigger a tight crop (5 px padding) stored in <code style="background: var(--darker-bg); padding: 2px 6px; color: var(--primary-blue);">~/counter_images</code></li>
+ <li><strong>Saving:</strong> New numbers trigger a tight crop (5 px padding) stored in <code style="background: var(--darker-bg); padding: 2px 6px; color: var(--md-sys-color-primary);">~/counter_images</code></li>
  <li><strong>Auto Defect Detection:</strong> Each saved image is analyzed right away; results are stored for the defect list</li>
  <li><strong>UI Update:</strong> Timeline, gallery, and defect panel pull the latest info every few seconds</li>
  </ol>
@@ -1171,8 +1184,8 @@
  <h4 style="color: var(--primary-pink); margin-top: 24px; margin-bottom: 12px;">Technical Notes</h4>
  <ul style="margin-left: 24px; margin-bottom: 16px;">
  <li>Backend: Flask + OpenCV + YOLO microservice (Ultralytics) managed by PM2</li>
- <li>Saved data lives in <code style="background: var(--darker-bg); padding: 2px 6px; color: var(--primary-blue);">~/counter_images</code> (images + JSON logs)</li>
- <li>All API routes are documented in <code style="background: var(--darker-bg); padding: 2px 6px; color: var(--primary-blue);">app.py</code> if you need custom tooling</li>
+ <li>Saved data lives in <code style="background: var(--darker-bg); padding: 2px 6px; color: var(--md-sys-color-primary);">~/counter_images</code> (images + JSON logs)</li>
+ <li>All API routes are documented in <code style="background: var(--darker-bg); padding: 2px 6px; color: var(--md-sys-color-primary);">app.py</code> if you need custom tooling</li>
  </ul>
  </div>
  </div>
@@ -1302,6 +1315,7 @@
  const connectBtn = document.getElementById('connectCameraBtn');
  const disconnectBtn = document.getElementById('disconnectCameraBtn');
  const captureBtn = document.getElementById('captureBtn');
+ const processFrameBtn = document.getElementById('processFrameBtn');
  const fullscreenBtn = document.getElementById('fullscreenBtn');
  const settingsBtn = document.getElementById('settingsBtn');
  const frame = document.getElementById('cameraFrame');
@@ -1313,6 +1327,7 @@
  if (connectBtn) connectBtn.disabled = true;
  if (disconnectBtn) disconnectBtn.disabled = false;
  if (captureBtn) captureBtn.disabled = false;
+ if (processFrameBtn) processFrameBtn.disabled = false;
  if (fullscreenBtn) fullscreenBtn.disabled = false;
  if (settingsBtn) settingsBtn.disabled = false;
  if (frame) frame.style.display = 'block';
@@ -1324,6 +1339,7 @@
  if (connectBtn) connectBtn.disabled = false;
  if (disconnectBtn) disconnectBtn.disabled = true;
  if (captureBtn) captureBtn.disabled = true;
+ if (processFrameBtn) processFrameBtn.disabled = true;
  if (fullscreenBtn) fullscreenBtn.disabled = true;
  if (settingsBtn) settingsBtn.disabled = true;
  if (frame) frame.style.display = 'none';
@@ -1497,6 +1513,23 @@
  addSerialLog(`Frame capture error: ${error.message}`, 'error');
  alert('Error capturing frame: ' + error.message);
  }
+ }
+
+ async function processFrame() {
+    try {
+        addSerialLog('Manually processing frame...', 'camera');
+        const response = await fetch(`${API_BASE}/api/vision/process-manual`, { method: 'POST' });
+        if (response.ok) {
+            const data = await response.json();
+            addSerialLog(data.message, 'success');
+        } else {
+            addSerialLog('Failed to start manual processing', 'error');
+        }
+    } catch (error) {
+        console.error('Error processing frame:', error);
+        addSerialLog(`Error processing frame: ${error.message}`, 'error');
+        alert('Error processing frame: ' + error.message);
+    }
  }
 
  function toggleObjectDetection() {
@@ -1772,7 +1805,7 @@
  const formattedTime = date.toLocaleString();
  return `
  <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-color);">
- <span style="color: var(--primary-blue); font-weight: 700; font-size: 12px;">Counter ${counterNum}</span>
+ <span style="color: var(--md-sys-color-primary); font-weight: 700; font-size: 12px;">Counter ${counterNum}</span>
  <span style="color: var(--text-muted); font-size: 10px;">${formattedTime}</span>
  </div>
  `;
@@ -1840,9 +1873,9 @@
  }
  imagesList.innerHTML = images.map(img => {
  return `
- <div style="background: var(--surface-1); padding: 10px; border: 1px solid var(--border-secondary); border-radius: 8px; cursor: pointer; transition: all 0.3s;" onclick="openImageModal('${img.url}')" onmouseover="this.style.borderColor='var(--primary-blue)'" onmouseout="this.style.borderColor='var(--border-secondary)'">
+ <div style="background: var(--md-sys-color-surface-container-low); padding: 10px; border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px; cursor: pointer; transition: all 0.3s;" onclick="openImageModal('${img.url}')" onmouseover="this.style.borderColor='var(--md-sys-color-primary)'" onmouseout="this.style.borderColor='var(--md-sys-color-outline-variant)'">
  <img src="${img.url}" alt="Counter ${img.counter_number}" style="width: 100%; height: 120px; object-fit: cover; margin-bottom: 8px;">
- <div style="color: var(--primary-blue); font-weight: 700; font-size: 10px; margin-bottom: 4px;">Counter ${img.counter_number}</div>
+ <div style="color: var(--md-sys-color-primary); font-weight: 700; font-size: 10px; margin-bottom: 4px;">Counter ${img.counter_number}</div>
  <div style="color: var(--text-muted); font-size: 9px;">${img.formatted_time}</div>
  </div>
  `;
@@ -1974,12 +2007,12 @@
  .map(result => {
  const data = result.defect_results || {};
  return `
- <div style="background: var(--surface-1); padding: 12px; margin-bottom: 10px; border-left: 3px solid var(--status-error); border: 1px solid var(--border-secondary); border-radius: 8px;">
+ <div style="background: var(--md-sys-color-surface-container-low); padding: 12px; margin-bottom: 10px; border-left: 3px solid var(--status-error); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
- <div style="color: var(--primary-blue); font-weight: 700; font-size: 11px;">Counter ${result.counter_number}</div>
+ <div style="color: var(--md-sys-color-primary); font-weight: 700; font-size: 11px;">Counter ${result.counter_number}</div>
  <div style="color: var(--accent-red); font-weight: 700; font-size: 10px;">DEFECT FOUND</div>
  </div>
- <div style="color: var(--text-secondary); font-size: 10px;">
+ <div style="color: var(--md-sys-color-on-surface-variant); font-size: 10px;">
  Coverage: ${data.total_defect_area_percentage ? data.total_defect_area_percentage.toFixed(1) : '0'}% | Confidence: ${data.confidence ? data.confidence.toFixed(1) : '0.0'}%
  </div>
  </div>
@@ -2104,12 +2137,12 @@
  .sort((a, b) => a.counter_number - b.counter_number)
  .map(result => {
  return `
- <div style="background: var(--surface-1); padding: 12px; margin-bottom: 10px; border-left: 3px solid var(--status-error); border: 1px solid var(--border-secondary); border-radius: 8px;">
+ <div style="background: var(--md-sys-color-surface-container-low); padding: 12px; margin-bottom: 10px; border-left: 3px solid var(--status-error); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
- <div style="color: var(--primary-blue); font-weight: 700; font-size: 11px;">Counter ${result.counter_number}</div>
+ <div style="color: var(--md-sys-color-primary); font-weight: 700; font-size: 11px;">Counter ${result.counter_number}</div>
  <div style="color: var(--accent-red); font-weight: 700; font-size: 10px;">DEFECT FOUND</div>
  </div>
- <div style="color: var(--text-secondary); font-size: 10px;">
+ <div style="color: var(--md-sys-color-on-surface-variant); font-size: 10px;">
  Coverage: ${result.total_defect_area_percentage ? result.total_defect_area_percentage.toFixed(1) : '0'}% | Confidence: ${(result.confidence || 0).toFixed(1)}%
  </div>
  </div>
@@ -2496,7 +2529,7 @@
  if (enabled) {
  statusDiv.innerHTML = `
  <div style="color: var(--accent-green);"> DB123 Communication: ENABLED</div>
- <div style="color: var(--text-secondary); margin-top: 4px;">DB Number: ${dbNumber}</div>
+ <div style="color: var(--md-sys-color-on-surface-variant); margin-top: 4px;">DB Number: ${dbNumber}</div>
  <div style="color: ${plcConnected ? 'var(--accent-green)' : 'var(--accent-red)'}; margin-top: 4px;">
  PLC Connection: ${plcConnected ? 'Connected' : 'Disconnected'}
  </div>
@@ -2504,7 +2537,7 @@
  } else {
  statusDiv.innerHTML = `
  <div style="color: var(--text-muted);">DB123 Communication: DISABLED</div>
- <div style="color: var(--text-secondary); margin-top: 4px; font-size: 9px;">Enable the checkbox above to start writing to PLC</div>
+ <div style="color: var(--md-sys-color-on-surface-variant); margin-top: 4px; font-size: 9px;">Enable the checkbox above to start writing to PLC</div>
  `;
  }
  } catch (error) {
@@ -2634,49 +2667,49 @@
  };
  
  tagsDiv.innerHTML = `
- <div style="padding: 8px; background: var(--surface-2); border: 1px solid var(--border-secondary); border-radius: 6px;">
- <div style="color: var(--text-secondary); font-size: 9px; margin-bottom: 4px;">Start</div>
- <div style="color: var(--primary-blue); font-size: 11px; font-weight: 700;">${formatBool(tags.start)}</div>
+ <div style="padding: 8px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 6px;">
+ <div style="color: var(--md-sys-color-on-surface-variant); font-size: 9px; margin-bottom: 4px;">Start</div>
+ <div style="color: var(--md-sys-color-primary); font-size: 11px; font-weight: 700;">${formatBool(tags.start)}</div>
  <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBX40.0</div>
  </div>
- <div style="padding: 8px; background: var(--surface-2); border: 1px solid var(--border-secondary); border-radius: 6px;">
- <div style="color: var(--text-secondary); font-size: 9px; margin-bottom: 4px;">Connected</div>
- <div style="color: var(--primary-blue); font-size: 11px; font-weight: 700;">${formatBool(tags.connected)}</div>
+ <div style="padding: 8px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 6px;">
+ <div style="color: var(--md-sys-color-on-surface-variant); font-size: 9px; margin-bottom: 4px;">Connected</div>
+ <div style="color: var(--md-sys-color-primary); font-size: 11px; font-weight: 700;">${formatBool(tags.connected)}</div>
  <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBX40.1</div>
  </div>
- <div style="padding: 8px; background: var(--surface-2); border: 1px solid var(--border-secondary); border-radius: 6px;">
- <div style="color: var(--text-secondary); font-size: 9px; margin-bottom: 4px;">Busy</div>
- <div style="color: var(--primary-blue); font-size: 11px; font-weight: 700;">${formatBool(tags.busy)}</div>
+ <div style="padding: 8px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 6px;">
+ <div style="color: var(--md-sys-color-on-surface-variant); font-size: 9px; margin-bottom: 4px;">Busy</div>
+ <div style="color: var(--md-sys-color-primary); font-size: 11px; font-weight: 700;">${formatBool(tags.busy)}</div>
  <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBX40.2</div>
  </div>
- <div style="padding: 8px; background: var(--surface-2); border: 1px solid var(--border-secondary); border-radius: 6px;">
- <div style="color: var(--text-secondary); font-size: 9px; margin-bottom: 4px;">Completed</div>
- <div style="color: var(--primary-blue); font-size: 11px; font-weight: 700;">${formatBool(tags.completed)}</div>
+ <div style="padding: 8px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 6px;">
+ <div style="color: var(--md-sys-color-on-surface-variant); font-size: 9px; margin-bottom: 4px;">Completed</div>
+ <div style="color: var(--md-sys-color-primary); font-size: 11px; font-weight: 700;">${formatBool(tags.completed)}</div>
  <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBX40.3</div>
  </div>
- <div style="padding: 8px; background: var(--surface-2); border: 1px solid var(--border-secondary); border-radius: 6px;">
- <div style="color: var(--text-secondary); font-size: 9px; margin-bottom: 4px;">Object_Detected</div>
- <div style="color: var(--primary-blue); font-size: 11px; font-weight: 700;">${formatBool(tags.object_detected)}</div>
+ <div style="padding: 8px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 6px;">
+ <div style="color: var(--md-sys-color-on-surface-variant); font-size: 9px; margin-bottom: 4px;">Object_Detected</div>
+ <div style="color: var(--md-sys-color-primary); font-size: 11px; font-weight: 700;">${formatBool(tags.object_detected)}</div>
  <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBX40.4</div>
  </div>
- <div style="padding: 8px; background: var(--surface-2); border: 1px solid var(--border-secondary); border-radius: 6px;">
- <div style="color: var(--text-secondary); font-size: 9px; margin-bottom: 4px;">Object_OK</div>
- <div style="color: var(--primary-blue); font-size: 11px; font-weight: 700;">${formatBool(tags.object_ok)}</div>
+ <div style="padding: 8px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 6px;">
+ <div style="color: var(--md-sys-color-on-surface-variant); font-size: 9px; margin-bottom: 4px;">Object_OK</div>
+ <div style="color: var(--md-sys-color-primary); font-size: 11px; font-weight: 700;">${formatBool(tags.object_ok)}</div>
  <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBX40.5</div>
  </div>
- <div style="padding: 8px; background: var(--surface-2); border: 1px solid var(--border-secondary); border-radius: 6px;">
- <div style="color: var(--text-secondary); font-size: 9px; margin-bottom: 4px;">Defect_Detected</div>
- <div style="color: var(--primary-blue); font-size: 11px; font-weight: 700;">${formatBool(tags.defect_detected)}</div>
+ <div style="padding: 8px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 6px;">
+ <div style="color: var(--md-sys-color-on-surface-variant); font-size: 9px; margin-bottom: 4px;">Defect_Detected</div>
+ <div style="color: var(--md-sys-color-primary); font-size: 11px; font-weight: 700;">${formatBool(tags.defect_detected)}</div>
  <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBX40.6</div>
  </div>
- <div style="padding: 8px; background: var(--surface-2); border: 1px solid var(--border-secondary); border-radius: 6px;">
- <div style="color: var(--text-secondary); font-size: 9px; margin-bottom: 4px;">Object_Number</div>
- <div style="color: var(--primary-blue); font-size: 11px; font-weight: 700;">${tags.object_number || 0}</div>
+ <div style="padding: 8px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 6px;">
+ <div style="color: var(--md-sys-color-on-surface-variant); font-size: 9px; margin-bottom: 4px;">Object_Number</div>
+ <div style="color: var(--md-sys-color-primary); font-size: 11px; font-weight: 700;">${tags.object_number || 0}</div>
  <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBW42</div>
  </div>
- <div style="padding: 8px; background: var(--surface-2); border: 1px solid var(--border-secondary); border-radius: 6px;">
- <div style="color: var(--text-secondary); font-size: 9px; margin-bottom: 4px;">Defect_Number</div>
- <div style="color: var(--primary-blue); font-size: 11px; font-weight: 700;">${tags.defect_number || 0}</div>
+ <div style="padding: 8px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 6px;">
+ <div style="color: var(--md-sys-color-on-surface-variant); font-size: 9px; margin-bottom: 4px;">Defect_Number</div>
+ <div style="color: var(--md-sys-color-primary); font-size: 11px; font-weight: 700;">${tags.defect_number || 0}</div>
  <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBW44</div>
  </div>
  `;
@@ -2785,7 +2818,7 @@
  updateStatusText(statusText, `<span style="color: var(--accent-green);"> ACTIVE (TRUE)</span><br><span style="font-size: 10px; color: var(--text-muted);">Vision processing enabled</span>`);
  } else {
  indicator.classList.remove('connected');
- updateStatusText(statusText, `<span style="color: var(--primary-blue);"> INACTIVE (FALSE)</span><br><span style="font-size: 10px; color: var(--text-muted);">Awaiting PLC start command</span>`);
+ updateStatusText(statusText, `<span style="color: var(--md-sys-color-primary);"> INACTIVE (FALSE)</span><br><span style="font-size: 10px; color: var(--text-muted);">Awaiting PLC start command</span>`);
  }
  } catch (error) {
  console.error('[DB40 Start] Error:', error);

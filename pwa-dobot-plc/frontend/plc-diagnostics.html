@@ -1,52 +1,75 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0a1628">
+    <meta name="theme-color" content="#1c1b1f">
     <meta name="description" content="PLC Tag Diagnostics - Smart Factory Control System">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="manifest" href="/manifest.json">
     <link rel="icon" type="image/png" href="/icon-192.png">
     <link rel="apple-touch-icon" href="/icon-512.png">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <title>PLC Tag Diagnostics - Smart Factory</title>
     <style>
-        /* ========== PROFESSIONAL IIOT VARIABLES ========== */
+        /* ========== MATERIAL DESIGN 3 DARK THEME ========== */
         :root {
-            /* Primary Industrial Colors */
-            --primary-blue: #0ea5e9;
-            --primary-teal: #14b8a6;
-            --primary-indigo: #6366f1;
-            --accent-orange: #f97316;
-            --accent-amber: #fbbf24;
+            /* Material Design 3 Color Tokens - Dark Theme */
+            --md-sys-color-primary: #a8c7fa;
+            --md-sys-color-on-primary: #0b3d8c;
+            --md-sys-color-primary-container: #1e54a4;
+            --md-sys-color-on-primary-container: #d6e3ff;
 
-            /* Status Colors */
-            --status-success: #10b981;
+            --md-sys-color-secondary: #bcc7dc;
+            --md-sys-color-on-secondary: #263141;
+            --md-sys-color-secondary-container: #3c4758;
+            --md-sys-color-on-secondary-container: #d8e3f8;
+
+            --md-sys-color-tertiary: #d7bce0;
+            --md-sys-color-on-tertiary: #3b2948;
+            --md-sys-color-tertiary-container: #533f5f;
+            --md-sys-color-on-tertiary-container: #f3dafd;
+
+            --md-sys-color-error: #ffb4ab;
+            --md-sys-color-on-error: #690005;
+            --md-sys-color-error-container: #93000a;
+            --md-sys-color-on-error-container: #ffdad6;
+
+            --md-sys-color-background: #1c1b1f;
+            --md-sys-color-on-background: #e4e1e6;
+            --md-sys-color-surface: #1c1b1f;
+            --md-sys-color-on-surface: #e4e1e6;
+            --md-sys-color-surface-variant: #44464f;
+            --md-sys-color-on-surface-variant: #c5c6d0;
+
+            --md-sys-color-outline: #8f9099;
+            --md-sys-color-outline-variant: #44464f;
+
+            --md-sys-color-surface-container-lowest: #0f0e11;
+            --md-sys-color-surface-container-low: #24232a;
+            --md-sys-color-surface-container: #282730;
+            --md-sys-color-surface-container-high: #33323a;
+            --md-sys-color-surface-container-highest: #3e3d45;
+
+            /* Elevation Shadows */
+            --md-sys-elevation-1: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 1px 3px 1px rgba(0, 0, 0, 0.15);
+            --md-sys-elevation-2: 0px 1px 2px rgba(0, 0, 0, 0.3), 0px 2px 6px 2px rgba(0, 0, 0, 0.15);
+            --md-sys-elevation-3: 0px 4px 8px 3px rgba(0, 0, 0, 0.15), 0px 1px 3px rgba(0, 0, 0, 0.3);
+
+            /* Shape */
+            --md-sys-shape-corner-small: 8px;
+            --md-sys-shape-corner-medium: 12px;
+            --md-sys-shape-corner-large: 16px;
+
+            /* Legacy compat colors */
+            --status-success: #4caf50;
             --status-warning: #f59e0b;
             --status-error: #ef4444;
-            --status-info: #3b82f6;
-
-            /* Background & Surfaces */
-            --bg-dark: #0a1628;
-            --bg-darker: #050b16;
-            --surface-1: rgba(15, 23, 42, 0.85);
-            --surface-2: rgba(30, 41, 59, 0.7);
-            --surface-glass: rgba(255, 255, 255, 0.03);
-
-            /* Borders & Dividers */
-            --border-primary: rgba(14, 165, 233, 0.2);
-            --border-secondary: rgba(148, 163, 184, 0.15);
-            --border-glow: rgba(14, 165, 233, 0.4);
-
-            /* Text */
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --text-tertiary: #64748b;
 
             /* Typography */
-            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         /* ========== RESET & BASE ========== */
@@ -58,9 +81,9 @@
 
         body {
             font-family: var(--font-family);
-            background: var(--bg-darker);
+            background: var(--md-sys-color-background);
             min-height: 100vh;
-            color: var(--text-primary);
+            color: var(--md-sys-color-on-background);
             line-height: 1.6;
             overflow-x: hidden;
             position: relative;
@@ -100,9 +123,9 @@
             position: absolute;
             width: 8px;
             height: 8px;
-            background: var(--primary-blue);
+            background: var(--md-sys-color-primary);
             border-radius: 50%;
-            box-shadow: 0 0 20px var(--primary-blue), 0 0 40px var(--primary-blue);
+            box-shadow: 0 0 20px var(--md-sys-color-primary), 0 0 40px var(--md-sys-color-primary);
             animation: nodePulse 3s ease-in-out infinite;
         }
 
@@ -128,7 +151,7 @@
             height: 2px;
             background: linear-gradient(90deg,
                 transparent 0%,
-                var(--primary-blue) 50%,
+                var(--md-sys-color-primary) 50%,
                 transparent 100%
             );
             animation: streamFlow 4s linear infinite;
@@ -152,7 +175,7 @@
         .gradient-orb.orb-1 {
             width: 500px;
             height: 500px;
-            background: radial-gradient(circle, var(--primary-blue), transparent);
+            background: radial-gradient(circle, var(--md-sys-color-primary), transparent);
             top: -200px;
             left: -200px;
         }
@@ -160,7 +183,7 @@
         .gradient-orb.orb-2 {
             width: 600px;
             height: 600px;
-            background: radial-gradient(circle, var(--primary-teal), transparent);
+            background: radial-gradient(circle, var(--md-sys-color-secondary), transparent);
             bottom: -250px;
             right: -250px;
             animation-delay: 8s;
@@ -169,7 +192,7 @@
         .gradient-orb.orb-3 {
             width: 400px;
             height: 400px;
-            background: radial-gradient(circle, var(--primary-indigo), transparent);
+            background: radial-gradient(circle, var(--md-sys-color-tertiary), transparent);
             top: 40%;
             left: 60%;
             animation-delay: 16s;
@@ -184,9 +207,9 @@
         /* ========== SIDEBAR ========== */
         .sidebar {
             width: 280px;
-            background: var(--surface-1);
+            background: var(--md-sys-color-surface-container-low);
             backdrop-filter: blur(20px);
-            border-right: 1px solid var(--border-secondary);
+            border-right: 1px solid var(--md-sys-color-outline-variant);
             position: fixed;
             left: 0;
             top: 0;
@@ -199,7 +222,7 @@
 
         .sidebar-header {
             padding: 32px 24px;
-            border-bottom: 1px solid var(--border-secondary);
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
         }
 
         .logo-container {
@@ -212,7 +235,7 @@
         .logo-icon {
             width: 40px;
             height: 40px;
-            background: linear-gradient(135deg, var(--primary-blue), var(--primary-teal));
+            background: linear-gradient(135deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -226,13 +249,13 @@
         .logo-text h2 {
             font-size: 18px;
             font-weight: 700;
-            color: var(--text-primary);
+            color: var(--md-sys-color-on-surface);
             letter-spacing: -0.5px;
         }
 
         .logo-text p {
             font-size: 11px;
-            color: var(--text-tertiary);
+            color: var(--md-sys-color-outline);
             text-transform: uppercase;
             letter-spacing: 1.5px;
             font-weight: 600;
@@ -243,8 +266,8 @@
             align-items: center;
             gap: 8px;
             padding: 12px 16px;
-            background: var(--surface-glass);
-            border: 1px solid var(--border-secondary);
+            background: var(--md-sys-color-surface-container-highest);
+            border: 1px solid var(--md-sys-color-outline-variant);
             border-radius: 8px;
             margin-top: 16px;
         }
@@ -265,7 +288,7 @@
 
         .status-text {
             font-size: 12px;
-            color: var(--text-secondary);
+            color: var(--md-sys-color-on-surface-variant);
             font-weight: 500;
         }
 
@@ -283,7 +306,7 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            color: var(--text-tertiary);
+            color: var(--md-sys-color-outline);
             margin-bottom: 12px;
             padding: 0 12px;
         }
@@ -302,7 +325,7 @@
             gap: 12px;
             padding: 12px 16px;
             text-decoration: none;
-            color: var(--text-secondary);
+            color: var(--md-sys-color-on-surface-variant);
             border-radius: 8px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 14px;
@@ -318,18 +341,18 @@
             top: 0;
             height: 100%;
             width: 3px;
-            background: var(--primary-blue);
+            background: var(--md-sys-color-primary);
             transform: scaleY(0);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .nav-link:hover {
-            color: var(--text-primary);
-            background: var(--surface-glass);
+            color: var(--md-sys-color-on-surface);
+            background: var(--md-sys-color-surface-container-highest);
         }
 
         .nav-link.active {
-            color: var(--primary-blue);
+            color: var(--md-sys-color-primary);
             background: rgba(14, 165, 233, 0.1);
         }
 
@@ -379,7 +402,7 @@
         .header-title h1 {
             font-size: 36px;
             font-weight: 700;
-            color: var(--text-primary);
+            color: var(--md-sys-color-on-surface);
             letter-spacing: -1px;
         }
 
@@ -396,15 +419,15 @@
 
         .header-description {
             font-size: 16px;
-            color: var(--text-secondary);
+            color: var(--md-sys-color-on-surface-variant);
             max-width: 800px;
         }
 
         /* ========== STATUS PANEL ========== */
         .status-panel {
-            background: var(--surface-1);
+            background: var(--md-sys-color-surface-container-low);
             backdrop-filter: blur(20px);
-            border: 1px solid var(--border-secondary);
+            border: 1px solid var(--md-sys-color-outline-variant);
             border-radius: 16px;
             padding: 32px;
             margin-bottom: 24px;
@@ -412,7 +435,7 @@
         }
 
         .status-panel:hover {
-            border-color: var(--border-glow);
+            border-color: var(--md-sys-color-primary);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
 
@@ -420,7 +443,7 @@
             display: grid;
             grid-template-columns: 220px 1fr;
             padding: 16px 0;
-            border-bottom: 1px solid var(--border-secondary);
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
             align-items: center;
         }
 
@@ -429,14 +452,14 @@
         }
 
         .status-label {
-            color: var(--text-secondary);
+            color: var(--md-sys-color-on-surface-variant);
             font-weight: 600;
             font-size: 14px;
             letter-spacing: 0.3px;
         }
 
         .status-value {
-            color: var(--text-primary);
+            color: var(--md-sys-color-on-surface);
             font-size: 18px;
             font-weight: 600;
             font-family: 'Courier New', monospace;
@@ -463,10 +486,10 @@
         }
 
         button {
-            background: var(--surface-1);
+            background: var(--md-sys-color-surface-container-low);
             backdrop-filter: blur(20px);
-            border: 1px solid var(--border-primary);
-            color: var(--text-primary);
+            border: 1px solid var(--md-sys-color-outline);
+            color: var(--md-sys-color-on-surface);
             padding: 12px 24px;
             font-size: 14px;
             font-weight: 600;
@@ -485,7 +508,7 @@
             left: 0;
             right: 0;
             height: 2px;
-            background: linear-gradient(90deg, var(--primary-blue), var(--primary-teal));
+            background: linear-gradient(90deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
             transform: scaleX(0);
             transform-origin: left;
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -493,7 +516,7 @@
 
         button:hover {
             background: rgba(14, 165, 233, 0.15);
-            border-color: var(--border-glow);
+            border-color: var(--md-sys-color-primary);
             transform: translateY(-2px);
             box-shadow: 0 8px 20px rgba(14, 165, 233, 0.2);
         }
@@ -515,9 +538,9 @@
         }
 
         .stat-box {
-            background: var(--surface-1);
+            background: var(--md-sys-color-surface-container-low);
             backdrop-filter: blur(20px);
-            border: 1px solid var(--border-secondary);
+            border: 1px solid var(--md-sys-color-outline-variant);
             border-radius: 12px;
             padding: 24px;
             text-align: center;
@@ -533,14 +556,14 @@
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, var(--primary-blue), var(--primary-teal));
+            background: linear-gradient(90deg, var(--md-sys-color-primary), var(--md-sys-color-secondary));
             transform: scaleX(0);
             transform-origin: left;
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .stat-box:hover {
-            border-color: var(--border-glow);
+            border-color: var(--md-sys-color-primary);
             transform: translateY(-4px);
             box-shadow: 0 12px 32px rgba(14, 165, 233, 0.2);
         }
@@ -550,7 +573,7 @@
         }
 
         .stat-label {
-            color: var(--text-tertiary);
+            color: var(--md-sys-color-outline);
             font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
@@ -559,7 +582,7 @@
         }
 
         .stat-value {
-            color: var(--primary-blue);
+            color: var(--md-sys-color-primary);
             font-size: 32px;
             font-weight: 700;
             font-family: 'Courier New', monospace;
@@ -568,9 +591,9 @@
 
         /* ========== LOG PANEL ========== */
         .log-panel {
-            background: var(--surface-1);
+            background: var(--md-sys-color-surface-container-low);
             backdrop-filter: blur(20px);
-            border: 1px solid var(--border-secondary);
+            border: 1px solid var(--md-sys-color-outline-variant);
             border-radius: 16px;
             padding: 24px;
             height: 500px;
@@ -587,7 +610,7 @@
         }
 
         .log-timestamp {
-            color: var(--text-tertiary);
+            color: var(--md-sys-color-outline);
             margin-right: 8px;
         }
 
@@ -610,16 +633,16 @@
         }
 
         ::-webkit-scrollbar-track {
-            background: var(--bg-darker);
+            background: var(--md-sys-color-background);
         }
 
         ::-webkit-scrollbar-thumb {
-            background: var(--border-primary);
+            background: var(--md-sys-color-outline);
             border-radius: 4px;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: var(--primary-blue);
+            background: var(--md-sys-color-primary);
         }
 
         /* ========== RESPONSIVE ========== */
@@ -741,43 +764,43 @@
                 <ul class="nav-menu">
                     <li class="nav-item">
                         <a href="/" class="nav-link">
-                            <span class="nav-icon">🏠</span>
+                            <span class="nav-icon">ðŸ </span>
                             <span>Dashboard</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="/robot-arm.html" class="nav-link">
-                            <span class="nav-icon">🤖</span>
+                            <span class="nav-icon">ðŸ¤–</span>
                             <span>Robot Arm</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="/smart-factory.html" class="nav-link">
-                            <span class="nav-icon">🏭</span>
+                            <span class="nav-icon">ðŸ­</span>
                             <span>Smart Factory</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="/vision-system.html" class="nav-link">
-                            <span class="nav-icon">👁</span>
+                            <span class="nav-icon">ðŸ‘</span>
                             <span>Vision System</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="/rfid.html" class="nav-link">
-                            <span class="nav-icon">📡</span>
+                            <span class="nav-icon">ðŸ“¡</span>
                             <span>RFID</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="/digital-twin.html" class="nav-link">
-                            <span class="nav-icon">🔄</span>
+                            <span class="nav-icon">ðŸ”„</span>
                             <span>Digital Twin</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="/plc-diagnostics.html" class="nav-link active">
-                            <span class="nav-icon">⚙️</span>
+                            <span class="nav-icon">âš™ï¸</span>
                             <span>PLC Diagnostics</span>
                         </a>
                     </li>
@@ -997,14 +1020,14 @@
                     // Update UI
                     const valueElement = document.getElementById('startBitValue');
                     if (startValue) {
-                        valueElement.textContent = 'TRUE ⚡';
+                        valueElement.textContent = 'TRUE âš¡';
                         valueElement.className = 'status-value active';
                     } else {
-                        valueElement.textContent = 'FALSE ⚫';
+                        valueElement.textContent = 'FALSE âš«';
                         valueElement.className = 'status-value inactive';
                     }
 
-                    document.getElementById('plcConnected').textContent = data.plc_connected ? 'YES ✓' : 'NO ✗';
+                    document.getElementById('plcConnected').textContent = data.plc_connected ? 'YES âœ“' : 'NO âœ—';
                     document.getElementById('plcConnected').className = data.plc_connected ? 'status-value active' : 'status-value inactive';
 
                 } else {
