@@ -733,6 +733,7 @@
  const response = await fetch(`${API_BASE}/api/camera/capture?t=${Date.now()}`, {
  signal: AbortSignal.timeout(10000) // 10 second timeout (camera operations can be slow)
  });
+ 
  if (response.ok) {
  const blob = await response.blob();
  const url = URL.createObjectURL(blob);
@@ -743,6 +744,23 @@
  frame.style.display = 'block';
  const placeholder = document.getElementById('cameraPlaceholder');
  if (placeholder) placeholder.style.display = 'none';
+ } else {
+ // Handle HTTP errors (camera not connected, etc.)
+ const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+ console.warn(`Camera snapshot failed (${response.status}): ${errorData.error}`);
+ 
+ // If camera not opened/connected, stop trying and show placeholder
+ if (response.status === 503 || errorData.error?.includes('not opened')) {
+ cameraConnected = false;
+ stopStream();
+ const placeholder = document.getElementById('cameraPlaceholder');
+ if (placeholder) {
+ placeholder.style.display = 'flex';
+ placeholder.innerHTML = '<div style="text-align:center"><i class="material-icons" style="font-size:48px;color:#f44336;">videocam_off</i><p style="margin-top:10px;color:#fff;">Camera Not Connected</p><p style="font-size:12px;color:#999;">Click Connect Camera to start</p></div>';
+ }
+ frame.style.display = 'none';
+ addSerialLog('Camera disconnected - snapshot stopped', 'error');
+ }
  }
  } catch (error) {
  // Extract meaningful error message
@@ -757,7 +775,8 @@
  
  // Don't log timeout/abort errors as they're expected when backend is slow
  if (!errorMsg.includes('timeout') && !errorMsg.includes('aborted') && !errorMsg.includes('AbortError')) {
- console.error('Error updating camera snapshot:', errorMsg, error);
+ console.error('Error updating camera snapshot:', errorMsg);
+ addSerialLog(`Camera error: ${errorMsg}`, 'error');
  }
  } finally {
  isFetchingCamera = false; // Always release lock
@@ -790,15 +809,6 @@
  const placeholder = document.getElementById('cameraPlaceholder');
  if (placeholder) placeholder.style.display = 'none';
  imgElement.style.display = 'block';
- }
-
- function handleStreamError(imgElement) {
- console.log('Snapshot error detected, will retry on next interval...');
- if (!cameraConnected) {
- const placeholder = document.getElementById('cameraPlaceholder');
- if (placeholder) placeholder.style.display = 'flex';
- imgElement.style.display = 'none';
- }
  }
 
  async function captureFrame() {
