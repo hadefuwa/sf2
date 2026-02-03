@@ -52,6 +52,11 @@ body, * { font-family: 'Plus Jakarta Sans', 'Helvetica', 'Arial', sans-serif !im
 /* ================================================================
    LAYOUT
    ================================================================ */
+body.dark-edition,
+.dark-edition {
+  background-color: var(--bg-page) !important;
+}
+
 .main-panel,
 .main-panel > .content {
   background-color: var(--bg-page) !important;
@@ -74,14 +79,21 @@ body, * { font-family: 'Plus Jakarta Sans', 'Helvetica', 'Arial', sans-serif !im
 /* ================================================================
    SIDEBAR
    ================================================================ */
+.dark-edition .sidebar,
+.dark-edition .sidebar .sidebar-background:after {
+  background: linear-gradient(127.09deg, rgba(6, 11, 40, 0.97) 19.41%, rgba(10, 14, 35, 0.92) 76.65%) !important;
+  opacity: 1 !important;
+}
 .sidebar[data-image]:after,
 .sidebar:after {
-  background: linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%) !important;
+  background: linear-gradient(127.09deg, rgba(6, 11, 40, 0.97) 19.41%, rgba(10, 14, 35, 0.92) 76.65%) !important;
   opacity: 1 !important;
 }
 
-/* nav links — floating pill shape */
-.sidebar .nav li a {
+/* reset MD nav link margins/padding, apply pill shape */
+.sidebar .nav li a,
+.sidebar .nav li .dropdown-menu a,
+.sidebar .nav li:first-child > a {
   display: flex !important;
   align-items: center !important;
   gap: 12px !important;
@@ -89,10 +101,12 @@ body, * { font-family: 'Plus Jakarta Sans', 'Helvetica', 'Arial', sans-serif !im
   border-radius: 15px !important;
   margin: 2px 12px !important;
   background: transparent !important;
+  box-shadow: none !important;
   transition: background 0.3s ease !important;
 }
 
 /* icon in a dark rounded box */
+.sidebar .nav li a i,
 .sidebar .nav li a i.material-icons {
   width: 32px !important;
   height: 32px !important;
@@ -104,6 +118,7 @@ body, * { font-family: 'Plus Jakarta Sans', 'Helvetica', 'Arial', sans-serif !im
   justify-content: center !important;
   color: #ffffff !important;
   font-size: 18px !important;
+  line-height: 32px !important;
   transition: background 0.3s ease, box-shadow 0.3s ease !important;
 }
 
@@ -111,17 +126,29 @@ body, * { font-family: 'Plus Jakarta Sans', 'Helvetica', 'Arial', sans-serif !im
   color: var(--text-secondary) !important;
   font-weight: 400 !important;
   margin: 0 !important;
+  white-space: nowrap !important;
 }
 
 /* hover — subtle white tint */
+.sidebar .nav li:hover > a,
 .sidebar .nav li > a:hover {
-  background-color: rgba(255, 255, 255, 0.05) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  box-shadow: none !important;
 }
 
-/* active — brighter background + coloured icon box */
-.sidebar .nav li.active > a {
+/* active — override ALL MD dark-edition active selectors */
+.sidebar .nav li.active > a,
+.sidebar[data-color] li.active > a,
+.sidebar[data-color=purple] li.active > a,
+.dark-edition .sidebar[data-color] li.active > a,
+.dark-edition .sidebar[data-color=purple] li.active > a {
+  background: rgba(255, 255, 255, 0.08) !important;
   background-color: rgba(255, 255, 255, 0.08) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
 }
+.sidebar .nav li.active > a i,
 .sidebar .nav li.active > a i.material-icons {
   background: linear-gradient(195deg, var(--status-info), #0062d6) !important;
   box-shadow: 0 4px 6px -1px rgba(0, 117, 255, 0.4) !important;
@@ -205,7 +232,8 @@ h1, h2, h3, h4, h5, h6 {
 /* ================================================================
    CARDS
    ================================================================ */
-.card {
+.card,
+.dark-edition .card {
   background: linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%) !important;
   backdrop-filter: blur(120px);
   -webkit-backdrop-filter: blur(120px);
@@ -214,7 +242,8 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 20px 27px 0 rgba(0, 0, 0, 0.05) !important;
 }
 
-.card:hover {
+.card:hover,
+.dark-edition .card:hover {
   background: linear-gradient(127.09deg, rgba(10, 14, 35, 0.96) 19.41%, rgba(15, 21, 53, 0.55) 76.65%) !important;
   border-color: rgba(67, 24, 255, 0.25) !important;
   transform: translateY(-3px);
@@ -222,24 +251,27 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 23px 45px -11px rgba(0, 0, 0, 0.25) !important;
 }
 
-/* card headers — transparent (no coloured bars), Vision UI style */
+/* card headers — transparent, no coloured bars, no raised -20px margin.
+   Match MD's [class*="card-header-"] patterns to override them. */
 .card-header,
-.card-header-purple,
-.card-header-rose,
-.card-header-warning,
-.card-header-success,
-.card-header-info,
-.card-header-danger,
-.card-header-primary {
+.card .card-header,
+.dark-edition .card .card-header,
+.card [class*="card-header-"],
+.card [class*="card-header-"]:not(.card-header-icon):not(.card-header-text):not(.card-header-image) {
   background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
   box-shadow: none !important;
   border-bottom: none !important;
   border-radius: 0 !important;
+  margin-top: 0 !important;
   padding: 22px 24px 0 !important;
 }
 
 /* ── stat-card icon layout: icon-box left, text right ── */
-.card-stats .card-header.card-header-icon {
+.card-stats .card-header,
+.card-stats .card-header.card-header-icon,
+.card-stats .card-header.card-header-text {
   display: grid !important;
   grid-template-columns: 48px 1fr !important;
   grid-template-rows: auto auto !important;
@@ -248,13 +280,19 @@ h1, h2, h3, h4, h5, h6 {
   text-align: left !important;
   padding: 22px !important;
   background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
   box-shadow: none !important;
   border-bottom: none !important;
   border-radius: 0 !important;
+  margin-top: 0 !important;
 }
 
-/* coloured icon box */
-.card-stats .card-icon {
+/* coloured icon box — override MD's float:left, background:#999, margin-top:-20px.
+   Match MD's exact selectors: .card [class*="card-header-"] .card-icon */
+.card-stats .card-icon,
+.card [class*="card-header-"] .card-icon,
+.dark-edition .card [class*="card-header-"] .card-icon {
   grid-row: 1 / 3 !important;
   grid-column: 1 !important;
   width: 48px !important;
@@ -262,41 +300,71 @@ h1, h2, h3, h4, h5, h6 {
   min-width: 48px !important;
   border-radius: 15px !important;
   background: linear-gradient(195deg, var(--status-info), #0062d6) !important;
+  background-color: transparent !important;
   box-shadow: 0 4px 6px -1px rgba(0, 117, 255, 0.3) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   position: static !important;
+  float: none !important;
+  margin-top: 0 !important;
+  margin-right: 0 !important;
+  padding: 0 !important;
 }
-.card-stats .card-icon i.material-icons {
+.card-stats .card-icon i,
+.card-stats .card-icon i.material-icons,
+.card [class*="card-header-"] .card-icon i {
   color: #ffffff !important;
   font-size: 24px !important;
+  line-height: 1 !important;
   position: static !important;
+  text-align: center !important;
+  width: auto !important;
+  height: auto !important;
 }
 
 /* category & title placed in the grid */
-.card-stats .card-header-icon > .card-category {
+.card-stats .card-header .card-category,
+.card-stats .card-header.card-header-icon .card-category,
+.card-stats .card-header.card-header-icon > .card-category {
   grid-row: 1 !important;
   grid-column: 2 !important;
   align-self: end !important;
-  margin-bottom: 0 !important;
+  margin: 0 !important;
+  padding-top: 0 !important;
 }
-.card-stats .card-header-icon > .card-title {
+.card-stats .card-header .card-title,
+.card-stats .card-header.card-header-icon .card-title,
+.card-stats .card-header.card-header-icon > .card-title {
   grid-row: 2 !important;
   grid-column: 2 !important;
   align-self: start !important;
+  margin: 0 !important;
   margin-top: 2px !important;
+  padding-top: 0 !important;
+  color: var(--text-white) !important;
+}
+
+/* reset MD's +.card-category / +.card-title padding-top:10px */
+.card-stats .card-header .card-icon + .card-category,
+.card-stats .card-header .card-icon + .card-title {
+  padding-top: 0 !important;
 }
 
 /* stat-card footer */
-.card-stats .card-footer {
+.card-stats .card-footer,
+.card-stats .card-header + .card-footer,
+.dark-edition .card-stats .card-header + .card-footer {
   padding: 12px 22px !important;
   border-top: 1px solid var(--border) !important;
+  margin-top: 0 !important;
 }
-.card-stats .card-footer .stats {
+.card-stats .card-footer .stats,
+.dark-edition .card-stats .card-footer .stats {
   color: var(--text-muted) !important;
   font-size: 12px !important;
 }
+.card-stats .card-footer .stats i,
 .card-stats .card-footer .stats i.material-icons {
   font-size: 16px !important;
   color: var(--text-muted) !important;
@@ -304,11 +372,22 @@ h1, h2, h3, h4, h5, h6 {
   margin-right: 4px;
 }
 
+/* dark-edition card-stats category colour override */
+.dark-edition .card-stats .card-header .card-category:not([class*="text-"]) {
+  color: var(--text-muted) !important;
+}
+.dark-edition .card .card-header.card-header-icon .card-title {
+  color: var(--text-white) !important;
+}
+
 /* ================================================================
    BUTTONS
    ================================================================ */
-.btn-primary                { background-color: var(--status-info) !important;     border-color: var(--status-info) !important;     border-radius: 12px !important; box-shadow: 0 4px 6px -1px rgba(0, 117, 255, 0.3) !important; color: #fff !important; }
-.btn-primary:hover          { background-color: #0062d6 !important;               border-color: #0062d6 !important;               box-shadow: 0 8px 9px -5px rgba(0, 117, 255, 0.4) !important; }
+.btn-primary,
+.dark-edition .btn.btn-primary                { background-color: var(--status-info) !important;     border-color: var(--status-info) !important;     border-radius: 12px !important; box-shadow: 0 4px 6px -1px rgba(0, 117, 255, 0.3) !important; color: #fff !important; }
+.btn-primary:hover,
+.dark-edition .btn.btn-primary:hover,
+.dark-edition .btn.btn-primary:focus          { background-color: #0062d6 !important;               border-color: #0062d6 !important;               box-shadow: 0 8px 9px -5px rgba(0, 117, 255, 0.4) !important; }
 
 .btn-success                { background-color: var(--status-success) !important;  border-color: var(--status-success) !important;  border-radius: 12px !important; box-shadow: 0 4px 6px -1px rgba(1, 181, 116, 0.3) !important; color: #fff !important; }
 .btn-success:hover          { background-color: #01a066 !important;               box-shadow: 0 8px 9px -5px rgba(1, 181, 116, 0.4) !important; }
@@ -321,6 +400,24 @@ h1, h2, h3, h4, h5, h6 {
 
 .btn-info                   { background-color: var(--status-info) !important;     border-color: var(--status-info) !important;     border-radius: 12px !important; box-shadow: 0 4px 6px -1px rgba(0, 117, 255, 0.3) !important; color: #fff !important; }
 .btn-info:hover             { background-color: #0062d6 !important;               box-shadow: 0 8px 9px -5px rgba(0, 117, 255, 0.4) !important; }
+
+/* override dark-edition card body / footer colours */
+.dark-edition .card .card-body {
+  color: var(--text-primary) !important;
+}
+.dark-edition .card .card-body .card-category,
+.dark-edition .card .card-body .card-title {
+  color: var(--text-primary) !important;
+}
+.dark-edition .card .card-footer .stats a {
+  background-image: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  color: var(--status-info) !important;
+}
+.dark-edition .card-stats .card-body {
+  text-align: right !important;
+}
 
 /* ================================================================
    STATUS TEXT & ICONS
