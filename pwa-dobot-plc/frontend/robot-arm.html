@@ -18,155 +18,11 @@
   
   <!-- PWA Manifest -->
   <link rel="manifest" href="/manifest.json">
-  <meta name="theme-color" content="#1c1b1f">
+  <meta name="theme-color" content="#030c1d">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-  <style>
-    .card:hover {
-      transform: translateY(-5px);
-      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
-
-    .status-dot {
-      display: inline-block;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      margin-right: 8px;
-      background: #ef4444;
-      animation: pulse 2s infinite;
-    }
-
-    .status-dot.connected {
-      background: #10b981;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    /* Bold White Text Override */
-    body, .card-body, .card-title, .card-category, p, span, div, td, th, label {
-      color: #ffffff !important;
-      font-weight: 500 !important;
-    }
-
-    .card-header .card-title,
-    .card-header .card-category {
-      color: #ffffff !important;
-      font-weight: 600 !important;
-    }
-
-    h1, h2, h3, h4, h5, h6 {
-      color: #ffffff !important;
-      font-weight: 700 !important;
-    }
-
-    .sidebar .nav li a p {
-      color: rgba(255, 255, 255, 0.95) !important;
-      font-weight: 500 !important;
-    }
-
-    /* Animated Factory Sidebar Background */
-    .sidebar[data-image]:after {
-      background: linear-gradient(135deg, #1a0033 0%, #0d001a 50%, #1a0033 100%) !important;
-      opacity: 1 !important;
-    }
-
-    .sidebar-animated-bg {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .factory-particle {
-      position: absolute;
-      background: rgba(156, 39, 176, 0.4);
-      border-radius: 50%;
-      animation: float-up linear infinite;
-    }
-
-    .circuit-line {
-      position: absolute;
-      background: linear-gradient(90deg, transparent, rgba(156, 39, 176, 0.3), transparent);
-      height: 1px;
-      animation: slide-right linear infinite;
-    }
-
-    @keyframes float-up {
-      0% { transform: translateY(100vh) scale(0); opacity: 0; }
-      10% { opacity: 0.5; }
-      90% { opacity: 0.5; }
-      100% { transform: translateY(-20vh) scale(1); opacity: 0; }
-    }
-
-    @keyframes slide-right {
-      0% { transform: translateX(-100%); opacity: 0; }
-      10% { opacity: 1; }
-      90% { opacity: 1; }
-      100% { transform: translateX(300%); opacity: 0; }
-    }
-
-    #debugLog {
-      font-family: 'Consolas', 'Monaco', monospace;
-      font-size: 12px;
-      max-height: 400px;
-      overflow-y: auto;
-      background: #0f0e11;
-      border: 1px solid #44464f;
-      border-radius: 4px;
-      padding: 16px;
-      color: #4caf50;
-    }
-
-    .preset-btn {
-      width: 100%;
-      margin-bottom: 8px;
-    }
-
-    .settings-modal {
-      display: none;
-      position: fixed;
-      z-index: 9999;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.8);
-    }
-
-    .settings-content {
-      background-color: #282730;
-      margin: 5% auto;
-      padding: 30px;
-      border: 1px solid #44464f;
-      border-radius: 12px;
-      width: 80%;
-      max-width: 700px;
-      max-height: 80vh;
-      overflow-y: auto;
-      color: #e4e1e6;
-    }
-
-    .settings-close {
-      color: #aaa;
-      float: right;
-      font-size: 28px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .settings-close:hover {
-      color: #fff;
-    }
-  </style>
+  <!-- All styles consolidated in professional-theme.css -->
 </head>
 
 <body class="dark-edition">
@@ -518,7 +374,7 @@
                 </div>
                 <div class="card-body">
                   <div id="debugLog">
-                    <div style="color: #94a3b8;">Waiting for commands...</div>
+                    <div class="log-placeholder">Waiting for commands...</div>
                   </div>
                 </div>
               </div>
@@ -542,63 +398,55 @@
   <div id="settingsModal" class="settings-modal">
     <div class="settings-content">
       <span class="settings-close" onclick="closeSettings()">&times;</span>
-      <h2 style="color: #a8c7fa; margin-bottom: 24px;">System Settings</h2>
-      
-      <h3 style="color: #bcc7dc; margin-top: 24px;">Dobot Configuration</h3>
-      <div style="margin-bottom: 18px;">
-        <label style="display: block; font-weight: 600; margin-bottom: 8px;">USB Port:</label>
-        <select id="settingDobotUSB" style="width: 100%; padding: 12px; background: #1c1b1f; border: 1px solid #44464f; color: #e4e1e6; border-radius: 4px;">
+      <h2>System Settings</h2>
+
+      <h3>Dobot Configuration</h3>
+      <div class="settings-group">
+        <label>USB Port:</label>
+        <select id="settingDobotUSB" class="settings-input">
           <option value="">Loading...</option>
         </select>
-        <small style="display: block; margin-top: 6px;">Select the USB port for Dobot connection</small>
+        <small>Select the USB port for Dobot connection</small>
       </div>
-      
-      <div style="margin-bottom: 18px;">
-        <label style="display: block; font-weight: 600; margin-bottom: 8px;">Home Position:</label>
-        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
-          <div>
-            <input type="number" id="settingHomeX" style="width: 100%; padding: 12px; background: #1c1b1f; border: 1px solid #44464f; color: #e4e1e6; border-radius: 4px;" placeholder="X">
-          </div>
-          <div>
-            <input type="number" id="settingHomeY" style="width: 100%; padding: 12px; background: #1c1b1f; border: 1px solid #44464f; color: #e4e1e6; border-radius: 4px;" placeholder="Y">
-          </div>
-          <div>
-            <input type="number" id="settingHomeZ" style="width: 100%; padding: 12px; background: #1c1b1f; border: 1px solid #44464f; color: #e4e1e6; border-radius: 4px;" placeholder="Z">
-          </div>
-          <div>
-            <input type="number" id="settingHomeR" style="width: 100%; padding: 12px; background: #1c1b1f; border: 1px solid #44464f; color: #e4e1e6; border-radius: 4px;" placeholder="R">
-          </div>
+
+      <div class="settings-group">
+        <label>Home Position:</label>
+        <div class="settings-grid-4">
+          <input type="number" id="settingHomeX" class="settings-input" placeholder="X">
+          <input type="number" id="settingHomeY" class="settings-input" placeholder="Y">
+          <input type="number" id="settingHomeZ" class="settings-input" placeholder="Z">
+          <input type="number" id="settingHomeR" class="settings-input" placeholder="R">
         </div>
       </div>
 
-      <h3 style="color: #bcc7dc; margin-top: 24px;">PLC Configuration</h3>
-      <div style="margin-bottom: 18px;">
-        <label style="display: block; font-weight: 600; margin-bottom: 8px;">PLC IP Address:</label>
-        <input type="text" id="settingPLCIP" style="width: 100%; padding: 12px; background: #1c1b1f; border: 1px solid #44464f; color: #e4e1e6; border-radius: 4px;" placeholder="192.168.0.1">
+      <h3>PLC Configuration</h3>
+      <div class="settings-group">
+        <label>PLC IP Address:</label>
+        <input type="text" id="settingPLCIP" class="settings-input" placeholder="192.168.0.1">
       </div>
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px;">
-        <div>
-          <label style="display: block; font-weight: 600; margin-bottom: 8px;">Rack:</label>
-          <input type="number" id="settingPLCRack" style="width: 100%; padding: 12px; background: #1c1b1f; border: 1px solid #44464f; color: #e4e1e6; border-radius: 4px;" placeholder="0">
+      <div class="settings-grid-2">
+        <div class="settings-group">
+          <label>Rack:</label>
+          <input type="number" id="settingPLCRack" class="settings-input" placeholder="0">
         </div>
-        <div>
-          <label style="display: block; font-weight: 600; margin-bottom: 8px;">Slot:</label>
-          <input type="number" id="settingPLCSlot" style="width: 100%; padding: 12px; background: #1c1b1f; border: 1px solid #44464f; color: #e4e1e6; border-radius: 4px;" placeholder="1">
+        <div class="settings-group">
+          <label>Slot:</label>
+          <input type="number" id="settingPLCSlot" class="settings-input" placeholder="1">
         </div>
       </div>
-      <div style="margin-bottom: 18px;">
-        <label style="display: block; font-weight: 600; margin-bottom: 8px;">Poll Interval (seconds):</label>
-        <input type="number" step="0.1" id="settingPollInterval" style="width: 100%; padding: 12px; background: #1c1b1f; border: 1px solid #44464f; color: #e4e1e6; border-radius: 4px;" placeholder="2.0">
-        <small style="display: block; margin-top: 6px;">How often to read PLC data (2.0 recommended for S7-1200)</small>
+      <div class="settings-group">
+        <label>Poll Interval (seconds):</label>
+        <input type="number" step="0.1" id="settingPollInterval" class="settings-input" placeholder="2.0">
+        <small>How often to read PLC data (2.0 recommended for S7-1200)</small>
       </div>
 
-      <div style="display: flex; gap: 12px; margin-top: 30px;">
-        <button class="btn btn-success" onclick="saveSettings()" style="flex: 1;">Save Settings</button>
-        <button class="btn btn-primary" onclick="restartServer()" style="flex: 1;">Restart Server</button>
-        <button class="btn btn-danger" onclick="closeSettings()" style="flex: 1;">Cancel</button>
+      <div class="settings-actions">
+        <button class="btn btn-success" onclick="saveSettings()">Save Settings</button>
+        <button class="btn btn-primary" onclick="restartServer()">Restart Server</button>
+        <button class="btn btn-danger" onclick="closeSettings()">Cancel</button>
       </div>
-      
-      <div style="margin-top: 24px; padding: 18px; background: rgba(245, 158, 11, 0.15); border: 1px solid #ffb870; color: #ffb870; border-radius: 4px;">
+
+      <div class="settings-warning">
         ⚠️ Note: Server restart required for changes to take effect. Click "Save Settings" then restart the app.
       </div>
     </div>
@@ -613,6 +461,13 @@
   <script src="./assets/js/material-dashboard.js?v=2.1.0"></script>
 
   <script>
+    // Read a CSS custom property once and cache it
+    const _themeCache = {};
+    function theme(name) {
+      if (!_themeCache[name]) _themeCache[name] = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+      return _themeCache[name];
+    }
+
     // Service Worker Registration
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('/sw.js').then(reg => {
@@ -629,31 +484,17 @@
     function updatePLCStatus(connected) {
       const dot = document.getElementById('plcDot');
       const text = document.getElementById('plcStatus');
-
-      if (connected) {
-        dot.classList.add('connected');
-        text.textContent = 'Connected';
-        text.style.color = '#10b981';
-      } else {
-        dot.classList.remove('connected');
-        text.textContent = 'Disconnected';
-        text.style.color = '#ef4444';
-      }
+      dot.classList.toggle('connected', connected);
+      text.textContent = connected ? 'Connected' : 'Disconnected';
+      text.style.color = theme(connected ? '--status-success' : '--status-danger');
     }
 
     function updateDobotStatus(connected) {
       const dot = document.getElementById('dobotDot');
       const text = document.getElementById('dobotStatus');
-
-      if (connected) {
-        dot.classList.add('connected');
-        text.textContent = 'Connected';
-        text.style.color = '#10b981';
-      } else {
-        dot.classList.remove('connected');
-        text.textContent = 'Disconnected';
-        text.style.color = '#ef4444';
-      }
+      dot.classList.toggle('connected', connected);
+      text.textContent = connected ? 'Connected' : 'Disconnected';
+      text.style.color = theme(connected ? '--status-success' : '--status-danger');
     }
 
     async function fetchAllData() {
@@ -668,22 +509,19 @@
         document.getElementById('targetZ').textContent = data.plc.pose.z?.toFixed(2) || '--';
 
         const bits = data.plc.control;
-        document.getElementById('bitStart').textContent = bits.start ? 'ON' : 'OFF';
-        document.getElementById('bitStart').style.color = bits.start ? '#10b981' : '#ef4444';
-        document.getElementById('bitStop').textContent = bits.stop ? 'ON' : 'OFF';
-        document.getElementById('bitStop').style.color = bits.stop ? '#10b981' : '#ef4444';
-        document.getElementById('bitHome').textContent = bits.home ? 'ON' : 'OFF';
-        document.getElementById('bitHome').style.color = bits.home ? '#10b981' : '#ef4444';
-        document.getElementById('bitEstop').textContent = bits.estop ? 'ON' : 'OFF';
-        document.getElementById('bitEstop').style.color = bits.estop ? '#ef4444' : '#10b981';
-        document.getElementById('bitSuction').textContent = bits.suction ? 'ON' : 'OFF';
-        document.getElementById('bitSuction').style.color = bits.suction ? '#10b981' : '#ef4444';
-        document.getElementById('bitReady').textContent = bits.ready ? 'ON' : 'OFF';
-        document.getElementById('bitReady').style.color = bits.ready ? '#10b981' : '#ef4444';
-        document.getElementById('bitBusy').textContent = bits.busy ? 'ON' : 'OFF';
-        document.getElementById('bitBusy').style.color = bits.busy ? '#f59e0b' : '#10b981';
-        document.getElementById('bitError').textContent = bits.error ? 'ON' : 'OFF';
-        document.getElementById('bitError').style.color = bits.error ? '#ef4444' : '#10b981';
+        function setBit(id, value, onColor, offColor) {
+          const el = document.getElementById(id);
+          el.textContent = value ? 'ON' : 'OFF';
+          el.style.color = theme(value ? onColor : offColor);
+        }
+        setBit('bitStart',   bits.start,   '--status-success', '--status-danger');
+        setBit('bitStop',    bits.stop,    '--status-success', '--status-danger');
+        setBit('bitHome',    bits.home,    '--status-success', '--status-danger');
+        setBit('bitEstop',   bits.estop,   '--status-danger',  '--status-success');
+        setBit('bitSuction', bits.suction, '--status-success', '--status-danger');
+        setBit('bitReady',   bits.ready,   '--status-success', '--status-danger');
+        setBit('bitBusy',    bits.busy,    '--status-warning', '--status-success');
+        setBit('bitError',   bits.error,   '--status-danger',  '--status-success');
 
         updateDobotStatus(data.dobot.status.connected);
 
@@ -735,29 +573,23 @@
     function addLog(message, type = 'info') {
       const logDiv = document.getElementById('debugLog');
       const timestamp = new Date().toLocaleTimeString();
-      const colors = {
-        'info': '#0ea5e9',
-        'success': '#10b981',
-        'error': '#ef4444',
-        'warning': '#f59e0b'
-      };
-      const color = colors[type] || colors['info'];
-      
+      const varMap = { info: '--status-info', success: '--status-success', error: '--status-danger', warning: '--status-warning' };
+
       const entry = document.createElement('div');
-      entry.style.color = color;
+      entry.style.color = theme(varMap[type] || varMap.info);
       entry.style.marginBottom = '6px';
       entry.innerHTML = `[${timestamp}] ${message}`;
-      
+
       logDiv.appendChild(entry);
       logDiv.scrollTop = logDiv.scrollHeight;
-      
+
       while (logDiv.children.length > 50) {
         logDiv.removeChild(logDiv.firstChild);
       }
     }
 
     function clearLog() {
-      document.getElementById('debugLog').innerHTML = '<div style="color: #94a3b8;">Log cleared...</div>';
+      document.getElementById('debugLog').innerHTML = '<div class="log-placeholder">Log cleared...</div>';
     }
 
     async function homeRobot() {

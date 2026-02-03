@@ -12,8 +12,8 @@
     }
 
     body {
-      font-family: 'Roboto', Arial, sans-serif;
-      background: #0f0e11;
+      font-family: 'Plus Jakarta Sans', 'Helvetica', 'Arial', sans-serif;
+      background: #030c1d;
       overflow: hidden;
     }
 
@@ -21,7 +21,7 @@
       position: absolute;
       width: 100%;
       height: 100vh;
-      background: #0f0e11;
+      background: #060b28;
     }
 
     #dashboard {
@@ -29,15 +29,16 @@
       top: 20px;
       right: 20px;
       z-index: 10;
-      background: rgba(36, 35, 42, 0.95);
-      backdrop-filter: blur(20px);
+      background: linear-gradient(127.09deg, rgba(6, 11, 40, 0.94) 19.41%, rgba(10, 14, 35, 0.49) 76.65%);
+      backdrop-filter: blur(120px);
+      -webkit-backdrop-filter: blur(120px);
       padding: 24px;
-      border-radius: 12px;
+      border-radius: 20px;
       font-size: 13px;
       width: 320px;
-      border: 1px solid #44464f;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-      color: #e3e3e3;
+      border: 1px solid rgba(226, 232, 240, 0.15);
+      box-shadow: 0 23px 45px -11px rgba(0, 0, 0, 0.25);
+      color: #e2e8f0;
       max-height: calc(100vh - 40px);
       overflow-y: auto;
     }
@@ -46,8 +47,8 @@
       margin: 0 0 20px 0;
       font-size: 18px;
       font-weight: 700;
-      color: #a8c7fa;
-      border-bottom: 1px solid #44464f;
+      color: #0075ff;
+      border-bottom: 1px solid rgba(226, 232, 240, 0.3);
       padding-bottom: 12px;
       letter-spacing: -0.5px;
     }
@@ -58,19 +59,19 @@
       align-items: center;
       margin: 10px 0;
       padding: 12px 14px;
-      background: rgba(62, 61, 69, 0.5);
-      border-radius: 8px;
-      border: 1px solid #44464f;
+      background: rgba(6, 11, 40, 0.6);
+      border-radius: 12px;
+      border: 1px solid rgba(226, 232, 240, 0.15);
       transition: all 0.3s ease;
     }
 
     .metric-row:hover {
-      background: rgba(62, 61, 69, 0.8);
-      border-color: #8f9099;
+      background: rgba(67, 24, 255, 0.1);
+      border-color: rgba(67, 24, 255, 0.25);
     }
 
     .metric-label {
-      color: #b8c4db;
+      color: #a0aec0;
       font-weight: 500;
       display: flex;
       align-items: center;
@@ -78,21 +79,21 @@
     }
 
     .metric-value {
-      color: #a8c7fa;
+      color: #e2e8f0;
       font-weight: 700;
-      font-size: 15px;
+      font-size: 14px;
     }
 
     .section {
-      margin-top: 24px;
+      margin-top: 20px;
       padding-top: 20px;
-      border-top: 1px solid #44464f;
-      color: #8f9099;
+      border-top: 1px solid rgba(226, 232, 240, 0.15);
+      color: #718096;
       font-weight: 600;
-      margin-bottom: 12px;
-      font-size: 12px;
+      margin-bottom: 14px;
+      font-size: 11px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
     }
 
     .status-indicator {
@@ -105,24 +106,24 @@
     }
 
     .status-indicator.running {
-      background: #22c55e;
-      box-shadow: 0 0 8px #22c55e;
+      background: #01b574;
+      box-shadow: 0 0 12px #01b574;
       animation: pulse 2s infinite;
     }
 
     .status-indicator.idle {
-      background: #6b7280;
+      background: #718096;
     }
 
     .status-indicator.warning {
-      background: #f59e0b;
-      box-shadow: 0 0 8px #f59e0b;
+      background: #ffb547;
+      box-shadow: 0 0 12px #ffb547;
       animation: pulse 2s infinite;
     }
 
     .status-indicator.error {
-      background: #ef4444;
-      box-shadow: 0 0 8px #ef4444;
+      background: #e31a1a;
+      box-shadow: 0 0 8px #e31a1a;
       animation: pulse 1s infinite;
     }
 
@@ -137,17 +138,17 @@
     }
 
     #dashboard::-webkit-scrollbar-track {
-      background: rgba(62, 61, 69, 0.3);
+      background: rgba(6, 11, 40, 0.4);
       border-radius: 3px;
     }
 
     #dashboard::-webkit-scrollbar-thumb {
-      background: #44464f;
+      background: rgba(226, 232, 240, 0.15);
       border-radius: 3px;
     }
 
     #dashboard::-webkit-scrollbar-thumb:hover {
-      background: #8f9099;
+      background: rgba(226, 232, 240, 0.3);
     }
   </style>
 </head>

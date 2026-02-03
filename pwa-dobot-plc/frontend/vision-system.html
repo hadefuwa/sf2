@@ -19,78 +19,11 @@
  
  <!-- PWA Manifest -->
  <link rel="manifest" href="/manifest.json">
- <meta name="theme-color" content="#1c1b1f">
+ <meta name="theme-color" content="#030c1d">
  <meta name="apple-mobile-web-app-capable" content="yes">
  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
- <style>
-   /* Bold White Text Override */
-   body, .card-body, .card-title, .card-category, p, span, div, td, th, label {
-     color: #ffffff !important;
-     font-weight: 500 !important;
-   }
-
-   .card-header .card-title,
-   .card-header .card-category {
-     color: #ffffff !important;
-     font-weight: 600 !important;
-   }
-
-   h1, h2, h3, h4, h5, h6 {
-     color: #ffffff !important;
-     font-weight: 700 !important;
-   }
-
-   .sidebar .nav li a p {
-     color: rgba(255, 255, 255, 0.95) !important;
-     font-weight: 500 !important;
-   }
-
-   /* Animated Factory Sidebar Background */
-   .sidebar[data-image]:after {
-     background: linear-gradient(135deg, #1a0033 0%, #0d001a 50%, #1a0033 100%) !important;
-     opacity: 1 !important;
-   }
-
-   .sidebar-animated-bg {
-     position: absolute;
-     top: 0;
-     left: 0;
-     width: 100%;
-     height: 100%;
-     overflow: hidden;
-     pointer-events: none;
-     z-index: 0;
-   }
-
-   .factory-particle {
-     position: absolute;
-     background: rgba(156, 39, 176, 0.4);
-     border-radius: 50%;
-     animation: float-up linear infinite;
-   }
-
-   .circuit-line {
-     position: absolute;
-     background: linear-gradient(90deg, transparent, rgba(156, 39, 176, 0.3), transparent);
-     height: 1px;
-     animation: slide-right linear infinite;
-   }
-
-   @keyframes float-up {
-     0% { transform: translateY(100vh) scale(0); opacity: 0; }
-     10% { opacity: 0.5; }
-     90% { opacity: 0.5; }
-     100% { transform: translateY(-20vh) scale(1); opacity: 0; }
-   }
-
-   @keyframes slide-right {
-     0% { transform: translateX(-100%); opacity: 0; }
-     10% { opacity: 1; }
-     90% { opacity: 1; }
-     100% { transform: translateX(300%); opacity: 0; }
-   }
- </style>
+ <!-- All styles consolidated in professional-theme.css -->
 </head>
 <body class="dark-edition">
   <div class="wrapper ">
@@ -589,6 +522,13 @@
   <script src="./assets/js/material-dashboard.min.js?v=2.1.0" type="text/javascript"></script>
 
  <script>
+ // Read a CSS custom property once and cache it
+ const _themeCache = {};
+ function theme(name) {
+   if (!_themeCache[name]) _themeCache[name] = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+   return _themeCache[name];
+ }
+
  // Global error handler for unhandled promise rejections
  window.addEventListener('unhandledrejection', function(event) {
  // Extract meaningful error message
@@ -1148,11 +1088,11 @@
  if (timeElement) timeElement.textContent = new Date().toLocaleTimeString();
  if (countElement) {
  if (objectCount === 4) {
- countElement.style.color = '#10b981';
+ countElement.style.color = theme('--status-success');
  } else if (objectCount > 4) {
- countElement.style.color = '#f59e0b';
+ countElement.style.color = theme('--status-warning');
  } else {
- countElement.style.color = '#ef4444';
+ countElement.style.color = theme('--status-danger');
  }
  }
  updateCounterTimelineFromImages();
@@ -1791,21 +1731,21 @@
  
  const timestamp = document.getElementById('timestampLog')?.checked ?? true;
  const colors = {
- 'info': '#4fb4ff',
- 'warning': '#f59e0b',
- 'error': '#ef4444',
- 'success': '#10b981',
- 'camera': '#22d3ee',
+ 'info':      theme('--status-info'),
+ 'warning':   theme('--status-warning'),
+ 'error':     theme('--status-danger'),
+ 'success':   theme('--status-success'),
+ 'camera':    '#22d3ee',
  'detection': '#2dd4bf',
- 'plc': '#f59e0b'
+ 'plc':       theme('--status-warning')
  };
  let html = '';
  serialLogEntries.forEach(entry => {
  const timeStr = timestamp ? `[${entry.timestamp.toLocaleTimeString()}.${String(entry.timestamp.getMilliseconds()).padStart(3, '0')}] ` : '';
- const color = colors[entry.type] || '#94a3b8';
+ const color = colors[entry.type] || theme('--text-muted');
  html += `<div style="color: ${color};">${timeStr}${entry.message}</div>`;
  });
- logDiv.innerHTML = html || '<div style="color: var(--text-muted);">No log entries</div>';
+ logDiv.innerHTML = html || '<div class="log-placeholder">No log entries</div>';
  
  // Restore scroll position AFTER content update
  if (autoScrollEnabled) {
