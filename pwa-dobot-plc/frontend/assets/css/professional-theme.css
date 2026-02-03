@@ -382,6 +382,7 @@ h1, h2, h3, h4, h5, h6 {
   align-self: end !important;
   margin: 0 !important;
   padding-top: 0 !important;
+  font-size: 0.7rem !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
@@ -397,6 +398,7 @@ h1, h2, h3, h4, h5, h6 {
   margin-top: 2px !important;
   padding-top: 0 !important;
   color: var(--text-white) !important;
+  font-size: 1rem !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
