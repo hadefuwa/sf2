@@ -260,7 +260,8 @@
 <body class="dark-edition">
   <div class="wrapper">
     <!-- Sidebar -->
-    <div class="sidebar" data-color="purple" data-background-color="black" data-image="./assets/img/sidebar-2.jpg">
+    <div class="sidebar" data-color="purple" data-background-color="black" data-image="">
+      <div class="sidebar-animated-bg" id="sidebarAnimatedBg"></div>
       <div class="logo">
         <a href="/" class="simple-text logo-normal">
           <i class="material-icons">factory</i>
@@ -825,6 +826,41 @@
       // Update time display every second
       setInterval(updateTimeDisplay, 1000);
     });
+  </script>
+
+  <script>
+    // Animated Factory Sidebar Background
+    function initSidebarAnimation() {
+      const container = document.getElementById('sidebarAnimatedBg');
+      if (!container) return;
+
+      for (let i = 0; i < 15; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'factory-particle';
+        particle.style.width = Math.random() * 4 + 2 + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDuration = Math.random() * 10 + 8 + 's';
+        particle.style.animationDelay = Math.random() * 5 + 's';
+        container.appendChild(particle);
+      }
+
+      for (let i = 0; i < 8; i++) {
+        const line = document.createElement('div');
+        line.className = 'circuit-line';
+        line.style.top = Math.random() * 100 + '%';
+        line.style.width = Math.random() * 150 + 100 + 'px';
+        line.style.animationDuration = Math.random() * 6 + 4 + 's';
+        line.style.animationDelay = Math.random() * 3 + 's';
+        container.appendChild(line);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initSidebarAnimation);
+    } else {
+      initSidebarAnimation();
+    }
   </script>
 </body>
 </html>

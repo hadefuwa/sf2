@@ -68,6 +68,51 @@
       font-weight: 500 !important;
     }
 
+    /* Animated Factory Sidebar Background */
+    .sidebar[data-image]:after {
+      background: linear-gradient(135deg, #1a0033 0%, #0d001a 50%, #1a0033 100%) !important;
+      opacity: 1 !important;
+    }
+
+    .sidebar-animated-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .factory-particle {
+      position: absolute;
+      background: rgba(156, 39, 176, 0.4);
+      border-radius: 50%;
+      animation: float-up linear infinite;
+    }
+
+    .circuit-line {
+      position: absolute;
+      background: linear-gradient(90deg, transparent, rgba(156, 39, 176, 0.3), transparent);
+      height: 1px;
+      animation: slide-right linear infinite;
+    }
+
+    @keyframes float-up {
+      0% { transform: translateY(100vh) scale(0); opacity: 0; }
+      10% { opacity: 0.5; }
+      90% { opacity: 0.5; }
+      100% { transform: translateY(-20vh) scale(1); opacity: 0; }
+    }
+
+    @keyframes slide-right {
+      0% { transform: translateX(-100%); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { transform: translateX(300%); opacity: 0; }
+    }
+
     #debugLog {
       font-family: 'Consolas', 'Monaco', monospace;
       font-size: 12px;
@@ -125,7 +170,8 @@
 
 <body class="dark-edition">
   <div class="wrapper ">
-    <div class="sidebar" data-color="purple" data-background-color="black" data-image="./assets/img/sidebar-2.jpg">
+    <div class="sidebar" data-color="purple" data-background-color="black" data-image="">
+      <div class="sidebar-animated-bg" id="sidebarAnimatedBg"></div>
       <div class="logo">
         <a href="/" class="simple-text logo-normal">
           <i class="material-icons">factory</i>
@@ -1121,6 +1167,41 @@
         startPolling();
       }
     });
+  </script>
+
+  <script>
+    // Animated Factory Sidebar Background
+    function initSidebarAnimation() {
+      const container = document.getElementById('sidebarAnimatedBg');
+      if (!container) return;
+
+      for (let i = 0; i < 15; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'factory-particle';
+        particle.style.width = Math.random() * 4 + 2 + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDuration = Math.random() * 10 + 8 + 's';
+        particle.style.animationDelay = Math.random() * 5 + 's';
+        container.appendChild(particle);
+      }
+
+      for (let i = 0; i < 8; i++) {
+        const line = document.createElement('div');
+        line.className = 'circuit-line';
+        line.style.top = Math.random() * 100 + '%';
+        line.style.width = Math.random() * 150 + 100 + 'px';
+        line.style.animationDuration = Math.random() * 6 + 4 + 's';
+        line.style.animationDelay = Math.random() * 3 + 's';
+        container.appendChild(line);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initSidebarAnimation);
+    } else {
+      initSidebarAnimation();
+    }
   </script>
 </body>
 </html>
