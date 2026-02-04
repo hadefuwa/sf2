@@ -41,7 +41,7 @@ Run these steps once on a new Pi. Internet is required for the initial install o
 
 ```bash
 cd ~
-git clone https://github.com/hadefuwa/rpi-dobot.git sf2
+git clone https://github.com/hadefuwa/sf2 sf2
 cd sf2
 ```
 
@@ -235,8 +235,8 @@ smart-factory/
 
 ```bash
 cd ~
-git clone https://github.com/hadefuwa/rpi-dobot.git
-cd rpi-dobot
+git clone https://github.com/hadefuwa/sf2
+cd sf2
 ```
 
 #### 2. Install System Dependencies
