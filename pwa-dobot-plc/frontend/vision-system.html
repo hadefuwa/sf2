@@ -280,18 +280,39 @@
  </div>
  <div class="card-body" style="padding: 16px;">
  <div>
- <!-- Detection Stats Display -->
- <div id="objectDetectionStats" class="panel" style="display: block;">
- <h4>Detection Results</h4>
- <div style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: center;">
- <span style="color: var(--md-sys-color-on-surface-variant); font-size: 13px; font-weight: 600;">Objects Detected:</span>
- <span id="currentObjectCount" style="color: var(--accent-green); font-weight: 700; font-size: 20px;">0</span>
- </div>
- <div style="display: flex; justify-content: space-between; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-color);">
- <span style="color: var(--md-sys-color-on-surface-variant); font-size: 10px;">Last Updated:</span>
- <span id="lastDetectionTime" style="color: var(--text-muted); font-size: 10px;">Never</span>
- </div>
- </div>
+<!-- Detection Method Selector -->
+<div class="panel" style="display: block; margin-bottom: 16px; background: var(--md-sys-color-surface-container-high); border: 2px solid var(--md-sys-color-primary);">
+<h4 style="margin-bottom: 12px;">Detection Method</h4>
+<div style="margin-bottom: 12px;">
+<label style="display: block; color: var(--md-sys-color-on-surface-variant); font-size: 11px; margin-bottom: 6px;">Select Detection Method:</label>
+<select id="detectionMethodSelector" onchange="changeDetectionMethod()" style="width: 100%; padding: 8px; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); border: 1px solid var(--md-sys-color-outline); border-radius: 4px; font-size: 12px;">
+<option value="yolo">YOLO AI Model (Current - 15% confidence)</option>
+<option value="contour">Simple Contour Detection (New - Basic shapes)</option>
+<option value="circle">Circle Detection (Hough Transform)</option>
+<option value="blob">Blob Detection (Connected components)</option>
+</select>
+</div>
+<div id="detectionMethodInfo" style="color: var(--text-muted); font-size: 10px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 4px;">
+<strong>YOLO AI Model:</strong> Uses trained neural network. Best accuracy, requires model file. Current settings: 15% confidence, 0.45 IOU.
+</div>
+</div>
+
+<!-- Detection Stats Display -->
+<div id="objectDetectionStats" class="panel" style="display: block;">
+<h4>Detection Results</h4>
+<div style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: center;">
+<span style="color: var(--md-sys-color-on-surface-variant); font-size: 13px; font-weight: 600;">Objects Detected:</span>
+<span id="currentObjectCount" style="color: var(--accent-green); font-weight: 700; font-size: 20px;">0</span>
+</div>
+<div style="display: flex; justify-content: space-between; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-color);">
+<span style="color: var(--md-sys-color-on-surface-variant); font-size: 10px;">Last Updated:</span>
+<span id="lastDetectionTime" style="color: var(--text-muted); font-size: 10px;">Never</span>
+</div>
+<div style="display: flex; justify-content: space-between; margin-top: 8px;">
+<span style="color: var(--md-sys-color-on-surface-variant); font-size: 10px;">Method:</span>
+<span id="currentMethodDisplay" style="color: var(--accent-green); font-size: 10px; font-weight: 600;">YOLO</span>
+</div>
+</div>
  
  <!-- Counter Timeline -->
  <div id="counterTimeline" class="panel" style="display: block;">
@@ -637,6 +658,17 @@
  addSerialLog('Vision System initialized', 'info');
  addSerialLog('Camera stream starting immediately', 'info');
  addSerialLog('Object detection enabled by default', 'info');
+ 
+ // Initialize detection method selector
+ const methodSelector = document.getElementById('detectionMethodSelector');
+ if (methodSelector) {
+ const hiddenInput = document.getElementById('objectDetectionMethod');
+ if (hiddenInput && hiddenInput.value) {
+ methodSelector.value = hiddenInput.value;
+ }
+ // Trigger initial info display
+ changeDetectionMethod();
+ }
  addSerialLog('Background subtraction enabled for conveyor belt detection', 'info');
  addSerialLog('Auto-analysis will start automatically when camera connects', 'info');
  addSerialLog('Serial monitor ready', 'info');
@@ -1029,9 +1061,24 @@
  // If override active or DB123 disabled or Start TRUE: allow processing
  
  const objectMethodElement = document.getElementById('objectDetectionMethod');
- const objectMethod = objectMethodElement ? objectMethodElement.value : 'circle';
- addSerialLog(`Running YOLO detection`, 'detection');
+ const objectMethod = objectMethodElement ? objectMethodElement.value : 'yolo';
+ 
+ // Log which detection method is being used
+ const methodNames = {
+ 'yolo': 'YOLO AI Model',
+ 'contour': 'Simple Contour Detection',
+ 'circle': 'Circle Detection (Hough)',
+ 'blob': 'Blob Detection'
+ };
+ const methodName = methodNames[objectMethod] || objectMethod;
+ addSerialLog(`Running detection: ${methodName}`, 'detection');
+ 
+ // Log parameters based on method
+ if (objectMethod === 'yolo') {
  addSerialLog(` Params: Confidence=${objectParams.conf}, IOU=${objectParams.iou}`, 'info');
+ } else {
+ addSerialLog(` Params: Using default ${objectMethod} parameters`, 'info');
+ }
  const captureResponse = await fetch(`${API_BASE}/api/vision/analyze`, {
  method: 'POST',
  headers: { 'Content-Type': 'application/json' },
@@ -1110,11 +1157,18 @@
  
  if (objects.length > 0) {
  objects.forEach((obj, idx) => {
- addSerialLog(` Counter ${idx + 1}: center=(${obj.center[0]},${obj.center[1]}), radius=${obj.radius || 'N/A'}px, area=${obj.area?.toFixed(0) || 'N/A'}px, confidence=${(obj.confidence * 100).toFixed(0) || 'N/A'}%`, 'detection');
+ const methodUsed = obj.method || objectMethod || 'unknown';
+ addSerialLog(` Counter ${idx + 1}: center=(${obj.center[0]},${obj.center[1]}), radius=${obj.radius || 'N/A'}px, area=${obj.area?.toFixed(0) || 'N/A'}px, confidence=${(obj.confidence * 100).toFixed(0) || 'N/A'}%, method=${methodUsed}`, 'detection');
  });
  } else {
  addSerialLog('No counters detected - check camera view and lighting', 'warning');
- addSerialLog(` Model settings: Confidence=${objectParams.conf}, IOU=${objectParams.iou}`, 'info');
+ }
+ 
+ // Log settings based on method used
+ if (objectMethod === 'yolo') {
+ addSerialLog(` YOLO settings: Confidence=${objectParams.conf}, IOU=${objectParams.iou}`, 'info');
+ } else {
+ addSerialLog(` Detection method: ${objectMethod}`, 'info');
  }
  
  const statsDiv = document.getElementById('objectDetectionStats');
@@ -2246,6 +2300,52 @@
  }, OVERRIDE_DURATION_SECONDS * 1000);
 
  addSerialLog('Override Start active for 1 minute - bypassing DB123.DBX40.0', 'info');
+ }
+
+ // Detection Method Switching
+ function changeDetectionMethod() {
+ const selector = document.getElementById('detectionMethodSelector');
+ const infoDiv = document.getElementById('detectionMethodInfo');
+ const methodDisplay = document.getElementById('currentMethodDisplay');
+ const hiddenInput = document.getElementById('objectDetectionMethod');
+ 
+ const selectedMethod = selector.value;
+ 
+ // Update hidden input that the backend uses
+ if (hiddenInput) {
+ hiddenInput.value = selectedMethod;
+ }
+ 
+ // Update method display in stats
+ if (methodDisplay) {
+ const methodNames = {
+ 'yolo': 'YOLO AI',
+ 'contour': 'CONTOUR',
+ 'circle': 'CIRCLE',
+ 'blob': 'BLOB'
+ };
+ methodDisplay.textContent = methodNames[selectedMethod] || selectedMethod.toUpperCase();
+ }
+ 
+ // Update info text
+ const methodInfo = {
+ 'yolo': '<strong>YOLO AI Model:</strong> Uses trained neural network. Best accuracy, requires model file. Current settings: 15% confidence, 0.45 IOU.',
+ 'contour': '<strong>Simple Contour Detection:</strong> Finds shapes by detecting edges and outlines. Fast, no AI needed. Good for clear backgrounds. No training required.',
+ 'circle': '<strong>Circle Detection (Hough):</strong> Specialized algorithm for finding circular shapes. Fast, works well for round counters. No training required.',
+ 'blob': '<strong>Blob Detection:</strong> Finds connected regions of similar color/brightness. Very fast, simple. Good for high-contrast objects. No training required.'
+ };
+ 
+ if (infoDiv) {
+ infoDiv.innerHTML = methodInfo[selectedMethod] || 'Unknown method';
+ }
+ 
+ // Log the change
+ addSerialLog('Detection method changed to: ' + selectedMethod.toUpperCase(), 'info');
+ 
+ // If detection is running, notify user it will use new method on next cycle
+ if (objectDetectionActive) {
+ addSerialLog('New method will be used starting next detection cycle (1 second)', 'info');
+ }
  }
 
  // DB40.0 Start Bit Status Functions
