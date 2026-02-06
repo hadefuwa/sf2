@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
  <meta charset="utf-8" />
@@ -114,7 +114,7 @@
    <h4 class="card-title">Connection Status</h4>
  </div>
  <div class="card-body" style="padding: 16px 20px;">
- <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+ <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px;">
  <!-- PLC Connection Status -->
  <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
  <span class="status-indicator" id="plcConnectionIndicator"></span>
@@ -130,6 +130,17 @@
  <div>
  <div style="color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">DB123.DBX40.0 VISION START</div>
  <div id="db40StartText" style="color: var(--md-sys-color-on-surface-variant); font-size: 12px; font-weight: 600;">Loading...</div>
+ </div>
+ </div>
+
+ <!-- Override Start (bypasses PLC, 1 min timeout) -->
+ <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
+ <div>
+ <div style="color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">OVERRIDE START</div>
+ <button type="button" class="btn btn-sm btn-warning" id="overrideStartBtn" onclick="setVisionOverride()" style="white-space: nowrap;">
+ Override Start (1 min)
+ </button>
+ <div id="overrideCountdownText" style="color: var(--accent-green); font-size: 12px; font-weight: 600; margin-top: 4px; display: none;"></div>
  </div>
  </div>
  </div>
@@ -584,6 +595,11 @@
  let fullAnalysisInterval = null;
  let fullAnalysisActive = false;
  let counterImagesFirstLoad = true;
+ // Override Start: bypasses PLC DB123.DBX40.0 check for 1 minute
+ let visionOverrideActive = false;
+ let visionOverrideTimeoutId = null;
+ let visionOverrideCountdownIntervalId = null;
+ let visionOverrideSecondsLeft = 0;
 
  window.addEventListener('load', () => {
  // Set up image event handlers
@@ -983,21 +999,23 @@
  const config = await configResponse.json();
  const db123Config = config.plc?.db123 || {};
  
- if (db123Config.enabled) {
+ if (visionOverrideActive) {
+ addSerialLog('Override active - bypassing PLC Start check', 'info');
+ } else if (db123Config.enabled) {
  // DB123 is enabled - check Start command
  const tagsResponse = await fetch(`${API_BASE}/api/plc/db123/read`);
  if (tagsResponse.ok) {
  const tagsData = await tagsResponse.json();
  const startCommand = tagsData.tags?.start || false;
- 
+
  addSerialLog(` Checking Start command: ${startCommand ? 'TRUE' : 'FALSE'}`, 'info');
- 
+
  if (!startCommand) {
  // Start command is False - skip detection
  addSerialLog('Detection skipped - PLC Start command not active', 'warning');
  return;
  }
- 
+
  addSerialLog('Start command is TRUE - proceeding with detection', 'success');
  } else {
  // Can't read tags - skip to be safe
@@ -1008,7 +1026,7 @@
  } else {
  addSerialLog('DB123 disabled - allowing detection (testing mode)', 'info');
  }
- // If DB123 is disabled, allow processing (for testing)
+ // If override active or DB123 disabled or Start TRUE: allow processing
  
  const objectMethodElement = document.getElementById('objectDetectionMethod');
  const objectMethod = objectMethodElement ? objectMethodElement.value : 'circle';
@@ -2148,8 +2166,95 @@
  }
  }
 
+ // Override Start: bypass PLC check for 1 minute, then auto-clear
+ const OVERRIDE_DURATION_SECONDS = 60;
+
+ function clearVisionOverride() {
+ visionOverrideActive = false;
+ visionOverrideSecondsLeft = 0;
+ if (visionOverrideTimeoutId) {
+ clearTimeout(visionOverrideTimeoutId);
+ visionOverrideTimeoutId = null;
+ }
+ if (visionOverrideCountdownIntervalId) {
+ clearInterval(visionOverrideCountdownIntervalId);
+ visionOverrideCountdownIntervalId = null;
+ }
+ const btn = document.getElementById('overrideStartBtn');
+ const countdownEl = document.getElementById('overrideCountdownText');
+ if (btn) {
+ btn.disabled = false;
+ btn.textContent = 'Override Start (1 min)';
+ }
+ if (countdownEl) {
+ countdownEl.style.display = 'none';
+ }
+ updateDb40StartBit();
+ addSerialLog('Override expired - PLC Start check active again', 'info');
+ }
+
+ function updateOverrideCountdownDisplay() {
+ const indicator = document.getElementById('db40StartIndicator');
+ const statusText = document.getElementById('db40StartText');
+ const countdownEl = document.getElementById('overrideCountdownText');
+ if (visionOverrideSecondsLeft <= 0) {
+ return;
+ }
+ if (indicator) {
+ indicator.classList.add('connected');
+ }
+ if (countdownEl) {
+ countdownEl.style.display = 'block';
+ countdownEl.textContent = 'Active for ' + visionOverrideSecondsLeft + 's';
+ }
+ if (statusText) {
+ statusText.innerHTML = '<span style="color: var(--accent-green);"> OVERRIDE ACTIVE</span><br><span style="font-size: 10px; color: var(--text-muted);">' + visionOverrideSecondsLeft + 's remaining</span>';
+ }
+ }
+
+ function setVisionOverride() {
+ if (visionOverrideActive) {
+ return;
+ }
+ visionOverrideActive = true;
+ visionOverrideSecondsLeft = OVERRIDE_DURATION_SECONDS;
+
+ if (visionOverrideTimeoutId) {
+ clearTimeout(visionOverrideTimeoutId);
+ }
+ if (visionOverrideCountdownIntervalId) {
+ clearInterval(visionOverrideCountdownIntervalId);
+ }
+
+ const btn = document.getElementById('overrideStartBtn');
+ if (btn) {
+ btn.disabled = true;
+ }
+ updateOverrideCountdownDisplay();
+
+ visionOverrideCountdownIntervalId = setInterval(function() {
+ visionOverrideSecondsLeft = visionOverrideSecondsLeft - 1;
+ if (visionOverrideSecondsLeft <= 0) {
+ clearVisionOverride();
+ return;
+ }
+ updateOverrideCountdownDisplay();
+ }, 1000);
+
+ visionOverrideTimeoutId = setTimeout(function() {
+ clearVisionOverride();
+ }, OVERRIDE_DURATION_SECONDS * 1000);
+
+ addSerialLog('Override Start active for 1 minute - bypassing DB123.DBX40.0', 'info');
+ }
+
  // DB40.0 Start Bit Status Functions
  async function updateDb40StartBit() {
+ if (visionOverrideActive) {
+ updateOverrideCountdownDisplay();
+ return;
+ }
+
  const indicator = document.getElementById('db40StartIndicator');
  const statusText = document.getElementById('db40StartText');
 
