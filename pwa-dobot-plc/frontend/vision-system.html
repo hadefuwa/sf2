@@ -292,8 +292,65 @@
 <option value="blob">Blob Detection (Connected components)</option>
 </select>
 </div>
-<div id="detectionMethodInfo" style="color: var(--text-muted); font-size: 10px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 4px;">
+<div id="detectionMethodInfo" style="color: var(--text-muted); font-size: 10px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 4px; margin-bottom: 12px;">
 <strong>YOLO AI Model:</strong> Uses trained neural network. Best accuracy, requires model file. Current settings: 15% confidence, 0.45 IOU.
+</div>
+
+<!-- YOLO Parameters -->
+<div id="yoloParams" style="display: block;">
+<h4 style="font-size: 12px; margin-bottom: 8px; color: var(--md-sys-color-on-surface-variant);">YOLO Parameters</h4>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+<div>
+<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">Confidence: <span id="yoloConfValue">0.15</span></label>
+<input type="range" id="yoloConfSlider" min="0.05" max="0.50" step="0.05" value="0.15" oninput="updateYoloParams()" style="width: 100%;">
+</div>
+<div>
+<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">IOU: <span id="yoloIouValue">0.45</span></label>
+<input type="range" id="yoloIouSlider" min="0.20" max="0.70" step="0.05" value="0.45" oninput="updateYoloParams()" style="width: 100%;">
+</div>
+<div>
+<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">Crop Top %: <span id="yoloCropTopValue">0</span></label>
+<input type="range" id="yoloCropTopSlider" min="0" max="50" step="5" value="0" oninput="updateYoloParams()" style="width: 100%;">
+</div>
+<div>
+<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">Crop Bottom %: <span id="yoloCropBottomValue">0</span></label>
+<input type="range" id="yoloCropBottomSlider" min="0" max="50" step="5" value="0" oninput="updateYoloParams()" style="width: 100%;">
+</div>
+</div>
+</div>
+
+<!-- Contour/Circle/Blob Parameters -->
+<div id="simpleParams" style="display: none;">
+<h4 style="font-size: 12px; margin-bottom: 8px; color: var(--md-sys-color-on-surface-variant);">Detection Parameters</h4>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+<div>
+<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">Min Area: <span id="minAreaValue">500</span></label>
+<input type="range" id="minAreaSlider" min="100" max="5000" step="100" value="500" oninput="updateSimpleParams()" style="width: 100%;">
+</div>
+<div>
+<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">Max Area: <span id="maxAreaValue">50000</span></label>
+<input type="range" id="maxAreaSlider" min="10000" max="100000" step="5000" value="50000" oninput="updateSimpleParams()" style="width: 100%;">
+</div>
+<div>
+<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">Canny Low: <span id="cannyLowValue">80</span></label>
+<input type="range" id="cannyLowSlider" min="20" max="150" step="10" value="80" oninput="updateSimpleParams()" style="width: 100%;">
+</div>
+<div>
+<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">Canny High: <span id="cannyHighValue">200</span></label>
+<input type="range" id="cannyHighSlider" min="100" max="300" step="10" value="200" oninput="updateSimpleParams()" style="width: 100%;">
+</div>
+<div>
+<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">Gaussian Blur: <span id="gaussianBlurValue">7</span></label>
+<input type="range" id="gaussianBlurSlider" min="3" max="15" step="2" value="7" oninput="updateSimpleParams()" style="width: 100%;">
+</div>
+<div>
+<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">Hough Threshold: <span id="houghThresholdValue">80</span></label>
+<input type="range" id="houghThresholdSlider" min="20" max="150" step="10" value="80" oninput="updateSimpleParams()" style="width: 100%;">
+</div>
+</div>
+<div style="margin-top: 8px; padding: 6px; background: rgba(0,0,0,0.2); border-radius: 4px;">
+<button class="btn btn-sm btn-primary" onclick="resetSimpleParams()" style="font-size: 10px; padding: 4px 8px;">Reset to Defaults</button>
+</div>
 </div>
 </div>
 
@@ -669,6 +726,29 @@
  // Trigger initial info display
  changeDetectionMethod();
  }
+ 
+ // Initialize parameter sliders with current values
+ document.getElementById('yoloConfSlider').value = objectParams.conf;
+ document.getElementById('yoloIouSlider').value = objectParams.iou;
+ document.getElementById('yoloCropTopSlider').value = objectParams.crop_top_percent;
+ document.getElementById('yoloCropBottomSlider').value = objectParams.crop_bottom_percent;
+ document.getElementById('yoloConfValue').textContent = objectParams.conf.toFixed(2);
+ document.getElementById('yoloIouValue').textContent = objectParams.iou.toFixed(2);
+ document.getElementById('yoloCropTopValue').textContent = objectParams.crop_top_percent;
+ document.getElementById('yoloCropBottomValue').textContent = objectParams.crop_bottom_percent;
+ 
+ document.getElementById('minAreaSlider').value = detectionParams.min_area;
+ document.getElementById('maxAreaSlider').value = detectionParams.max_area;
+ document.getElementById('cannyLowSlider').value = detectionParams.canny_low;
+ document.getElementById('cannyHighSlider').value = detectionParams.canny_high;
+ document.getElementById('gaussianBlurSlider').value = detectionParams.gaussian_blur;
+ document.getElementById('houghThresholdSlider').value = detectionParams.hough_threshold;
+ document.getElementById('minAreaValue').textContent = detectionParams.min_area;
+ document.getElementById('maxAreaValue').textContent = detectionParams.max_area;
+ document.getElementById('cannyLowValue').textContent = detectionParams.canny_low;
+ document.getElementById('cannyHighValue').textContent = detectionParams.canny_high;
+ document.getElementById('gaussianBlurValue').textContent = detectionParams.gaussian_blur;
+ document.getElementById('houghThresholdValue').textContent = detectionParams.hough_threshold;
  addSerialLog('Background subtraction enabled for conveyor belt detection', 'info');
  addSerialLog('Auto-analysis will start automatically when camera connects', 'info');
  addSerialLog('Serial monitor ready', 'info');
@@ -990,12 +1070,14 @@
  let topLevelObjectDetectionEnabled = true;
  let topLevelDefectDetectionEnabled = true;
  let objectDetectionEnabled = true;
- const objectParams = Object.freeze({
+ 
+ // YOLO parameters (now mutable for real-time adjustment)
+ let objectParams = {
  conf: 0.15,
  iou: 0.45,
  crop_top_percent: 0,
  crop_bottom_percent: 0
- });
+ };
 
  let detectionParams = {
  min_area: 500,
@@ -2302,18 +2384,133 @@
  addSerialLog('Override Start active for 1 minute - bypassing DB123.DBX40.0', 'info');
  }
 
+ // Update YOLO parameters from sliders
+ function updateYoloParams() {
+ const confSlider = document.getElementById('yoloConfSlider');
+ const iouSlider = document.getElementById('yoloIouSlider');
+ const cropTopSlider = document.getElementById('yoloCropTopSlider');
+ const cropBottomSlider = document.getElementById('yoloCropBottomSlider');
+ 
+ if (confSlider) {
+ objectParams.conf = parseFloat(confSlider.value);
+ document.getElementById('yoloConfValue').textContent = objectParams.conf.toFixed(2);
+ }
+ if (iouSlider) {
+ objectParams.iou = parseFloat(iouSlider.value);
+ document.getElementById('yoloIouValue').textContent = objectParams.iou.toFixed(2);
+ }
+ if (cropTopSlider) {
+ objectParams.crop_top_percent = parseInt(cropTopSlider.value);
+ document.getElementById('yoloCropTopValue').textContent = objectParams.crop_top_percent;
+ }
+ if (cropBottomSlider) {
+ objectParams.crop_bottom_percent = parseInt(cropBottomSlider.value);
+ document.getElementById('yoloCropBottomValue').textContent = objectParams.crop_bottom_percent;
+ }
+ 
+ addSerialLog('YOLO params updated: conf=' + objectParams.conf + ', iou=' + objectParams.iou + ', crop_top=' + objectParams.crop_top_percent + '%, crop_bottom=' + objectParams.crop_bottom_percent + '%', 'info');
+ }
+ 
+ // Update simple detection parameters from sliders
+ function updateSimpleParams() {
+ const minAreaSlider = document.getElementById('minAreaSlider');
+ const maxAreaSlider = document.getElementById('maxAreaSlider');
+ const cannyLowSlider = document.getElementById('cannyLowSlider');
+ const cannyHighSlider = document.getElementById('cannyHighSlider');
+ const gaussianBlurSlider = document.getElementById('gaussianBlurSlider');
+ const houghThresholdSlider = document.getElementById('houghThresholdSlider');
+ 
+ if (minAreaSlider) {
+ detectionParams.min_area = parseInt(minAreaSlider.value);
+ detectionParams.contour_min_area = detectionParams.min_area;
+ detectionParams.blob_min_area = detectionParams.min_area;
+ document.getElementById('minAreaValue').textContent = detectionParams.min_area;
+ }
+ if (maxAreaSlider) {
+ detectionParams.max_area = parseInt(maxAreaSlider.value);
+ detectionParams.contour_max_area = detectionParams.max_area;
+ detectionParams.blob_max_area = detectionParams.max_area;
+ document.getElementById('maxAreaValue').textContent = detectionParams.max_area;
+ }
+ if (cannyLowSlider) {
+ detectionParams.canny_low = parseInt(cannyLowSlider.value);
+ detectionParams.edge_canny_low = detectionParams.canny_low;
+ document.getElementById('cannyLowValue').textContent = detectionParams.canny_low;
+ }
+ if (cannyHighSlider) {
+ detectionParams.canny_high = parseInt(cannyHighSlider.value);
+ detectionParams.edge_canny_high = detectionParams.canny_high;
+ document.getElementById('cannyHighValue').textContent = detectionParams.canny_high;
+ }
+ if (gaussianBlurSlider) {
+ detectionParams.gaussian_blur = parseInt(gaussianBlurSlider.value);
+ document.getElementById('gaussianBlurValue').textContent = detectionParams.gaussian_blur;
+ }
+ if (houghThresholdSlider) {
+ detectionParams.hough_threshold = parseInt(houghThresholdSlider.value);
+ document.getElementById('houghThresholdValue').textContent = detectionParams.hough_threshold;
+ }
+ 
+ addSerialLog('Detection params updated: min_area=' + detectionParams.min_area + ', max_area=' + detectionParams.max_area + ', canny=' + detectionParams.canny_low + '-' + detectionParams.canny_high, 'info');
+ }
+ 
+ // Reset simple parameters to defaults
+ function resetSimpleParams() {
+ detectionParams.min_area = 500;
+ detectionParams.max_area = 50000;
+ detectionParams.canny_low = 80;
+ detectionParams.canny_high = 200;
+ detectionParams.gaussian_blur = 7;
+ detectionParams.hough_threshold = 80;
+ detectionParams.contour_min_area = 500;
+ detectionParams.contour_max_area = 50000;
+ detectionParams.blob_min_area = 500;
+ detectionParams.blob_max_area = 20000;
+ detectionParams.edge_canny_low = 80;
+ detectionParams.edge_canny_high = 200;
+ 
+ document.getElementById('minAreaSlider').value = 500;
+ document.getElementById('maxAreaSlider').value = 50000;
+ document.getElementById('cannyLowSlider').value = 80;
+ document.getElementById('cannyHighSlider').value = 200;
+ document.getElementById('gaussianBlurSlider').value = 7;
+ document.getElementById('houghThresholdSlider').value = 80;
+ 
+ document.getElementById('minAreaValue').textContent = '500';
+ document.getElementById('maxAreaValue').textContent = '50000';
+ document.getElementById('cannyLowValue').textContent = '80';
+ document.getElementById('cannyHighValue').textContent = '200';
+ document.getElementById('gaussianBlurValue').textContent = '7';
+ document.getElementById('houghThresholdValue').textContent = '80';
+ 
+ addSerialLog('Detection params reset to defaults', 'info');
+ }
+
  // Detection Method Switching
  function changeDetectionMethod() {
  const selector = document.getElementById('detectionMethodSelector');
  const infoDiv = document.getElementById('detectionMethodInfo');
  const methodDisplay = document.getElementById('currentMethodDisplay');
  const hiddenInput = document.getElementById('objectDetectionMethod');
+ const yoloParamsDiv = document.getElementById('yoloParams');
+ const simpleParamsDiv = document.getElementById('simpleParams');
  
  const selectedMethod = selector.value;
  
  // Update hidden input that the backend uses
  if (hiddenInput) {
  hiddenInput.value = selectedMethod;
+ }
+ 
+ // Show/hide parameter sections based on method
+ if (yoloParamsDiv && simpleParamsDiv) {
+ if (selectedMethod === 'yolo') {
+ yoloParamsDiv.style.display = 'block';
+ simpleParamsDiv.style.display = 'none';
+ } else {
+ yoloParamsDiv.style.display = 'none';
+ simpleParamsDiv.style.display = 'block';
+ }
  }
  
  // Update method display in stats
@@ -2329,10 +2526,10 @@
  
  // Update info text
  const methodInfo = {
- 'yolo': '<strong>YOLO AI Model:</strong> Uses trained neural network. Best accuracy, requires model file. Current settings: 15% confidence, 0.45 IOU.',
- 'contour': '<strong>Simple Contour Detection:</strong> Finds shapes by detecting edges and outlines. Fast, no AI needed. Good for clear backgrounds. No training required.',
- 'circle': '<strong>Circle Detection (Hough):</strong> Specialized algorithm for finding circular shapes. Fast, works well for round counters. No training required.',
- 'blob': '<strong>Blob Detection:</strong> Finds connected regions of similar color/brightness. Very fast, simple. Good for high-contrast objects. No training required.'
+ 'yolo': '<strong>YOLO AI Model:</strong> Uses trained neural network. Best accuracy, requires model file. Adjust confidence and IOU below.',
+ 'contour': '<strong>Simple Contour Detection:</strong> Finds shapes by detecting edges and outlines. Fast, no AI needed. Good for clear backgrounds. Adjust edge detection sensitivity below.',
+ 'circle': '<strong>Circle Detection (Hough):</strong> Specialized algorithm for finding circular shapes. Fast, works well for round counters. Adjust threshold and area limits below.',
+ 'blob': '<strong>Blob Detection:</strong> Finds connected regions of similar color/brightness. Very fast, simple. Good for high-contrast objects. Adjust area limits below.'
  };
  
  if (infoDiv) {
