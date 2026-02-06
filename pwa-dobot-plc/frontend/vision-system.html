@@ -280,79 +280,194 @@
  </div>
  <div class="card-body" style="padding: 16px;">
  <div>
-<!-- Detection Method Selector -->
-<div class="panel" style="display: block; margin-bottom: 16px; background: var(--md-sys-color-surface-container-high); border: 2px solid var(--md-sys-color-primary);">
-<h4 style="margin-bottom: 12px;">Detection Method</h4>
-<div style="margin-bottom: 12px;">
-<label style="display: block; color: var(--md-sys-color-on-surface-variant); font-size: 11px; margin-bottom: 6px;">Select Detection Method:</label>
-<select id="detectionMethodSelector" onchange="changeDetectionMethod()" style="width: 100%; padding: 8px; background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); border: 1px solid var(--md-sys-color-outline); border-radius: 4px; font-size: 12px;">
-<option value="yolo">YOLO AI Model (Current - 15% confidence)</option>
-<option value="contour">Simple Contour Detection (New - Basic shapes)</option>
-<option value="circle">Circle Detection (Hough Transform)</option>
-<option value="blob">Blob Detection (Connected components)</option>
-</select>
-</div>
-<div id="detectionMethodInfo" style="color: var(--text-muted); font-size: 10px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 4px; margin-bottom: 12px;">
-<strong>YOLO AI Model:</strong> Uses trained neural network. Best accuracy, requires model file. Current settings: 15% confidence, 0.45 IOU.
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+<!-- DETECTION METHOD SELECTOR - Clean, organized, dark mode optimized -->
+<!-- ═══════════════════════════════════════════════════════════════════ -->
+
+<div style="background: linear-gradient(135deg, #1a1f3a 0%, #0f1419 100%); border: 3px solid #9c27b0; border-radius: 12px; padding: 20px; margin-bottom: 24px; box-shadow: 0 8px 32px rgba(156, 39, 176, 0.3);">
+  
+  <!-- ACTIVE METHOD DISPLAY - Big, obvious, easy to see -->
+  <div style="text-align: center; margin-bottom: 20px; padding: 16px; background: rgba(156, 39, 176, 0.15); border-radius: 8px; border: 2px solid #9c27b0;">
+    <div style="color: #9c27b0; font-size: 11px; font-weight: 600; letter-spacing: 1px; margin-bottom: 8px;">ACTIVE DETECTION METHOD</div>
+    <div id="activeMethodDisplay" style="color: #ffffff; font-size: 24px; font-weight: 700; text-shadow: 0 2px 8px rgba(156, 39, 176, 0.5);">YOLO AI Model</div>
+    <div id="activeMethodSubtext" style="color: #b39ddb; font-size: 12px; margin-top: 6px;">Neural network trained on your counters</div>
+  </div>
+
+  <!-- METHOD SELECTOR DROPDOWN -->
+  <div style="margin-bottom: 20px;">
+    <label style="display: block; color: #e0e0e0; font-size: 13px; font-weight: 600; margin-bottom: 10px;">
+      <span style="color: #9c27b0;">●</span> Choose Detection Method:
+    </label>
+    <select id="detectionMethodSelector" onchange="changeDetectionMethod()" style="
+      width: 100%; 
+      padding: 14px 16px; 
+      background: #1e1e2e; 
+      color: #ffffff; 
+      border: 2px solid #424242; 
+      border-radius: 8px; 
+      font-size: 14px; 
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      outline: none;
+    " onmouseover="this.style.borderColor='#9c27b0'" onmouseout="this.style.borderColor='#424242'">
+      <option value="yolo" style="background: #1e1e2e; color: #ffffff; padding: 10px;">🤖 YOLO AI Model - Neural Network (Best Accuracy)</option>
+      <option value="contour" style="background: #1e1e2e; color: #ffffff; padding: 10px;">📐 Contour Detection - Edge-based (Fast & Simple)</option>
+      <option value="circle" style="background: #1e1e2e; color: #ffffff; padding: 10px;">⭕ Circle Detection - Hough Transform (For Round Objects)</option>
+      <option value="blob" style="background: #1e1e2e; color: #ffffff; padding: 10px;">🔵 Blob Detection - Region-based (Very Fast)</option>
+    </select>
+  </div>
+
+  <!-- METHOD INFO BOX -->
+  <div id="detectionMethodInfo" style="
+    color: #b0bec5; 
+    font-size: 12px; 
+    line-height: 1.6;
+    padding: 14px; 
+    background: rgba(0,0,0,0.4); 
+    border-radius: 8px; 
+    border-left: 4px solid #9c27b0;
+    margin-bottom: 24px;
+  ">
+    <strong style="color: #ce93d8;">YOLO AI Model:</strong> Uses trained neural network. Best accuracy, requires model file. Adjust confidence and IOU below.
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- YOLO PARAMETERS - Only shown when YOLO is selected -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div id="yoloParams" style="display: block;">
+    <div style="background: rgba(156, 39, 176, 0.1); border-radius: 8px; padding: 16px; border: 1px solid rgba(156, 39, 176, 0.3);">
+      <h4 style="font-size: 14px; margin: 0 0 16px 0; color: #ce93d8; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+        <span style="color: #9c27b0;">⚙️</span> YOLO Parameters
+      </h4>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <!-- Confidence -->
+        <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px;">
+          <label style="display: block; color: #e0e0e0; font-size: 11px; font-weight: 600; margin-bottom: 8px;">
+            Confidence Threshold
+            <span id="yoloConfValue" style="float: right; color: #9c27b0; font-size: 13px; font-weight: 700;">0.15</span>
+          </label>
+          <input type="range" id="yoloConfSlider" min="0.05" max="0.50" step="0.05" value="0.15" oninput="updateYoloParams()" style="width: 100%; height: 6px; accent-color: #9c27b0;">
+          <div style="color: #757575; font-size: 9px; margin-top: 4px;">Lower = more detections, Higher = fewer but confident</div>
+        </div>
+
+        <!-- IOU -->
+        <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px;">
+          <label style="display: block; color: #e0e0e0; font-size: 11px; font-weight: 600; margin-bottom: 8px;">
+            IOU Threshold
+            <span id="yoloIouValue" style="float: right; color: #9c27b0; font-size: 13px; font-weight: 700;">0.45</span>
+          </label>
+          <input type="range" id="yoloIouSlider" min="0.20" max="0.70" step="0.05" value="0.45" oninput="updateYoloParams()" style="width: 100%; height: 6px; accent-color: #9c27b0;">
+          <div style="color: #757575; font-size: 9px; margin-top: 4px;">Controls duplicate box removal</div>
+        </div>
+
+        <!-- Crop Top -->
+        <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px;">
+          <label style="display: block; color: #e0e0e0; font-size: 11px; font-weight: 600; margin-bottom: 8px;">
+            Crop Top %
+            <span id="yoloCropTopValue" style="float: right; color: #9c27b0; font-size: 13px; font-weight: 700;">0</span>
+          </label>
+          <input type="range" id="yoloCropTopSlider" min="0" max="50" step="5" value="0" oninput="updateYoloParams()" style="width: 100%; height: 6px; accent-color: #9c27b0;">
+          <div style="color: #757575; font-size: 9px; margin-top: 4px;">Ignore top portion of frame</div>
+        </div>
+
+        <!-- Crop Bottom -->
+        <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px;">
+          <label style="display: block; color: #e0e0e0; font-size: 11px; font-weight: 600; margin-bottom: 8px;">
+            Crop Bottom %
+            <span id="yoloCropBottomValue" style="float: right; color: #9c27b0; font-size: 13px; font-weight: 700;">0</span>
+          </label>
+          <input type="range" id="yoloCropBottomSlider" min="0" max="50" step="5" value="0" oninput="updateYoloParams()" style="width: 100%; height: 6px; accent-color: #9c27b0;">
+          <div style="color: #757575; font-size: 9px; margin-top: 4px;">Ignore bottom portion of frame</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- SIMPLE DETECTION PARAMETERS - For Contour/Circle/Blob -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <div id="simpleParams" style="display: none;">
+    <div style="background: rgba(33, 150, 243, 0.1); border-radius: 8px; padding: 16px; border: 1px solid rgba(33, 150, 243, 0.3);">
+      <h4 style="font-size: 14px; margin: 0 0 16px 0; color: #64b5f6; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+        <span style="color: #2196f3;">⚙️</span> Detection Parameters
+      </h4>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <!-- Min Area -->
+        <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px;">
+          <label style="display: block; color: #e0e0e0; font-size: 11px; font-weight: 600; margin-bottom: 8px;">
+            Min Area (pixels)
+            <span id="minAreaValue" style="float: right; color: #2196f3; font-size: 13px; font-weight: 700;">500</span>
+          </label>
+          <input type="range" id="minAreaSlider" min="100" max="5000" step="100" value="500" oninput="updateSimpleParams()" style="width: 100%; height: 6px; accent-color: #2196f3;">
+          <div style="color: #757575; font-size: 9px; margin-top: 4px;">Minimum object size to detect</div>
+        </div>
+
+        <!-- Max Area -->
+        <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px;">
+          <label style="display: block; color: #e0e0e0; font-size: 11px; font-weight: 600; margin-bottom: 8px;">
+            Max Area (pixels)
+            <span id="maxAreaValue" style="float: right; color: #2196f3; font-size: 13px; font-weight: 700;">50000</span>
+          </label>
+          <input type="range" id="maxAreaSlider" min="10000" max="100000" step="5000" value="50000" oninput="updateSimpleParams()" style="width: 100%; height: 6px; accent-color: #2196f3;">
+          <div style="color: #757575; font-size: 9px; margin-top: 4px;">Maximum object size to detect</div>
+        </div>
+
+        <!-- Canny Low -->
+        <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px;">
+          <label style="display: block; color: #e0e0e0; font-size: 11px; font-weight: 600; margin-bottom: 8px;">
+            Edge Sensitivity (Low)
+            <span id="cannyLowValue" style="float: right; color: #2196f3; font-size: 13px; font-weight: 700;">80</span>
+          </label>
+          <input type="range" id="cannyLowSlider" min="20" max="150" step="10" value="80" oninput="updateSimpleParams()" style="width: 100%; height: 6px; accent-color: #2196f3;">
+          <div style="color: #757575; font-size: 9px; margin-top: 4px;">Lower = detect weaker edges</div>
+        </div>
+
+        <!-- Canny High -->
+        <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px;">
+          <label style="display: block; color: #e0e0e0; font-size: 11px; font-weight: 600; margin-bottom: 8px;">
+            Edge Sensitivity (High)
+            <span id="cannyHighValue" style="float: right; color: #2196f3; font-size: 13px; font-weight: 700;">200</span>
+          </label>
+          <input type="range" id="cannyHighSlider" min="100" max="300" step="10" value="200" oninput="updateSimpleParams()" style="width: 100%; height: 6px; accent-color: #2196f3;">
+          <div style="color: #757575; font-size: 9px; margin-top: 4px;">Higher = only strong edges</div>
+        </div>
+
+        <!-- Gaussian Blur -->
+        <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px;">
+          <label style="display: block; color: #e0e0e0; font-size: 11px; font-weight: 600; margin-bottom: 8px;">
+            Noise Reduction (Blur)
+            <span id="gaussianBlurValue" style="float: right; color: #2196f3; font-size: 13px; font-weight: 700;">7</span>
+          </label>
+          <input type="range" id="gaussianBlurSlider" min="3" max="15" step="2" value="7" oninput="updateSimpleParams()" style="width: 100%; height: 6px; accent-color: #2196f3;">
+          <div style="color: #757575; font-size: 9px; margin-top: 4px;">Higher = smoother, less noise</div>
+        </div>
+
+        <!-- Hough Threshold -->
+        <div style="background: rgba(0,0,0,0.3); padding: 12px; border-radius: 6px;">
+          <label style="display: block; color: #e0e0e0; font-size: 11px; font-weight: 600; margin-bottom: 8px;">
+            Circle Threshold
+            <span id="houghThresholdValue" style="float: right; color: #2196f3; font-size: 13px; font-weight: 700;">80</span>
+          </label>
+          <input type="range" id="houghThresholdSlider" min="20" max="150" step="10" value="80" oninput="updateSimpleParams()" style="width: 100%; height: 6px; accent-color: #2196f3;">
+          <div style="color: #757575; font-size: 9px; margin-top: 4px;">Lower = more circles detected</div>
+        </div>
+      </div>
+
+      <!-- Reset Button -->
+      <div style="margin-top: 16px; text-align: center;">
+        <button class="btn btn-primary" onclick="resetSimpleParams()" style="padding: 10px 24px; font-size: 12px; font-weight: 600; border-radius: 6px;">
+          🔄 Reset to Defaults
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<!-- YOLO Parameters -->
-<div id="yoloParams" style="display: block;">
-<h4 style="font-size: 12px; margin-bottom: 8px; color: var(--md-sys-color-on-surface-variant);">YOLO Parameters</h4>
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-<div>
-<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">Confidence: <span id="yoloConfValue">0.15</span></label>
-<input type="range" id="yoloConfSlider" min="0.05" max="0.50" step="0.05" value="0.15" oninput="updateYoloParams()" style="width: 100%;">
-</div>
-<div>
-<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">IOU: <span id="yoloIouValue">0.45</span></label>
-<input type="range" id="yoloIouSlider" min="0.20" max="0.70" step="0.05" value="0.45" oninput="updateYoloParams()" style="width: 100%;">
-</div>
-<div>
-<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">Crop Top %: <span id="yoloCropTopValue">0</span></label>
-<input type="range" id="yoloCropTopSlider" min="0" max="50" step="5" value="0" oninput="updateYoloParams()" style="width: 100%;">
-</div>
-<div>
-<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">Crop Bottom %: <span id="yoloCropBottomValue">0</span></label>
-<input type="range" id="yoloCropBottomSlider" min="0" max="50" step="5" value="0" oninput="updateYoloParams()" style="width: 100%;">
-</div>
-</div>
-</div>
-
-<!-- Contour/Circle/Blob Parameters -->
-<div id="simpleParams" style="display: none;">
-<h4 style="font-size: 12px; margin-bottom: 8px; color: var(--md-sys-color-on-surface-variant);">Detection Parameters</h4>
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-<div>
-<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">Min Area: <span id="minAreaValue">500</span></label>
-<input type="range" id="minAreaSlider" min="100" max="5000" step="100" value="500" oninput="updateSimpleParams()" style="width: 100%;">
-</div>
-<div>
-<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">Max Area: <span id="maxAreaValue">50000</span></label>
-<input type="range" id="maxAreaSlider" min="10000" max="100000" step="5000" value="50000" oninput="updateSimpleParams()" style="width: 100%;">
-</div>
-<div>
-<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">Canny Low: <span id="cannyLowValue">80</span></label>
-<input type="range" id="cannyLowSlider" min="20" max="150" step="10" value="80" oninput="updateSimpleParams()" style="width: 100%;">
-</div>
-<div>
-<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">Canny High: <span id="cannyHighValue">200</span></label>
-<input type="range" id="cannyHighSlider" min="100" max="300" step="10" value="200" oninput="updateSimpleParams()" style="width: 100%;">
-</div>
-<div>
-<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">Gaussian Blur: <span id="gaussianBlurValue">7</span></label>
-<input type="range" id="gaussianBlurSlider" min="3" max="15" step="2" value="7" oninput="updateSimpleParams()" style="width: 100%;">
-</div>
-<div>
-<label style="display: block; color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">Hough Threshold: <span id="houghThresholdValue">80</span></label>
-<input type="range" id="houghThresholdSlider" min="20" max="150" step="10" value="80" oninput="updateSimpleParams()" style="width: 100%;">
-</div>
-</div>
-<div style="margin-top: 8px; padding: 6px; background: rgba(0,0,0,0.2); border-radius: 4px;">
-<button class="btn btn-sm btn-primary" onclick="resetSimpleParams()" style="font-size: 10px; padding: 4px 8px;">Reset to Defaults</button>
-</div>
-</div>
-</div>
+<!-- ═══════════════════════════════════════════════════════════════════ -->
 
 <!-- Detection Stats Display -->
 <div id="objectDetectionStats" class="panel" style="display: block;">
@@ -2491,6 +2606,8 @@
  const selector = document.getElementById('detectionMethodSelector');
  const infoDiv = document.getElementById('detectionMethodInfo');
  const methodDisplay = document.getElementById('currentMethodDisplay');
+ const activeMethodDisplay = document.getElementById('activeMethodDisplay');
+ const activeMethodSubtext = document.getElementById('activeMethodSubtext');
  const hiddenInput = document.getElementById('objectDetectionMethod');
  const yoloParamsDiv = document.getElementById('yoloParams');
  const simpleParamsDiv = document.getElementById('simpleParams');
@@ -2513,7 +2630,7 @@
  }
  }
  
- // Update method display in stats
+ // Update method display in stats (small version)
  if (methodDisplay) {
  const methodNames = {
  'yolo': 'YOLO AI',
@@ -2524,12 +2641,35 @@
  methodDisplay.textContent = methodNames[selectedMethod] || selectedMethod.toUpperCase();
  }
  
+ // Update BIG active method display
+ const methodDisplayNames = {
+ 'yolo': 'YOLO AI Model',
+ 'contour': 'Contour Detection',
+ 'circle': 'Circle Detection',
+ 'blob': 'Blob Detection'
+ };
+ 
+ const methodSubtexts = {
+ 'yolo': 'Neural network trained on your counters',
+ 'contour': 'Edge-based shape detection',
+ 'circle': 'Hough transform for circular objects',
+ 'blob': 'Region-based detection'
+ };
+ 
+ if (activeMethodDisplay) {
+ activeMethodDisplay.textContent = methodDisplayNames[selectedMethod] || selectedMethod.toUpperCase();
+ }
+ 
+ if (activeMethodSubtext) {
+ activeMethodSubtext.textContent = methodSubtexts[selectedMethod] || '';
+ }
+ 
  // Update info text
  const methodInfo = {
- 'yolo': '<strong>YOLO AI Model:</strong> Uses trained neural network. Best accuracy, requires model file. Adjust confidence and IOU below.',
- 'contour': '<strong>Simple Contour Detection:</strong> Finds shapes by detecting edges and outlines. Fast, no AI needed. Good for clear backgrounds. Adjust edge detection sensitivity below.',
- 'circle': '<strong>Circle Detection (Hough):</strong> Specialized algorithm for finding circular shapes. Fast, works well for round counters. Adjust threshold and area limits below.',
- 'blob': '<strong>Blob Detection:</strong> Finds connected regions of similar color/brightness. Very fast, simple. Good for high-contrast objects. Adjust area limits below.'
+ 'yolo': '<strong style="color: #ce93d8;">YOLO AI Model:</strong> Uses trained neural network. Best accuracy, requires model file. Adjust confidence and IOU below.',
+ 'contour': '<strong style="color: #64b5f6;">Contour Detection:</strong> Finds shapes by detecting edges and outlines. Fast, no AI needed. Good for clear backgrounds. Adjust edge detection sensitivity below.',
+ 'circle': '<strong style="color: #64b5f6;">Circle Detection (Hough):</strong> Specialized algorithm for finding circular shapes. Fast, works well for round counters. Adjust threshold and area limits below.',
+ 'blob': '<strong style="color: #64b5f6;">Blob Detection:</strong> Finds connected regions of similar color/brightness. Very fast, simple. Good for high-contrast objects. Adjust area limits below.'
  };
  
  if (infoDiv) {
