@@ -3058,5 +3058,21 @@ if __name__ == '__main__':
 
     # Start server
     port = int(os.getenv('PORT', 8080))
+    
+    # HTTPS support for WinCC Unified HMI (mixed content requires HTTPS)
+    backend_dir = os.path.dirname(os.path.abspath(__file__))
+    cert_path = os.getenv('SSL_CERT') or os.path.join(backend_dir, 'ssl', 'cert.pem')
+    key_path = os.getenv('SSL_KEY') or os.path.join(backend_dir, 'ssl', 'key.pem')
+    
+    run_kwargs = {'host': '0.0.0.0', 'port': port, 'debug': False, 'allow_unsafe_werkzeug': True}
+    if os.path.exists(cert_path) and os.path.exists(key_path):
+        # Use certfile/keyfile (widely supported) - ssl_context tuple may not pass through
+        run_kwargs['certfile'] = cert_path
+        run_kwargs['keyfile'] = key_path
+        logger.info(f"🔒 HTTPS enabled (cert: {cert_path})")
+        logger.info(f"   Camera stream: https://<pi-ip>:{port}/api/camera/stream")
+    else:
+        logger.info("HTTP only (no SSL certs - run deploy/generate_ssl_cert.sh for HTTPS)")
+    
     logger.info(f"Starting server on port {port}")
-    socketio.run(app, host='0.0.0.0', port=port, debug=False, allow_unsafe_werkzeug=True)
+    socketio.run(app, **run_kwargs)

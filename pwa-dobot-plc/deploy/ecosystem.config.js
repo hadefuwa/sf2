@@ -2,7 +2,7 @@ module.exports = {
   apps: [
     {
       name: 'pwa-dobot-plc',
-      cwd: '/home/pi/rpi-dobot/pwa-dobot-plc/backend',
+      cwd: '/home/pi/sf2/pwa-dobot-plc/backend',
       script: 'venv/bin/python',
       args: 'app.py',
       instances: 1,
