@@ -29,7 +29,7 @@ source venv/bin/activate
 python3 app.py
 ```
 
-Open `http://your-pi-ip:8080` in your browser.
+Open `http://your-pi-ip:8080` in your browser (or `https://` when SSL is enabled for WinCC).
 
 ---
 
@@ -169,6 +169,19 @@ Note: the `ecosystem.config.js` paths assume the repo is at `/home/pi/sf2`. Edit
 
 **Access the web interface:** Open your browser and visit `http://your-pi-ip-address:8080`
 
+#### HTTPS (for WinCC Unified HMI)
+
+WinCC Unified requires HTTPS for embedded camera streams. Generate a self-signed certificate:
+
+```bash
+cd ~/sf2/pwa-dobot-plc
+chmod +x deploy/generate_ssl_cert.sh
+./deploy/generate_ssl_cert.sh 192.168.7.5   # use your Pi's IP
+pm2 restart pwa-dobot-plc   # or systemctl restart smart-factory
+```
+
+Then use `https://192.168.7.5:8080/api/camera/stream` in WinCC. Accept the certificate warning on first load.
+
 ---
 
 ## 🎯 What This Project Does
@@ -187,34 +200,26 @@ This project allows you to:
 ## 📁 Project Structure
 
 ```
-smart-factory/
-├── pwa-dobot-plc/              # Main application (core working code)
-├── WinCC_Camera_Control/       # Siemens WinCC Unified Custom Web Control
-│   ├── backend/                 # Flask server and robot control
-│   │   ├── app.py              # Main Flask application
-│   │   ├── dobot_client.py     # Dobot robot control (FIXED)
+sf2/
+├── pwa-dobot-plc/              # Main application (robot, PLC, vision, camera)
+│   ├── backend/                # Flask server
+│   │   ├── app.py              # Main Flask app (HTTP/HTTPS)
+│   │   ├── dobot_client.py     # Dobot robot control
 │   │   ├── plc_client.py       # PLC communication
-│   │   ├── camera_service.py   # Camera functionality
-│   │   └── config.json         # Configuration file
-│   ├── frontend/               # Web interface files
-│   │   ├── index.html         # Main control page
-│   │   ├── robot-arm.html     # Robot control interface
-│   │   └── ...                # Other pages
-│   └── deploy/                # Deployment scripts
-│       └── ecosystem.config.js # PM2 configuration
-├── docs/                       # All documentation
-│   ├── guides/                # Setup and usage guides
-│   ├── solutions/             # Problem resolution docs
-│   └── api/                   # API documentation
-├── scripts/                    # Executable scripts
-│   ├── deployment/            # Deployment scripts
-│   └── testing/               # Test scripts
-├── lib/                       # External libraries
-│   └── DobotAPI/             # Official Dobot API files
-├── tests/                     # Test files
-│   ├── pydobot/              # pydobot library tests
-│   └── official_api/         # Official API tests
-└── README.md                  # This file
+│   │   ├── camera_service.py   # Camera & vision
+│   │   ├── vision_service.py   # YOLO detection (separate process)
+│   │   ├── config.json         # Configuration
+│   │   └── ssl/                # HTTPS certs (generated, not in git)
+│   ├── frontend/               # Web UI (HTML, vision-system, etc.)
+│   └── deploy/
+│       ├── ecosystem.config.js # PM2 config (points to sf2)
+│       └── generate_ssl_cert.sh # HTTPS certificate for WinCC
+├── WinCC_Camera_Control/       # Siemens WinCC Unified Custom Web Control
+├── docs/                       # Documentation
+├── scripts/                    # Scripts
+├── lib/                        # External libraries
+├── tests/                      # Test files
+└── README.md                   # This file
 ```
 
 ---
@@ -261,7 +266,7 @@ sudo ldconfig
 #### 3. Set Up Python Virtual Environment
 
 ```bash
-cd ~/smart-factory/pwa-dobot-plc/backend
+cd ~/sf2/pwa-dobot-plc/backend
 
 # Create virtual environment
 python3 -m venv venv
@@ -337,7 +342,7 @@ INFO - Dobot client initialized
 ### Starting the Application
 
 ```bash
-cd ~/smart-factory/pwa-dobot-plc/backend
+cd ~/sf2/pwa-dobot-plc/backend
 source venv/bin/activate
 python3 app.py
 ```
@@ -376,7 +381,10 @@ python3 app.py
 - ✅ **Settings Management** - Web-based configuration interface
 - ✅ **Emergency Stop** - Safety controls for immediate shutdown
 - ✅ **Progressive Web App** - Install and use offline
-- ✅ **Camera Support** - Optional camera integration for vision systems
+- ✅ **Vision System** - YOLO counter detection, Override Start (bypass PLC), multiple detection methods (YOLO, contour, circle, blob)
+- ✅ **Real-time Parameter Controls** - Adjust detection confidence, IOU, cropping, edge sensitivity from the UI
+- ✅ **Camera Support** - MJPEG stream, optional camera integration
+- ✅ **HTTPS for WinCC** - Self-signed SSL for embedding camera in WinCC Unified HMI (run `deploy/generate_ssl_cert.sh`)
 - ✅ **WinCC HMI Support** - Custom Web Control to view camera streams on Siemens Unified Panels
 
 ---
@@ -586,7 +594,7 @@ npm install -g pm2
 ./scripts/deployment/FINAL_DEPLOYMENT.sh
 
 # Or manually:
-cd ~/smart-factory/pwa-dobot-plc
+cd ~/sf2/pwa-dobot-plc
 pm2 start deploy/ecosystem.config.js
 pm2 save
 pm2 startup  # Follow instructions to enable auto-start on boot
@@ -596,7 +604,7 @@ pm2 startup  # Follow instructions to enable auto-start on boot
 
 ```bash
 # Navigate to project
-cd ~/smart-factory/pwa-dobot-plc
+cd ~/sf2/pwa-dobot-plc
 
 # Start with PM2
 pm2 start deploy/ecosystem.config.js
@@ -707,6 +715,6 @@ MIT License - Feel free to use and modify!
 
 ---
 
-**Last Updated:** 2026-02-03
-**Version:** v4.2
+**Last Updated:** 2026-02-10
+**Version:** v4.5
 **Status:** Production Ready ✅

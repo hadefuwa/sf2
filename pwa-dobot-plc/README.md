@@ -10,14 +10,17 @@ Beautiful Progressive Web App for controlling Dobot Magician robot via Siemens S
 - 🛑 **Emergency Stop** - Quick safety shutdown
 - 📊 **Control Bits Display** - Monitor PLC control signals
 - 🎨 **Beautiful UI** - Modern, gradient design with emoji indicators
+- 📷 **Vision System** - YOLO counter detection, Override Start (bypass PLC DB123.DBX40.0), detection method selector (YOLO/contour/circle/blob)
+- ⚙️ **Real-time Parameters** - Adjust confidence, IOU, cropping, edge detection from the UI
+- 🔒 **HTTPS** - Self-signed SSL for WinCC Unified HMI (run `deploy/generate_ssl_cert.sh`)
 
 ## 🚀 Installation on Raspberry Pi
 
 ### 1. Clone the repository
 ```bash
 cd ~
-git clone https://github.com/hadefuwa/rpi-dobot.git
-cd rpi-dobot/pwa-dobot-plc/backend
+git clone https://github.com/hadefuwa/sf2.git sf2
+cd sf2/pwa-dobot-plc/backend
 ```
 
 ### 2. Install System Dependencies
@@ -38,7 +41,7 @@ sudo ldconfig
 
 ### 3. Create Virtual Environment and Install Python Packages
 ```bash
-cd ~/rpi-dobot/pwa-dobot-plc/backend
+cd ~/sf2/pwa-dobot-plc/backend
 python3 -m venv venv
 source venv/bin/activate
 
@@ -90,37 +93,26 @@ python app.py
 
 Visit `http://your-pi-ip:8080` in your browser!
 
+### 6b. Enable HTTPS (for WinCC Unified HMI)
+WinCC Unified requires HTTPS for embedded camera streams. Generate a self-signed certificate:
+
+```bash
+cd ~/sf2/pwa-dobot-plc
+chmod +x deploy/generate_ssl_cert.sh
+./deploy/generate_ssl_cert.sh 192.168.7.5   # use your Pi's IP
+pm2 restart pwa-dobot-plc   # or restart your server
+```
+
+Then use: `https://192.168.7.5:8080/api/camera/stream` in WinCC. Accept the certificate warning on first load.
+
 ### 7. Set up PM2 for auto-start
 ```bash
 # Install PM2 globally
 npm install -g pm2
 
-# Create PM2 ecosystem file
-cd ~/rpi-dobot/pwa-dobot-plc
-```
-
-Create `ecosystem.config.js`:
-```javascript
-module.exports = {
-  apps: [{
-    name: 'pwa-dobot-plc',
-    cwd: '/home/pi/rpi-dobot/pwa-dobot-plc/backend',
-    script: 'venv/bin/python',
-    args: 'app.py',
-    instances: 1,
-    autorestart: true,
-    watch: false,
-    max_memory_restart: '200M',
-    env: {
-      NODE_ENV: 'production'
-    }
-  }]
-};
-```
-
-```bash
-# Start with PM2
-pm2 start ecosystem.config.js
+# Start with PM2 (ecosystem.config.js uses sf2 path)
+cd ~/sf2/pwa-dobot-plc
+pm2 start deploy/ecosystem.config.js
 
 # Save PM2 config
 pm2 save
