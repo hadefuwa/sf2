@@ -631,6 +631,67 @@ If you want to use the official Dobot API instead of pydobot:
 
 ---
 
+### 📡 Raspberry Pi Wi‑Fi Hotspot (Access Point)
+
+This lets your **phone or tablet connect directly to the Raspberry Pi** (no extra router).  
+The Pi creates its own Wi‑Fi network and serves the web app at `http://192.168.4.1:8080`.
+
+#### 1. Run the hotspot setup script (one time on the Pi)
+
+```bash
+cd ~/sf2
+chmod +x scripts/setup_wifi_access_point.sh
+./scripts/setup_wifi_access_point.sh
+sudo reboot
+```
+
+What this does:
+
+- Installs `hostapd` and `dnsmasq`
+- Configures Wi‑Fi access point:
+  - **SSID**: `SmartFactory`
+  - **Password**: `matrix123`
+  - **Pi IP on Wi‑Fi**: `192.168.4.1`
+- Enables services on boot:
+  - `hostapd` (Wi‑Fi AP)
+  - `dnsmasq` (DHCP)
+
+#### 2. Check hotspot from the web app (simple frontend page)
+
+Once your backend is running on the Pi:
+
+- Open: `http://<your-pi-ip>:8080/hotspot-status.html`
+- When you are already on the Pi hotspot, `<your-pi-ip>` will usually be `192.168.4.1`
+
+This page calls `GET /api/hotspot/status` and shows:
+
+- `hostapd` active or not
+- `dnsmasq` active or not
+- Whether `wlan0` has IP `192.168.4.1`
+- How many devices are connected (DHCP leases)
+
+If everything is green, phones should be able to:
+
+- Join Wi‑Fi network **SmartFactory** (password **matrix123**)
+- Open `http://192.168.4.1:8080` to use the Smart Factory app
+
+#### 3. Optional: CLI diagnostics / fix scripts
+
+From the Pi terminal:
+
+```bash
+cd ~/sf2
+chmod +x scripts/check_wifi_ap.sh scripts/fix_wifi_ap.sh
+
+# See detailed status:
+./scripts/check_wifi_ap.sh
+
+# Try to repair and restart the hotspot:
+./scripts/fix_wifi_ap.sh
+```
+
+---
+
 ## 📋 PLC Memory Map
 
 ### DB1 (Data Block)

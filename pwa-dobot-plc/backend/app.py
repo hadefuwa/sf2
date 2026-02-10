@@ -2126,6 +2126,86 @@ def set_camera_crop():
         logger.error(f"Error setting crop: {e}")
         return jsonify({'error': str(e)}), 500
 
+
+@app.route('/api/hotspot/status', methods=['GET'])
+def hotspot_status():
+    """Check basic Raspberry Pi WiFi hotspot status (hostapd/dnsmasq/wlan0).
+
+    This is a simple, beginner-friendly diagnostic:
+    - Checks if hostapd service is active (WiFi access point)
+    - Checks if dnsmasq service is active (DHCP server)
+    - Checks if wlan0 has IP 192.168.4.1 (from setup_wifi_access_point.sh)
+    - Optionally reports how many devices have DHCP leases
+    """
+    status = {
+        'hostapd_active': False,
+        'dnsmasq_active': False,
+        'wlan0_has_ap_ip': False,
+        'leases_count': 0,
+        'ok': False,
+        'error': None,
+    }
+
+    try:
+        # Check hostapd service
+        try:
+            hostapd_result = subprocess.run(
+                ['systemctl', 'is-active', 'hostapd'],
+                capture_output=True,
+                text=True,
+                timeout=2,
+            )
+            status['hostapd_active'] = hostapd_result.stdout.strip() == 'active'
+        except Exception as e:
+            logger.warning(f"Error checking hostapd status: {e}")
+
+        # Check dnsmasq service
+        try:
+            dnsmasq_result = subprocess.run(
+                ['systemctl', 'is-active', 'dnsmasq'],
+                capture_output=True,
+                text=True,
+                timeout=2,
+            )
+            status['dnsmasq_active'] = dnsmasq_result.stdout.strip() == 'active'
+        except Exception as e:
+            logger.warning(f"Error checking dnsmasq status: {e}")
+
+        # Check wlan0 IP address
+        try:
+            ip_result = subprocess.run(
+                ['ip', 'addr', 'show', 'wlan0'],
+                capture_output=True,
+                text=True,
+                timeout=2,
+            )
+            status['wlan0_has_ap_ip'] = '192.168.4.1' in ip_result.stdout
+        except Exception as e:
+            logger.warning(f"Error checking wlan0 IP address: {e}")
+
+        # Count DHCP leases (connected devices)
+        try:
+            leases_path = '/var/lib/misc/dnsmasq.leases'
+            if os.path.exists(leases_path):
+                with open(leases_path, 'r') as f:
+                    leases_lines = [line for line in f.read().splitlines() if line.strip()]
+                    status['leases_count'] = len(leases_lines)
+        except Exception as e:
+            logger.warning(f"Error reading dnsmasq leases: {e}")
+
+        # Overall hotspot OK if both services are active and wlan0 has AP IP
+        status['ok'] = (
+            status['hostapd_active'] and
+            status['dnsmasq_active'] and
+            status['wlan0_has_ap_ip']
+        )
+
+        return jsonify(status)
+    except Exception as e:
+        logger.error(f"Error in hotspot_status: {e}")
+        status['error'] = str(e)
+        return jsonify(status), 500
+
 @app.route('/api/vision/detect-objects', methods=['POST'])
 def vision_detect_objects():
     """Run object detection on current frame"""
