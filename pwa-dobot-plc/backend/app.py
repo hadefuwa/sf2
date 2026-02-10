@@ -3066,9 +3066,8 @@ if __name__ == '__main__':
     
     run_kwargs = {'host': '0.0.0.0', 'port': port, 'debug': False, 'allow_unsafe_werkzeug': True}
     if os.path.exists(cert_path) and os.path.exists(key_path):
-        # Use certfile/keyfile (widely supported) - ssl_context tuple may not pass through
-        run_kwargs['certfile'] = cert_path
-        run_kwargs['keyfile'] = key_path
+        # Werkzeug run_simple expects ssl_context as (cert_path, key_path) tuple
+        run_kwargs['ssl_context'] = (cert_path, key_path)
         logger.info(f"🔒 HTTPS enabled (cert: {cert_path})")
         logger.info(f"   Camera stream: https://<pi-ip>:{port}/api/camera/stream")
     else:
