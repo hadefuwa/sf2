@@ -1990,10 +1990,10 @@ def generate_digital_twin_frames():
 def camera_frame():
     """Single JPEG frame from camera - no Playwright, no extra deps. Use with live-view.html"""
     if camera_service is None:
-        return jsonify({'error': 'Camera not initialized'}), 503
+        return Response(b'', status=503, mimetype='image/jpeg')
     frame = camera_service.get_frame_jpeg(quality=70, use_cache=True, max_cache_age=0.5)
     if frame is None:
-        return Response(b'', status=204, mimetype='image/jpeg')
+        return Response(b'', status=503, mimetype='image/jpeg')
     return Response(frame, mimetype='image/jpeg')
 
 
@@ -2001,10 +2001,10 @@ def camera_frame():
 def digital_twin_frame():
     """Single JPEG frame from Playwright-rendered 3D - needs playwright. Prefer camera-frame instead."""
     if digital_twin_stream_service is None:
-        return jsonify({'error': 'Digital twin not available (install Playwright?)'}), 503
+        return Response(b'', status=503, mimetype='image/jpeg')
     frame = digital_twin_stream_service.get_frame_jpeg(quality=70)
     if frame is None:
-        return Response(b'', status=204, mimetype='image/jpeg')
+        return Response(b'', status=503, mimetype='image/jpeg')
     return Response(frame, mimetype='image/jpeg')
 
 
@@ -2026,15 +2026,6 @@ def digital_twin_stream():
     return response
 
 
-@app.before_request
-def ensure_stream_routes_take_precedence():
-    """Handle frame/stream routes before the SPA catch-all can return index.html."""
-    if request.path == '/camera-frame':
-        return camera_frame()
-    if request.path == '/digital-twin-frame':
-        return digital_twin_frame()
-    if request.path == '/api/digital-twin/stream' or request.path == '/api/digital-twin/stream/':
-        return digital_twin_stream()
 
 
 @app.route('/api/camera/status', methods=['GET'])
@@ -3179,9 +3170,11 @@ def cleanup_counter_images():
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_pwa(path):
-    """Serve PWA frontend. Never serve index.html for /api paths - they are API routes."""
+    """Serve PWA frontend. Never serve index.html for /api paths or frame endpoints."""
     if path and (path == 'api' or path.startswith('api/')):
         abort(404)  # API routes should handle these; if we're here, the route wasn't found
+    if path in ('camera-frame', 'digital-twin-frame'):
+        abort(404)  # These are image endpoints, not SPA pages
     if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
         return send_from_directory(app.static_folder, path)
     else:
