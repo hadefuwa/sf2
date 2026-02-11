@@ -3218,7 +3218,6 @@ if __name__ == '__main__':
     port = int(os.getenv('PORT', 8080))
 
     # Start digital twin stream (same approach as camera: Pi renders 3D, streams MJPEG for HMI)
-    global digital_twin_stream_service
     if PLAYWRIGHT_AVAILABLE:
         digital_twin_stream_service = DigitalTwinStreamService(port=port, width=640, height=480)
         digital_twin_stream_service.start()
