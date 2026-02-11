@@ -23,6 +23,7 @@ import snap7.util
 from plc_client import PLCClient
 from dobot_client import DobotClient
 from camera_service import CameraService
+from digital_twin_stream_service import DigitalTwinStreamService, PLAYWRIGHT_AVAILABLE
 
 # Configure logging
 logging.basicConfig(
@@ -132,8 +133,10 @@ def initialize_counter_tracker():
 # Initialize counter tracker on startup
 initialize_counter_tracker()
 
-# Initialize Flask app
-app = Flask(__name__, static_folder='../frontend')
+# Initialize Flask app - use absolute path so it works regardless of CWD
+_BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+_FRONTEND_DIR = os.path.normpath(os.path.join(_BACKEND_DIR, '..', 'frontend'))
+app = Flask(__name__, static_folder=_FRONTEND_DIR)
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 CORS(app)
 
@@ -144,6 +147,7 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 plc_client = None  # Will be None if snap7 fails
 dobot_client = None
 camera_service = None
+digital_twin_stream_service = None  # Renders 3D on Pi, streams as MJPEG for HMI
 
 # Vision service configuration
 VISION_SERVICE_URL = os.getenv('VISION_SERVICE_URL', 'http://127.0.0.1:5001')
@@ -1966,6 +1970,39 @@ def camera_stream():
     response.headers['Access-Control-Allow-Origin'] = '*'
     return response
 
+
+def generate_digital_twin_frames():
+    """Generator for digital twin MJPEG stream - same format as camera."""
+    while True:
+        if digital_twin_stream_service is None:
+            break
+        frame_bytes = digital_twin_stream_service.get_frame_jpeg(quality=70)
+        if frame_bytes is None:
+            time.sleep(0.1)
+            continue
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+        time.sleep(0.1)  # ~10 FPS - 3D rendering is heavier than camera
+
+
+@app.route('/api/digital-twin/stream')
+def digital_twin_stream():
+    """MJPEG stream of rendered digital twin - for HMI panels that cannot run WebGL.
+
+    The Pi renders the 3D view in headless Chromium and streams it.
+    Use this URL in WinCC (same as camera stream) when the panel cannot render Three.js.
+    """
+    if digital_twin_stream_service is None:
+        return jsonify({'error': 'Digital twin stream not available (Playwright not installed?)'}), 503
+    response = Response(
+        generate_digital_twin_frames(),
+        mimetype='multipart/x-mixed-replace; boundary=frame'
+    )
+    response.headers['X-Frame-Options'] = 'ALLOWALL'
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    return response
+
+
 @app.route('/api/camera/status', methods=['GET'])
 def camera_status():
     """Get camera connection status"""
@@ -3150,6 +3187,15 @@ if __name__ == '__main__':
 
     # Start server
     port = int(os.getenv('PORT', 8080))
+
+    # Start digital twin stream (same approach as camera: Pi renders 3D, streams MJPEG for HMI)
+    global digital_twin_stream_service
+    if PLAYWRIGHT_AVAILABLE:
+        digital_twin_stream_service = DigitalTwinStreamService(port=port, width=640, height=480)
+        digital_twin_stream_service.start()
+        logger.info(f"   Digital twin stream: http(s)://<pi-ip>:{port}/api/digital-twin/stream")
+    else:
+        logger.info("   Digital twin stream: disabled (playwright not installed)")
     
     # HTTPS support for WinCC Unified HMI (mixed content requires HTTPS)
     backend_dir = os.path.dirname(os.path.abspath(__file__))

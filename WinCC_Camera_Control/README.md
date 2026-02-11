@@ -63,6 +63,21 @@ WinCC Unified HMI requires **HTTPS** for embedded content (mixed content policy)
 - `https://192.168.7.5:8080/api/camera/stream`
 - `https://rpi:8080/api/camera/stream`
 
+### Digital Twin Stream (HMI cannot run WebGL)
+Basic panels lack the RAM/GPU for Three.js. The Pi renders the 3D view and streams it as MJPEG (same as camera).
+
+**URL format:** `https://<RASPBERRY_PI_IP>:8080/api/digital-twin/stream`
+
+**Examples:**
+- `https://192.168.7.5:8080/api/digital-twin/stream`
+
+**First-time setup on Pi:** Install Playwright and Chromium:
+```bash
+pip install playwright
+playwright install chromium
+```
+Restart the app afterward. If Playwright is missing, the digital twin stream is disabled (camera stream still works).
+
 **First-time setup on the Pi:** Run the certificate generator, then restart the app:
 ```bash
 cd ~/sf2/pwa-dobot-plc
