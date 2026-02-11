@@ -66,10 +66,13 @@ WinCC Unified HMI requires **HTTPS** for embedded content (mixed content policy)
 ### Digital Twin Stream (HMI cannot run WebGL)
 Basic panels lack the RAM/GPU for Three.js. The Pi renders the 3D view and streams it as MJPEG (same as camera).
 
-**URL format:** `https://<RASPBERRY_PI_IP>:8080/api/digital-twin/stream`
+**Simple HTML page (recommended):**  
+`https://192.168.7.5:8080/digital-twin-stream.html`  
 
-**Examples:**
-- `https://192.168.7.5:8080/api/digital-twin/stream`
+This page polls single frames and displays them. No MJPEG stream – works reliably.
+
+**MJPEG stream URL** (for WinCC embed):  
+`https://192.168.7.5:8080/api/digital-twin/stream`
 
 **First-time setup on Pi:** Install Playwright and Chromium:
 ```bash

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Digital Twin - Live View</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0a0e1a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: system-ui, sans-serif;
+      color: #e2e8f0;
+    }
+    h1 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      color: #94a3b8;
+    }
+    #frame {
+      max-width: 100%;
+      max-height: 80vh;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      background: #0f172a;
+    }
+    #status {
+      margin-top: 0.5rem;
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <h1>Digital Twin - Live View</h1>
+  <img id="frame" src="" alt="Digital twin 3D view">
+  <p id="status">Loading...</p>
+
+  <script>
+    var img = document.getElementById('frame');
+    var status = document.getElementById('status');
+    var intervalMs = 150;
+
+    function refreshFrame() {
+      img.src = '/digital-twin-frame?t=' + Date.now();
+    }
+
+    img.onload = function() {
+      status.textContent = 'Live';
+    };
+
+    img.onerror = function() {
+      status.textContent = 'No frame yet (Playwright may still be starting...)';
+    };
+
+    refreshFrame();
+    setInterval(refreshFrame, intervalMs);
+  </script>
+</body>
+</html>

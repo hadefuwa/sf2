@@ -1986,6 +1986,21 @@ def generate_digital_twin_frames():
         time.sleep(0.1)  # ~10 FPS - 3D rendering is heavier than camera
 
 
+@app.route('/digital-twin-frame')
+def digital_twin_frame():
+    """Single JPEG frame - poll this from a simple HTML page to display the digital twin.
+
+    No MJPEG stream, no /api path - just a plain image URL that always works.
+    Use with: https://192.168.7.5:8080/digital-twin-stream.html
+    """
+    if digital_twin_stream_service is None:
+        return jsonify({'error': 'Digital twin not available (install Playwright?)'}), 503
+    frame = digital_twin_stream_service.get_frame_jpeg(quality=70)
+    if frame is None:
+        return Response(b'', status=204, mimetype='image/jpeg')  # No frame yet
+    return Response(frame, mimetype='image/jpeg')
+
+
 @app.route('/api/digital-twin/stream')
 def digital_twin_stream():
     """MJPEG stream of rendered digital twin - for HMI panels that cannot run WebGL.
@@ -2005,12 +2020,10 @@ def digital_twin_stream():
 
 
 @app.before_request
-def ensure_api_routes_take_precedence():
-    """Handle /api/digital-twin/stream before the SPA catch-all can return index.html.
-
-    The catch-all /<path:path> sometimes matches before /api/* routes on some Flask/Werkzeug
-    setups. This handler runs first and ensures the stream URL gets the correct response.
-    """
+def ensure_stream_routes_take_precedence():
+    """Handle digital twin routes before the SPA catch-all can return index.html."""
+    if request.path == '/digital-twin-frame':
+        return digital_twin_frame()
     if request.path == '/api/digital-twin/stream' or request.path == '/api/digital-twin/stream/':
         return digital_twin_stream()
 
