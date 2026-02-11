@@ -325,7 +325,7 @@ const containerWidth = container.clientWidth;
 const containerHeight = container.clientHeight;
 
 const camera = new THREE.PerspectiveCamera(45, containerWidth/containerHeight, 0.1, 1000);
-camera.position.set(0, 8, 14);
+camera.position.set(0, 6, 10);
 camera.lookAt(0, 0, 0);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
