@@ -158,6 +158,8 @@ window.injectFactoryData = (data) => {
 
 let ws = null;
 let wsReconnectTimeout = null;
+let wsFailCount = 0;
+const WS_MAX_RECONNECTS = 5;  // Stop after 5 failures to avoid spam (e.g. on HMI when Pi unreachable)
 
 function connectWebSocket() {
  try {
@@ -167,6 +169,7 @@ function connectWebSocket() {
  ws = new WebSocket(wsUrl);
 
  ws.onopen = () => {
+ wsFailCount = 0;  // Reset on success
  log('WebSocket connected - ready for real-time data');
  console.log('[WebSocket] Connected to server');
  };
@@ -174,9 +177,7 @@ function connectWebSocket() {
  ws.onmessage = (event) => {
  try {
  const message = JSON.parse(event.data);
-
  if (message.type === 'factoryData') {
- // Inject external data into metrics
  metrics.injectExternalData(message.data);
  console.log('[WebSocket] Data injected:', message.data);
  } else if (message.type === 'connected') {
@@ -187,20 +188,23 @@ function connectWebSocket() {
  }
  };
 
- ws.onerror = (error) => {
+ ws.onerror = () => {
  console.log('[WebSocket] Connection error (expected if no WebSocket server)');
  };
 
  ws.onclose = () => {
  console.log('[WebSocket] Connection closed');
  ws = null;
+ wsFailCount++;
 
- // Attempt to reconnect after 5 seconds
- if (wsReconnectTimeout) clearTimeout(wsReconnectTimeout);
+ if (wsFailCount <= WS_MAX_RECONNECTS && wsReconnectTimeout == null) {
+ const delay = Math.min(5000 * wsFailCount, 30000);  // Back off: 5s, 10s, 15s, 20s, 25s (max 30s)
  wsReconnectTimeout = setTimeout(() => {
+ wsReconnectTimeout = null;
  console.log('[WebSocket] Attempting to reconnect...');
  connectWebSocket();
- }, 5000);
+ }, delay);
+ }
  };
  } catch (e) {
  console.log('[WebSocket] Not available - running in simulation mode');
@@ -1388,57 +1392,49 @@ function animate() {
 
 animate();
 
-// UI
+// UI (buttons may not exist in embed/HMI mode - e.g. digital-twin-embed.html has no controls)
 const resetBtn = document.getElementById('reset');
 const releaseBtn = document.getElementById('release');
 
-// Hide reset button in real PLC mode
-if (OPERATION_MODE === MODE.REAL_PLC) {
- resetBtn.style.display = 'none';
+if (resetBtn) {
+  // Hide reset button in real PLC mode
+  if (OPERATION_MODE === MODE.REAL_PLC) {
+    resetBtn.style.display = 'none';
+  }
+  resetBtn.addEventListener('click', () => {
+    // Clear all boxes
+    for (const b of boxes) scene.remove(b);
+    boxes.length = 0;
+    gantryT = 0;
+    gantryDir = 1;
+    gantryHolding = false;
+    gantryActive = false;
+    sortingBays.forEach(bay => bay.count = 0);
+    Object.keys(sensors).forEach(key => {
+      sensors[key].active = false;
+      updateSensorIndicator(key, false);
+    });
+    cycleInitialized = false;
+    autoReleaseTimer = 0;
+    window.location.reload();
+    log('System reset');
+  });
 }
 
-resetBtn.addEventListener('click', () => {
- // Clear all boxes
- for (const b of boxes) scene.remove(b);
- boxes.length = 0;
-
- // Reset gantry
- gantryT = 0;
- gantryDir = 1;
- gantryHolding = false;
- gantryActive = false;
-
- // Reset bays
- sortingBays.forEach(bay => bay.count = 0);
-
- // Reset sensors
- Object.keys(sensors).forEach(key => {
- sensors[key].active = false;
- updateSensorIndicator(key, false);
- });
-
- // Reinitialize hopper
- cycleInitialized = false;
- autoReleaseTimer = 0;
-
- // Reset metrics
- window.location.reload();
- log('System reset');
-});
-
-releaseBtn.addEventListener('click', () => {
- // Only release if no cube is currently being inspected or rejected
- const canRelease = !boxes.some(b =>
- b.userData.state === 'inspecting' ||
- b.userData.state === 'rejecting' ||
- b.userData.state === 'ready_for_gantry'
- );
- if (canRelease) {
- spawnCubeFromHopper();
- autoReleaseTimer = 0;
- log('Manual release');
- }
-});
+if (releaseBtn) {
+  releaseBtn.addEventListener('click', () => {
+    const canRelease = !boxes.some(b =>
+      b.userData.state === 'inspecting' ||
+      b.userData.state === 'rejecting' ||
+      b.userData.state === 'ready_for_gantry'
+    );
+    if (canRelease) {
+      spawnCubeFromHopper();
+      autoReleaseTimer = 0;
+      log('Manual release');
+    }
+  });
+}
 
 // Resize
 window.addEventListener('resize', () => {

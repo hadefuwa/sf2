@@ -961,6 +961,18 @@ def health_check():
         'timestamp': time.time()
     })
 
+@app.route('/log', methods=['POST'])
+def log_message():
+    """Accept client log messages from digital twin (prevents 405 errors)"""
+    try:
+        data = request.json or {}
+        msg = data.get('message', '')
+        if msg:
+            logger.debug(f"[DigitalTwin] {msg}")
+        return jsonify({'ok': True})
+    except Exception:
+        return jsonify({'ok': True})  # Never fail client
+
 @app.route('/api/data', methods=['GET'])
 def get_all_data():
     """Get all data in a single request to minimize PLC load"""
