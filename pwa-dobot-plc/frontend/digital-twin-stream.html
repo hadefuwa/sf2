@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Digital Twin - Live View</title>
+  <title>Live View - Camera</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -36,8 +36,8 @@
   </style>
 </head>
 <body>
-  <h1>Digital Twin - Live View</h1>
-  <img id="frame" src="" alt="Digital twin 3D view">
+  <h1>Live View - Camera</h1>
+  <img id="frame" src="" alt="Camera view">
   <p id="status">Loading...</p>
 
   <script>
@@ -46,7 +46,7 @@
     var intervalMs = 150;
 
     function refreshFrame() {
-      img.src = '/digital-twin-frame?t=' + Date.now();
+      img.src = '/camera-frame?t=' + Date.now();
     }
 
     img.onload = function() {
@@ -54,7 +54,7 @@
     };
 
     img.onerror = function() {
-      status.textContent = 'No frame yet (Playwright may still be starting...)';
+      status.textContent = 'No frame (is camera connected?)';
     };
 
     refreshFrame();

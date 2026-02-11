@@ -1986,18 +1986,25 @@ def generate_digital_twin_frames():
         time.sleep(0.1)  # ~10 FPS - 3D rendering is heavier than camera
 
 
+@app.route('/camera-frame')
+def camera_frame():
+    """Single JPEG frame from camera - no Playwright, no extra deps. Use with live-view.html"""
+    if camera_service is None:
+        return jsonify({'error': 'Camera not initialized'}), 503
+    frame = camera_service.get_frame_jpeg(quality=70, use_cache=True, max_cache_age=0.5)
+    if frame is None:
+        return Response(b'', status=204, mimetype='image/jpeg')
+    return Response(frame, mimetype='image/jpeg')
+
+
 @app.route('/digital-twin-frame')
 def digital_twin_frame():
-    """Single JPEG frame - poll this from a simple HTML page to display the digital twin.
-
-    No MJPEG stream, no /api path - just a plain image URL that always works.
-    Use with: https://192.168.7.5:8080/digital-twin-stream.html
-    """
+    """Single JPEG frame from Playwright-rendered 3D - needs playwright. Prefer camera-frame instead."""
     if digital_twin_stream_service is None:
         return jsonify({'error': 'Digital twin not available (install Playwright?)'}), 503
     frame = digital_twin_stream_service.get_frame_jpeg(quality=70)
     if frame is None:
-        return Response(b'', status=204, mimetype='image/jpeg')  # No frame yet
+        return Response(b'', status=204, mimetype='image/jpeg')
     return Response(frame, mimetype='image/jpeg')
 
 
@@ -2021,7 +2028,9 @@ def digital_twin_stream():
 
 @app.before_request
 def ensure_stream_routes_take_precedence():
-    """Handle digital twin routes before the SPA catch-all can return index.html."""
+    """Handle frame/stream routes before the SPA catch-all can return index.html."""
+    if request.path == '/camera-frame':
+        return camera_frame()
     if request.path == '/digital-twin-frame':
         return digital_twin_frame()
     if request.path == '/api/digital-twin/stream' or request.path == '/api/digital-twin/stream/':
