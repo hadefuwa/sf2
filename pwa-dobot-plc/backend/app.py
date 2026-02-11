@@ -137,6 +137,17 @@ initialize_counter_tracker()
 _BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 _FRONTEND_DIR = os.path.normpath(os.path.join(_BACKEND_DIR, '..', 'frontend'))
 app = Flask(__name__, static_folder=_FRONTEND_DIR)
+
+# Custom converter: path that does NOT match 'api' or 'api/*'.
+# Ensures /api/* URLs are never caught by the SPA catch-all (which would return index.html).
+from werkzeug.routing import PathConverter
+class NoApiPathConverter(PathConverter):
+    def to_python(self, value):
+        if value == 'api' or value.startswith('api/'):
+            raise ValueError('api paths are handled by API routes')
+        return value
+
+app.url_map.converters['noapi'] = NoApiPathConverter
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 CORS(app)
 
@@ -3143,9 +3154,9 @@ def cleanup_counter_images():
 # ==================================================
 
 @app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
+@app.route('/<noapi:path>')
 def serve_pwa(path):
-    """Serve PWA frontend"""
+    """Serve PWA frontend. API paths are excluded by NoApiPathConverter so they hit API routes."""
     if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
         return send_from_directory(app.static_folder, path)
     else:
