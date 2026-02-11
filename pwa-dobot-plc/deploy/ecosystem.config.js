@@ -18,7 +18,7 @@ module.exports = {
     },
     {
       name: 'vision-service',
-      cwd: '/home/pi/rpi-dobot/pwa-dobot-plc/backend',
+      cwd: '/home/pi/sf2/pwa-dobot-plc/backend',
       script: 'venv/bin/python',
       args: 'vision_service.py',
       instances: 1,

@@ -3,7 +3,7 @@ PWA Dobot-PLC Control Backend
 Flask API with WebSocket support for real-time PLC monitoring
 """
 
-from flask import Flask, jsonify, request, send_from_directory, Response
+from flask import Flask, jsonify, request, send_from_directory, Response, abort
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import logging
@@ -138,16 +138,6 @@ _BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 _FRONTEND_DIR = os.path.normpath(os.path.join(_BACKEND_DIR, '..', 'frontend'))
 app = Flask(__name__, static_folder=_FRONTEND_DIR)
 
-# Custom converter: path that does NOT match 'api' or 'api/*'.
-# Ensures /api/* URLs are never caught by the SPA catch-all (which would return index.html).
-from werkzeug.routing import PathConverter
-class NoApiPathConverter(PathConverter):
-    def to_python(self, value):
-        if value == 'api' or value.startswith('api/'):
-            raise ValueError('api paths are handled by API routes')
-        return value
-
-app.url_map.converters['noapi'] = NoApiPathConverter
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 CORS(app)
 
@@ -2014,6 +2004,17 @@ def digital_twin_stream():
     return response
 
 
+@app.before_request
+def ensure_api_routes_take_precedence():
+    """Handle /api/digital-twin/stream before the SPA catch-all can return index.html.
+
+    The catch-all /<path:path> sometimes matches before /api/* routes on some Flask/Werkzeug
+    setups. This handler runs first and ensures the stream URL gets the correct response.
+    """
+    if request.path == '/api/digital-twin/stream' or request.path == '/api/digital-twin/stream/':
+        return digital_twin_stream()
+
+
 @app.route('/api/camera/status', methods=['GET'])
 def camera_status():
     """Get camera connection status"""
@@ -3154,9 +3155,11 @@ def cleanup_counter_images():
 # ==================================================
 
 @app.route('/', defaults={'path': ''})
-@app.route('/<noapi:path>')
+@app.route('/<path:path>')
 def serve_pwa(path):
-    """Serve PWA frontend. API paths are excluded by NoApiPathConverter so they hit API routes."""
+    """Serve PWA frontend. Never serve index.html for /api paths - they are API routes."""
+    if path and (path == 'api' or path.startswith('api/')):
+        abort(404)  # API routes should handle these; if we're here, the route wasn't found
     if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
         return send_from_directory(app.static_folder, path)
     else:
