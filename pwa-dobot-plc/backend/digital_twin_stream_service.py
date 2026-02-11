@@ -75,7 +75,7 @@ class DigitalTwinStreamService:
         """Background loop: launch browser, load page, capture screenshots."""
         # Wait for Flask server to be ready
         time.sleep(10)
-        url = f"http://127.0.0.1:{self.port}/digital-twin-embed.html"
+        url = f"https://127.0.0.1:{self.port}/digital-twin-embed.html"
         try:
             with sync_playwright() as p:
                 self._playwright = p
