@@ -23,14 +23,26 @@
       background: rgba(255, 255, 255, 0.05);
       border-radius: 8px;
       margin-bottom: 10px;
+      min-height: 300px;
     }
     
-    /* Make charts taller and more visible */
+    /* Make charts taller and more visible - responsive */
     .ct-perfect-fourth {
       display: block;
       position: relative;
       width: 100%;
-      height: 250px;
+      height: 280px;
+      min-height: 250px;
+    }
+    
+    /* Responsive chart height on smaller screens */
+    @media (max-width: 768px) {
+      .ct-perfect-fourth {
+        height: 250px;
+      }
+      .chart-container {
+        min-height: 280px;
+      }
     }
     
     /* Chart line and area colors for each graph */
@@ -73,16 +85,41 @@
       stroke-width: 8px;
     }
     
-    /* Chart labels */
+    /* Chart labels - responsive and readable */
     .ct-label {
       color: rgba(255, 255, 255, 0.7);
-      font-size: 11px;
+      font-size: 10px;
+      fill: rgba(255, 255, 255, 0.7);
+    }
+    
+    /* X-axis labels - better spacing and readability */
+    .ct-chart .ct-label.ct-horizontal {
+      text-anchor: middle;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 60px;
+    }
+    
+    /* Better spacing for x-axis */
+    .ct-chart .ct-axis-x {
+      overflow: visible;
+    }
+    
+    /* Ensure chart area has enough padding for labels */
+    .ct-chart-line .ct-area {
+      clip-path: inset(0 0 10% 0);
     }
     
     /* Chart grid */
     .ct-grid {
       stroke: rgba(255, 255, 255, 0.1);
       stroke-width: 1px;
+    }
+    
+    /* Ensure charts resize on window resize */
+    .ct-chart {
+      overflow: visible;
     }
   </style>
   
@@ -258,6 +295,40 @@
             </div>
           </div>
 
+          <!-- Supervision Trends - Full Width -->
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card card-chart">
+                <div class="card-header card-header-success">
+                  <h4 class="card-title">Supervision Trends</h4>
+                  <p class="card-category">Current, Voltage, Temperature over time</p>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-4 col-sm-12">
+                      <div class="chart-container">
+                        <h6 class="text-center font-weight-bold">Current (mA)</h6>
+                        <div class="ct-chart ct-perfect-fourth" id="chartCurrent"></div>
+                      </div>
+                    </div>
+                    <div class="col-md-4 col-sm-12">
+                      <div class="chart-container">
+                        <h6 class="text-center font-weight-bold">Voltage (mV)</h6>
+                        <div class="ct-chart ct-perfect-fourth" id="chartVoltage"></div>
+                      </div>
+                    </div>
+                    <div class="col-md-4 col-sm-12">
+                      <div class="chart-container">
+                        <h6 class="text-center font-weight-bold">Temperature (°C)</h6>
+                        <div class="ct-chart ct-perfect-fourth" id="chartTemp"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Supervision and Software -->
           <div class="row">
             <div class="col-md-6">
@@ -273,34 +344,6 @@
                         <tr><td colspan="2" class="text-center">-</td></tr>
                       </tbody>
                     </table>
-                  </div>
-                </div>
-              </div>
-              <div class="card card-chart">
-                <div class="card-header card-header-success">
-                  <h4 class="card-title">Supervision Trends</h4>
-                  <p class="card-category">Current, Voltage, Temperature over time</p>
-                </div>
-                <div class="card-body">
-                  <div class="row">
-                    <div class="col-md-4">
-                      <div class="chart-container">
-                        <h6 class="text-center font-weight-bold">Current (mA)</h6>
-                        <div class="ct-chart ct-perfect-fourth" id="chartCurrent"></div>
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="chart-container">
-                        <h6 class="text-center font-weight-bold">Voltage (mV)</h6>
-                        <div class="ct-chart ct-perfect-fourth" id="chartVoltage"></div>
-                      </div>
-                    </div>
-                    <div class="col-md-4">
-                      <div class="chart-container">
-                        <h6 class="text-center font-weight-bold">Temperature (°C)</h6>
-                        <div class="ct-chart ct-perfect-fourth" id="chartTemp"></div>
-                      </div>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -505,41 +548,112 @@
         const history = data.history || [];
         if (history.length < 2) return;
 
-        const step = Math.max(1, Math.floor(history.length / 6));
-        const labels = history.map((h, i) => (i % step === 0 || i === history.length - 1) ? new Date(h.ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
+        // Calculate optimal number of labels based on chart width to prevent overlap
+        const chartWidth = document.getElementById('chartCurrent')?.offsetWidth || 300;
+        const maxLabels = Math.max(3, Math.min(8, Math.floor(chartWidth / 70))); // ~70px per label, max 8 labels
+        const step = Math.max(1, Math.floor(history.length / maxLabels));
+        
+        // Create labels with better spacing - only show every Nth label, shorter format
+        const labels = history.map((h, i) => {
+          if (i % step === 0 || i === history.length - 1) {
+            const date = new Date(h.ts * 1000);
+            // Short format: HH:MM only
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          }
+          return '';
+        });
         
         const currentSer = history.map(h => h.current != null ? h.current : null);
         const voltageSer = history.map(h => h.voltage != null ? h.voltage : null);
         const tempSer = history.map(h => h.temperature != null ? h.temperature : null);
 
-        // Base chart options
+        // Base chart options with better responsive settings
         const baseOpts = {
           showArea: true,
-          showPoint: true,
+          showPoint: false, // Hide points to reduce clutter
           fullWidth: true,
-          lineSmooth: true,
-          chartPadding: { top: 10, right: 10, bottom: 5, left: 10 },
-          axisY: { onlyInteger: false, labelInterpolationFnc: value => Math.round(value) }
+          lineSmooth: Chartist.Interpolation.simple({
+            divisor: 2
+          }),
+          chartPadding: { 
+            top: 15, 
+            right: 15, 
+            bottom: 30, // Space for x-axis labels
+            left: 20 // Space for y-axis labels
+          },
+          axisX: {
+            labelInterpolationFnc: function(value, index) {
+              // Only show non-empty labels
+              return value || '';
+            },
+            offset: 50 // Space for rotated labels
+          },
+          axisY: { 
+            onlyInteger: false, 
+            labelInterpolationFnc: value => {
+              // Format large numbers better
+              if (value >= 1000) return (value / 1000).toFixed(1) + 'k';
+              return Math.round(value);
+            }
+          },
+          responsiveOptions: [
+            ['screen and (max-width: 768px)', {
+              chartPadding: { top: 10, right: 10, bottom: 30, left: 15 },
+              axisX: { offset: 30 },
+              axisY: { 
+                labelInterpolationFnc: value => {
+                  if (value >= 1000) return (value / 1000).toFixed(0) + 'k';
+                  return Math.round(value);
+                }
+              }
+            }]
+          ]
         };
 
-        // Current chart (mA) - auto scale
-        const currentOpts = { ...baseOpts, low: Math.min(...currentSer.filter(v => v != null)) * 0.95, high: Math.max(...currentSer.filter(v => v != null)) * 1.05 };
+        // Calculate min/max - always start at 0 for all charts
+        const getMinMax = (series) => {
+          const values = series.filter(v => v != null);
+          if (values.length === 0) return { low: 0, high: 100 };
+          const max = Math.max(...values);
+          const range = max || 1;
+          return {
+            low: 0, // Always start at 0
+            high: max + range * 0.1 // Add 10% padding at the top
+          };
+        };
+
+        // Current chart (mA) - always starts at 0A
+        const currentRange = getMinMax(currentSer);
+        const currentOpts = { ...baseOpts, ...currentRange };
         if (chartCurrent) chartCurrent.update({ labels: labels, series: [currentSer] }, currentOpts);
         else chartCurrent = new Chartist.Line('#chartCurrent', { labels: labels, series: [currentSer] }, currentOpts);
 
-        // Voltage chart (mV) - auto scale
-        const voltageOpts = { ...baseOpts, low: Math.min(...voltageSer.filter(v => v != null)) * 0.95, high: Math.max(...voltageSer.filter(v => v != null)) * 1.05 };
+        // Voltage chart (mV) - always starts at 0V
+        const voltageRange = getMinMax(voltageSer);
+        const voltageOpts = { ...baseOpts, ...voltageRange };
         if (chartVoltage) chartVoltage.update({ labels: labels, series: [voltageSer] }, voltageOpts);
         else chartVoltage = new Chartist.Line('#chartVoltage', { labels: labels, series: [voltageSer] }, voltageOpts);
 
-        // Temperature chart (°C) - auto scale
-        const tempOpts = { ...baseOpts, low: Math.min(...tempSer.filter(v => v != null)) * 0.95, high: Math.max(...tempSer.filter(v => v != null)) * 1.05 };
+        // Temperature chart (°C) - always starts at 0°C
+        const tempRange = getMinMax(tempSer);
+        const tempOpts = { ...baseOpts, ...tempRange };
         if (chartTemp) chartTemp.update({ labels: labels, series: [tempSer] }, tempOpts);
         else chartTemp = new Chartist.Line('#chartTemp', { labels: labels, series: [tempSer] }, tempOpts);
       } catch (e) {
         console.error('Chart update error:', e);
       }
     }
+    
+    // Make charts responsive to window resize
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(function() {
+        if (chartCurrent || chartVoltage || chartTemp) {
+          updateSupervisionChart();
+        }
+      }, 250);
+    });
 
     function escapeHtml(text) {
       if (text === null || text === undefined) return '-';
