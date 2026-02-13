@@ -3225,6 +3225,203 @@ def io_link_supervision_history():
     })
 
 
+@app.route('/api/io-link/port/<int:port_num>', methods=['GET'])
+def io_link_port_detail(port_num):
+    """Get detailed data for a specific IO-Link port including decoded process data"""
+    if port_num < 1 or port_num > 4:
+        return jsonify({'success': False, 'error': 'Port must be between 1 and 4'}), 400
+    
+    try:
+        config = load_config()
+        io_config = config.get('io_link', {})
+        ip = io_config.get('master_ip', '192.168.7.4')
+        port = io_config.get('port', 80)
+        timeout = io_config.get('timeout_sec', 3)
+        scheme = 'https' if io_config.get('use_https', False) else 'http'
+        default_port = 443 if scheme == 'https' else 80
+        base_url = f'{scheme}://{ip}' if port == default_port else f'{scheme}://{ip}:{port}'
+        
+        port_data = {
+            'port': port_num,
+            'mode': '',
+            'comm_mode': '',
+            'vendor_id': '',
+            'device_id': '',
+            'name': '',
+            'serial': '',
+            'pdin': {'raw': '', 'hex': '', 'bytes': [], 'decoded': {}},
+            'pdout': {'raw': '', 'hex': '', 'bytes': [], 'decoded': {}},
+            'parameters': {}
+        }
+        
+        # Get port mode
+        try:
+            r = requests.get(f'{base_url}/iolinkmaster/port[{port_num}]/mode/getdata', timeout=timeout)
+            if r.status_code == 200 and r.json().get('code') == 200:
+                port_data['mode'] = r.json().get('data', {}).get('value', '')
+        except Exception as e:
+            logger.error(f"Error fetching port {port_num} mode: {e}")
+        
+        # Get device info
+        try:
+            r = requests.get(f'{base_url}/iolinkmaster/port[{port_num}]/iolinkdevice/productname/getdata', timeout=timeout)
+            if r.status_code == 200 and r.json().get('code') == 200:
+                port_data['name'] = r.json().get('data', {}).get('value', '')
+        except Exception:
+            pass
+        
+        try:
+            r = requests.get(f'{base_url}/iolinkmaster/port[{port_num}]/iolinkdevice/vendorid/getdata', timeout=timeout)
+            if r.status_code == 200 and r.json().get('code') == 200:
+                port_data['vendor_id'] = r.json().get('data', {}).get('value', '')
+        except Exception:
+            pass
+        
+        try:
+            r = requests.get(f'{base_url}/iolinkmaster/port[{port_num}]/iolinkdevice/deviceid/getdata', timeout=timeout)
+            if r.status_code == 200 and r.json().get('code') == 200:
+                port_data['device_id'] = r.json().get('data', {}).get('value', '')
+        except Exception:
+            pass
+        
+        try:
+            r = requests.get(f'{base_url}/iolinkmaster/port[{port_num}]/iolinkdevice/serial/getdata', timeout=timeout)
+            if r.status_code == 200 and r.json().get('code') == 200:
+                port_data['serial'] = r.json().get('data', {}).get('value', '')
+        except Exception:
+            pass
+        
+        # Get PDin (Process Data In - from device to PLC)
+        try:
+            r = requests.get(f'{base_url}/iolinkmaster/port[{port_num}]/iolinkdevice/pdin/getdata', timeout=timeout)
+            if r.status_code == 200 and r.json().get('code') == 200:
+                pdin_raw = r.json().get('data', {}).get('value', '')
+                port_data['pdin']['raw'] = pdin_raw
+                if pdin_raw:
+                    # Parse hex string to bytes
+                    pdin_hex = pdin_raw.replace(' ', '').replace('0x', '')
+                    port_data['pdin']['hex'] = pdin_hex
+                    port_data['pdin']['bytes'] = [int(pdin_hex[i:i+2], 16) for i in range(0, len(pdin_hex), 2)] if pdin_hex else []
+        except Exception as e:
+            logger.error(f"Error fetching port {port_num} PDin: {e}")
+        
+        # Get PDout (Process Data Out - from PLC to device)
+        try:
+            r = requests.get(f'{base_url}/iolinkmaster/port[{port_num}]/iolinkdevice/pdout/getdata', timeout=timeout)
+            if r.status_code == 200 and r.json().get('code') == 200:
+                pdout_raw = r.json().get('data', {}).get('value', '')
+                port_data['pdout']['raw'] = pdout_raw
+                if pdout_raw:
+                    # Parse hex string to bytes
+                    pdout_hex = pdout_raw.replace(' ', '').replace('0x', '')
+                    port_data['pdout']['hex'] = pdout_hex
+                    port_data['pdout']['bytes'] = [int(pdout_hex[i:i+2], 16) for i in range(0, len(pdout_hex), 2)] if pdout_hex else []
+                    
+                    # Decode LED status from PDout (CL50 PRO SELECT - decode if bytes exist)
+                    if port_data['pdout']['bytes'] and len(port_data['pdout']['bytes']) >= 3:
+                        logger.info(f"Decoding PDout bytes for port {port_num}: {port_data['pdout']['bytes']}")
+                        port_data['pdout']['decoded'] = _decode_cl50_led(port_data['pdout']['bytes'])
+                        logger.info(f"Decoded result: {port_data['pdout']['decoded']}")
+        except Exception as e:
+            logger.error(f"Error fetching port {port_num} PDout: {e}")
+        
+        return jsonify({
+            'success': True,
+            'port': port_data,
+            'timestamp': time.time()
+        })
+        
+    except Exception as e:
+        logger.error(f"Error fetching IO-Link port {port_num} detail: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'port': port_num
+        }), 500
+
+
+def _decode_cl50_led(bytes_data):
+    """Decode CL50 PRO SELECT LED status from process data bytes (3 bytes)
+    Based on IFM CL50 PRO SELECT IO-Link documentation
+    
+    Byte 0 (Octet 0): Audible State (2 bits) | Color 2 Intensity (3 bits) | Color 1 Intensity (3 bits)
+    Byte 1 (Octet 1): Speed (2 bits) | Pulse Pattern (3 bits) | Animation (3 bits)
+    Byte 2 (Octet 2): Color 2 (4 bits) | Color 1 (4 bits)
+    """
+    decoded = {
+        'color1': 'off',
+        'color2': 'off',
+        'color1_intensity': 'off',
+        'color2_intensity': 'off',
+        'animation': 'off',
+        'pulse_pattern': 'normal',
+        'speed': 'medium',
+        'audible_state': 'off',
+        'raw_bytes': bytes_data,
+        'raw_hex': ''.join(f'{b:02X}' for b in bytes_data) if bytes_data else ''
+    }
+    
+    if not bytes_data or len(bytes_data) < 3:
+        return decoded
+    
+    # Byte 2 (Octet 2) - Colors
+    byte2 = bytes_data[2]
+    color1_code = byte2 & 0x0F  # Lower 4 bits
+    color2_code = (byte2 >> 4) & 0x0F  # Upper 4 bits
+    
+    color_map = {
+        0: 'Green', 1: 'Red', 2: 'Orange', 3: 'Amber', 4: 'Yellow',
+        5: 'Lime Green', 6: 'Spring Green', 7: 'Cyan', 8: 'Sky Blue',
+        9: 'Blue', 10: 'Violet', 11: 'Magenta', 12: 'Rose',
+        13: 'White', 14: 'Custom 1', 15: 'Custom 2'
+    }
+    decoded['color1'] = color_map.get(color1_code, f'Unknown ({color1_code})')
+    decoded['color2'] = color_map.get(color2_code, f'Unknown ({color2_code})')
+    
+    # Byte 1 (Octet 1) - Animation, Pulse Pattern, Speed
+    byte1 = bytes_data[1]
+    animation_code = byte1 & 0x07  # Bits 0-2
+    pulse_pattern_code = (byte1 >> 3) & 0x07  # Bits 3-5
+    speed_code = (byte1 >> 6) & 0x03  # Bits 6-7
+    
+    animation_map = {
+        0: 'Off', 1: 'Steady', 2: 'Flash', 3: 'Two Color Flash', 4: 'Intensity Sweep'
+    }
+    decoded['animation'] = animation_map.get(animation_code, f'Unknown ({animation_code})')
+    
+    pulse_pattern_map = {
+        0: 'Normal', 1: 'Strobe', 2: 'Three Pulse', 3: 'SOS', 4: 'Random'
+    }
+    decoded['pulse_pattern'] = pulse_pattern_map.get(pulse_pattern_code, f'Unknown ({pulse_pattern_code})')
+    
+    speed_map = {
+        0: 'Medium', 1: 'Fast', 2: 'Slow'
+    }
+    decoded['speed'] = speed_map.get(speed_code, f'Unknown ({speed_code})')
+    
+    # Byte 0 (Octet 0) - Intensities and Audible State
+    byte0 = bytes_data[0]
+    color1_intensity_code = byte0 & 0x07  # Bits 0-2
+    color2_intensity_code = (byte0 >> 3) & 0x07  # Bits 3-5
+    audible_state_code = (byte0 >> 6) & 0x03  # Bits 6-7
+    
+    intensity_map = {
+        0: 'High', 1: 'Low', 2: 'Medium', 3: 'Off', 4: 'Custom'
+    }
+    decoded['color1_intensity'] = intensity_map.get(color1_intensity_code, f'Unknown ({color1_intensity_code})')
+    decoded['color2_intensity'] = intensity_map.get(color2_intensity_code, f'Unknown ({color2_intensity_code})')
+    
+    audible_map = {
+        0: 'Off', 1: 'On', 2: 'Pulsed', 3: 'SOS Pulse'
+    }
+    decoded['audible_state'] = audible_map.get(audible_state_code, f'Unknown ({audible_state_code})')
+    
+    # Determine if LED is effectively "on"
+    decoded['led_on'] = decoded['animation'] != 'Off' and decoded['color1_intensity'] != 'Off'
+    
+    return decoded
+
+
 # Fallback SVG when no product image found (always works, no 404)
 _IO_LINK_SVG_FALLBACK = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" width="200" height="120">
   <rect fill="#E65100" width="200" height="120" rx="4"/>

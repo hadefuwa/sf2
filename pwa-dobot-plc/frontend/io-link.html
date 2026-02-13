@@ -366,6 +366,21 @@
               </div>
             </div>
           </div>
+
+          <!-- Port Details Section -->
+          <div class="row" id="portDetailsSection">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header card-header-info">
+                  <h4 class="card-title">Active Port Details</h4>
+                  <p class="card-category">Process data and decoded device status</p>
+                </div>
+                <div class="card-body" id="portDetailsContainer">
+                  <p class="text-center">Loading...</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -485,8 +500,8 @@
         const rowClass = isActive ? 'table-success port-active' : '';
         const row = document.createElement('tr');
         row.className = rowClass;
-        const pdin = p.pdin ? (p.pdin.length <= 8 ? p.pdin : p.pdin + '...') : '-';
-        const pdout = p.pdout ? (p.pdout.length <= 8 ? p.pdout : p.pdout + '...') : '-';
+        const pdin = p.pdin ? (p.pdin.length <= 8 ? p.pdin : p.pdin.substring(0, 8) + '...') : '-';
+        const pdout = p.pdout ? (p.pdout.length <= 8 ? p.pdout : p.pdout.substring(0, 8) + '...') : '-';
         row.innerHTML = `
           <td>${p.port}</td>
           <td>${escapeHtml(p.mode || '-')}</td>
@@ -501,6 +516,95 @@
         `;
         tbody.appendChild(row);
       }
+      
+      // Load details for active ports
+      loadActivePortDetails(ports);
+    }
+
+    async function loadActivePortDetails(ports) {
+      const activePorts = ports.filter(p => (p.mode || '').toLowerCase().includes('io-link'));
+      
+      if (activePorts.length === 0) {
+        document.getElementById('portDetailsContainer').innerHTML = '<p class="text-center">No active IO-Link ports</p>';
+        return;
+      }
+      
+      let html = '';
+      for (const port of activePorts) {
+        try {
+          const res = await fetch(`${API_BASE}/api/io-link/port/${port.port}`, { signal: AbortSignal.timeout(30000) });
+          const data = await res.json();
+          
+          if (data.success && data.port) {
+            html += generatePortDetailsHTML(data.port);
+          } else {
+            html += `<div class="alert alert-warning">Port ${port.port}: No data available</div>`;
+          }
+        } catch (error) {
+          console.error(`Port ${port.port} error:`, error);
+          html += `<div class="alert alert-warning">Port ${port.port}: ${error.name === 'TimeoutError' ? 'Request timed out (30s)' : 'Error loading details'}</div>`;
+        }
+      }
+      
+      document.getElementById('portDetailsContainer').innerHTML = html || '<p class="text-center">No port details available</p>';
+    }
+
+    function generatePortDetailsHTML(port) {
+      let html = `<div class="port-detail-card" style="border: 1px solid #333; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: rgba(255,255,255,0.02);">`;
+      html += `<h5 class="text-info">Port ${port.port} - ${escapeHtml(port.name || 'Unknown Device')}</h5>`;
+      
+      // Device Info
+      html += '<div class="row mb-2">';
+      html += `<div class="col-md-3"><small><strong>Vendor ID:</strong> ${escapeHtml(port.vendor_id || '-')}</small></div>`;
+      html += `<div class="col-md-3"><small><strong>Device ID:</strong> ${escapeHtml(port.device_id || '-')}</small></div>`;
+      html += `<div class="col-md-3"><small><strong>Serial:</strong> ${escapeHtml(port.serial || '-')}</small></div>`;
+      html += `<div class="col-md-3"><small><strong>Mode:</strong> ${escapeHtml(port.mode || '-')}</small></div>`;
+      html += '</div>';
+      
+      // Process Data Out (PLC to Device)
+      html += '<div class="row mt-3"><div class="col-12"><h6 class="text-success" style="font-size: 14px;">Process Data Out (PLC → Device)</h6></div></div>';
+      html += '<div class="row">';
+      if (port.pdout && port.pdout.raw) {
+        html += `<div class="col-md-4"><small><strong>Raw:</strong> <code>${escapeHtml(port.pdout.raw)}</code></small></div>`;
+        html += `<div class="col-md-4"><small><strong>Hex:</strong> <code>${escapeHtml(port.pdout.hex)}</code></small></div>`;
+        html += `<div class="col-md-4"><small><strong>Bytes:</strong> <code>[${port.pdout.bytes.join(', ')}]</code></small></div>`;
+        
+        // Decoded LED status
+        if (port.pdout.decoded && Object.keys(port.pdout.decoded).length > 0) {
+          html += '<div class="col-12 mt-2">';
+          const dec = port.pdout.decoded;
+          html += '<div class="row">';
+          html += `<div class="col-md-12 mb-2"><strong>LED Status:</strong> <span class="badge badge-${dec.led_on ? 'success' : 'secondary'}">${dec.led_on ? 'ON' : 'OFF'}</span></div>`;
+          html += `<div class="col-md-6"><strong>Color 1:</strong> <span class="badge badge-primary">${dec.color1}</span> <span class="badge badge-secondary">${dec.color1_intensity}</span></div>`;
+          html += `<div class="col-md-6"><strong>Color 2:</strong> <span class="badge badge-primary">${dec.color2}</span> <span class="badge badge-secondary">${dec.color2_intensity}</span></div>`;
+          html += `<div class="col-md-4"><strong>Animation:</strong> <span class="badge badge-info">${dec.animation}</span></div>`;
+          html += `<div class="col-md-4"><strong>Pattern:</strong> <span class="badge badge-info">${dec.pulse_pattern}</span></div>`;
+          html += `<div class="col-md-4"><strong>Speed:</strong> <span class="badge badge-info">${dec.speed}</span></div>`;
+          if (dec.audible_state && dec.audible_state !== 'Off') {
+            html += `<div class="col-md-12 mt-1"><strong>Audible:</strong> <span class="badge badge-warning">${dec.audible_state}</span></div>`;
+          }
+          html += '</div>';
+          html += '</div>';
+        }
+      } else {
+        html += '<div class="col-12"><small><em>No process data out</em></small></div>';
+      }
+      html += '</div>';
+      
+      // Process Data In (Device to PLC)
+      html += '<div class="row mt-2"><div class="col-12"><h6 class="text-warning" style="font-size: 14px;">Process Data In (Device → PLC)</h6></div></div>';
+      html += '<div class="row">';
+      if (port.pdin && port.pdin.raw) {
+        html += `<div class="col-md-4"><small><strong>Raw:</strong> <code>${escapeHtml(port.pdin.raw)}</code></small></div>`;
+        html += `<div class="col-md-4"><small><strong>Hex:</strong> <code>${escapeHtml(port.pdin.hex)}</code></small></div>`;
+        html += `<div class="col-md-4"><small><strong>Bytes:</strong> <code>[${port.pdin.bytes.join(', ')}]</code></small></div>`;
+      } else {
+        html += '<div class="col-12"><small><em>No process data in</em></small></div>';
+      }
+      html += '</div>';
+      
+      html += '</div>';
+      return html;
     }
 
     function updateSupervisionTable(supervision) {
