@@ -11,12 +11,14 @@ import os
 import time
 import threading
 import json
+import re
 import subprocess
 import sys
 import cv2
 import numpy as np
 import requests
 import base64
+from bs4 import BeautifulSoup
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 import snap7.util
@@ -3113,6 +3115,359 @@ def get_smart_factory_data():
             'plc_connected': False,
             'timestamp': time.time()
         }), 500
+
+# Supervision history for graphing (keeps last 120 points ~10 min at 5s poll)
+_io_link_supervision_history = []
+_IO_LINK_HISTORY_MAX = 120
+
+
+def _parse_supervision_number(val, default=0):
+    """Parse supervision value to number. E.g. '251mA'->251, '23758mV'->23.758, '39°C'->39"""
+    if val is None or val == '':
+        return default
+    s = str(val).strip()
+    m = re.match(r'^([-\d.]+)', s)
+    if m:
+        num = float(m.group(1))
+        if 'mV' in s.lower():
+            return round(num / 1000, 2)
+        if 'mA' in s.lower() or '°c' in s.lower() or 'c' in s.lower():
+            return num
+        return num
+    try:
+        return float(s)
+    except ValueError:
+        return default
+
+
+def _append_supervision_history(supervision_dict):
+    """Append parsed supervision to history buffer"""
+    if not supervision_dict:
+        return
+    entry = {'ts': time.time(), 'current': None, 'voltage': None, 'temperature': None, 'status': None, 'sw_version': None}
+    for k, v in supervision_dict.items():
+        low = k.lower().replace('-', '').replace(' ', '')
+        if 'current' in low:
+            entry['current'] = _parse_supervision_number(v, None)
+        elif 'voltage' in low:
+            entry['voltage'] = _parse_supervision_number(v, None)
+        elif 'temp' in low:
+            entry['temperature'] = _parse_supervision_number(v, None)
+        elif 'status' in low and 'version' not in low:
+            entry['status'] = _parse_supervision_number(v, None)
+        elif 'swversion' in low or ('sw' in low and 'version' in low):
+            entry['sw_version'] = _parse_supervision_number(v, None)
+    _io_link_supervision_history.append(entry)
+    while len(_io_link_supervision_history) > _IO_LINK_HISTORY_MAX:
+        _io_link_supervision_history.pop(0)
+
+
+@app.route('/api/io-link/status', methods=['GET'])
+def io_link_status():
+    """Get IO-Link Master status - tries IoT Core API first, falls back to HTML scraping"""
+    try:
+        config = load_config()
+        io_config = config.get('io_link', {})
+        ip = io_config.get('master_ip', '192.168.7.4')
+        port = io_config.get('port', 80)
+        timeout = io_config.get('timeout_sec', 3)
+        scheme = 'https' if io_config.get('use_https', False) else 'http'
+        default_port = 443 if scheme == 'https' else 80
+        base_url = f'{scheme}://{ip}' if port == default_port else f'{scheme}://{ip}:{port}'
+
+        # Try web scrape first (1 request) - lighter on device, more stable
+        result = _fetch_io_link_via_web_scrape(base_url, timeout)
+        if result is not None:
+            result['source'] = 'web_scrape'
+            result['success'] = True
+            result.setdefault('product_image_url', '/api/io-link/product-image')
+            result.setdefault('device_icon_url', None)
+            _append_supervision_history(result.get('supervision', {}))
+            return jsonify(result)
+
+        # Fallback: IoT Core API (many requests - can overwhelm device if polled often)
+        result = _fetch_io_link_via_iot_core(base_url, timeout)
+        if result is not None:
+            result['source'] = 'iot_core'
+            result['success'] = True
+            result.setdefault('product_image_url', '/api/io-link/product-image')
+            _append_supervision_history(result.get('supervision', {}))
+            return jsonify(result)
+
+        return jsonify({
+            'success': False,
+            'error': f'Could not reach IO-Link Master at {base_url}. Ping works but HTTP failed - try opening {base_url} in a browser. Check if web server uses a different port.',
+            'ports': [],
+            'supervision': {},
+            'software': {},
+            'device_name': '',
+            'product_image_url': '/api/io-link/product-image'
+        }), 503
+
+    except Exception as e:
+        logger.error(f"Error fetching IO-Link status: {e}")
+        return jsonify({
+            'success': False,
+            'error': str(e),
+            'ports': [],
+            'supervision': {},
+            'software': {},
+            'device_name': ''
+        }), 500
+
+
+@app.route('/api/io-link/supervision-history', methods=['GET'])
+def io_link_supervision_history():
+    """Return supervision data history for graphing"""
+    return jsonify({
+        'history': _io_link_supervision_history,
+        'count': len(_io_link_supervision_history)
+    })
+
+
+# Fallback SVG when no product image found (always works, no 404)
+_IO_LINK_SVG_FALLBACK = '''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120" width="200" height="120">
+  <rect fill="#E65100" width="200" height="120" rx="4"/>
+  <rect fill="#333" x="20" y="30" width="80" height="60" rx="2"/>
+  <circle fill="#4CAF50" cx="130" cy="50" r="8"/>
+  <circle fill="#FFC107" cx="150" cy="50" r="8"/>
+  <rect fill="#555" x="40" y="45" width="12" height="20" rx="1"/>
+  <rect fill="#555" x="58" y="45" width="12" height="20" rx="1"/>
+  <rect fill="#555" x="76" y="45" width="12" height="20" rx="1"/>
+  <rect fill="#555" x="94" y="45" width="12" height="20" rx="1"/>
+  <text fill="white" font-family="sans-serif" font-size="12" x="100" y="105" text-anchor="middle">AL1300 IO-Link Master</text>
+</svg>'''
+
+_IO_LINK_PRODUCT_IMAGE_URLS = [
+    'https://www.ifm.com/shared/media/product/AL1300.png',
+    'https://media.ifm.com/images/oe_extern/ifm/gimg/AL1300.png',
+]
+
+
+@app.route('/api/io-link/product-image', methods=['GET'])
+def io_link_product_image():
+    """Serve local product image, proxy from IFM, or SVG fallback (never 404)"""
+    try:
+        for fname in ('AL1300.png', 'io-link-master.png'):
+            local_path = os.path.normpath(os.path.join(_FRONTEND_DIR, 'assets', 'img', fname))
+            if os.path.exists(local_path):
+                return send_from_directory(os.path.dirname(local_path), fname, mimetype='image/png')
+    except Exception as e:
+        logger.debug(f"Product image local serve failed: {e}")
+    for url in _IO_LINK_PRODUCT_IMAGE_URLS:
+        try:
+            r = requests.get(url, timeout=3, stream=True)
+            if r.status_code == 200 and r.headers.get('content-type', '').startswith('image'):
+                return Response(r.iter_content(chunk_size=8192), mimetype=r.headers.get('content-type', 'image/png'))
+        except Exception:
+            continue
+    return Response(_IO_LINK_SVG_FALLBACK, mimetype='image/svg+xml')
+
+
+def _fetch_io_link_via_iot_core(base_url: str, timeout: float) -> Optional[Dict]:
+    """Try to fetch data via IFM IoT Core JSON API"""
+    try:
+        # Try device name first (confirms IoT Core is available)
+        r = requests.get(f'{base_url}/devicetag/applicationtag/getdata', timeout=timeout)
+        if r.status_code != 200:
+            return None
+        data = r.json()
+        if data.get('code') != 200:
+            return None
+        device_name = data.get('data', {}).get('value', 'IO-Link Master')
+
+        ports = []
+        for i in range(1, 5):
+            port_data = {'port': i, 'mode': 'inactive', 'comm_mode': '', 'master_cycle_time': '',
+                         'vendor_id': '', 'device_id': '', 'name': '', 'serial': '', 'pdin': '', 'pdout': ''}
+            try:
+                r = requests.get(f'{base_url}/iolinkmaster/port[{i}]/mode/getdata', timeout=timeout)
+                if r.status_code == 200 and r.json().get('code') == 200:
+                    port_data['mode'] = r.json().get('data', {}).get('value', 'unknown')
+            except Exception:
+                pass
+            try:
+                r = requests.get(f'{base_url}/iolinkmaster/port[{i}]/iolinkdevice/deviceid/getdata', timeout=timeout)
+                if r.status_code == 200 and r.json().get('code') == 200:
+                    port_data['device_id'] = r.json().get('data', {}).get('value', '')
+            except Exception:
+                pass
+            try:
+                r = requests.get(f'{base_url}/iolinkmaster/port[{i}]/iolinkdevice/vendorid/getdata', timeout=timeout)
+                if r.status_code == 200 and r.json().get('code') == 200:
+                    port_data['vendor_id'] = r.json().get('data', {}).get('value', '')
+            except Exception:
+                pass
+            try:
+                r = requests.get(f'{base_url}/iolinkmaster/port[{i}]/iolinkdevice/productname/getdata', timeout=timeout)
+                if r.status_code == 200 and r.json().get('code') == 200:
+                    port_data['name'] = r.json().get('data', {}).get('value', '')
+            except Exception:
+                pass
+            try:
+                r = requests.get(f'{base_url}/iolinkmaster/port[{i}]/iolinkdevice/serialnumber/getdata', timeout=timeout)
+                if r.status_code == 200 and r.json().get('code') == 200:
+                    port_data['serial'] = r.json().get('data', {}).get('value', '')
+            except Exception:
+                pass
+            try:
+                r = requests.get(f'{base_url}/iolinkmaster/port[{i}]/mastercycle/getdata', timeout=timeout)
+                if r.status_code == 200 and r.json().get('code') == 200:
+                    port_data['master_cycle_time'] = r.json().get('data', {}).get('value', '')
+            except Exception:
+                pass
+            try:
+                r = requests.get(f'{base_url}/iolinkmaster/port[{i}]/iolinkdevice/pdin/getdata', timeout=timeout)
+                if r.status_code == 200 and r.json().get('code') == 200:
+                    port_data['pdin'] = r.json().get('data', {}).get('value', '')
+            except Exception:
+                pass
+            try:
+                r = requests.get(f'{base_url}/iolinkmaster/port[{i}]/iolinkdevice/pdout/getdata', timeout=timeout)
+                if r.status_code == 200 and r.json().get('code') == 200:
+                    port_data['pdout'] = r.json().get('data', {}).get('value', '')
+            except Exception:
+                pass
+            try:
+                r = requests.get(f'{base_url}/iolinkmaster/port[{i}]/comcode/getdata', timeout=timeout)
+                if r.status_code == 200 and r.json().get('code') == 200:
+                    port_data['comm_mode'] = r.json().get('data', {}).get('value', '')
+            except Exception:
+                pass
+            ports.append(port_data)
+
+        supervision = {}
+        software = {}
+        device_icon_url = None
+        for path, key in [
+            ('deviceinfo/software/getdata', 'Firmware'),
+            ('deviceinfo/bootloaderrevision/getdata', 'Bootloader'),
+            ('software/firmware/getdata', 'Firmware'),
+            ('software/container/getdata', 'Container'),
+            ('software/bootloader/getdata', 'Bootloader'),
+            ('software/fieldbusfirmware/getdata', 'Fieldbus Firmware'),
+        ]:
+            try:
+                r = requests.get(f'{base_url}/{path}', timeout=timeout)
+                if r.status_code == 200 and r.json().get('code') == 200:
+                    val = r.json().get('data', {}).get('value', '')
+                    if val and key not in software:
+                        software[key] = val
+            except Exception:
+                pass
+        try:
+            r = requests.get(f'{base_url}/deviceinfo/deviceicon/getdata', timeout=timeout)
+            if r.status_code == 200 and r.json().get('code') == 200:
+                device_icon_url = r.json().get('data', {}).get('value', '')
+            if not device_icon_url:
+                r = requests.get(f'{base_url}/deviceinfo/image/getdata', timeout=timeout)
+                if r.status_code == 200 and r.json().get('code') == 200:
+                    device_icon_url = r.json().get('data', {}).get('value', '')
+        except Exception:
+            pass
+
+        return {
+            'device_name': device_name,
+            'ports': ports,
+            'supervision': supervision,
+            'software': software,
+            'device_icon_url': device_icon_url,
+            'product_image_url': '/api/io-link/product-image',
+            'timestamp': time.time()
+        }
+    except Exception as e:
+        logger.debug(f"IO-Link IoT Core fetch failed: {e}")
+        return None
+
+
+def _fetch_io_link_via_web_scrape(base_url: str, timeout: float) -> Optional[Dict]:
+    """Fallback: scrape data from built-in web page"""
+    try:
+        r = requests.get(base_url + '/', timeout=timeout)
+        if r.status_code != 200:
+            return None
+
+        soup = BeautifulSoup(r.text, 'html.parser')
+
+        # Extract device name from page title or header
+        device_name = 'IO-Link Master'
+        title = soup.find('title') or soup.find('h1')
+        if title and title.get_text(strip=True):
+            device_name = title.get_text(strip=True)
+
+        # Find all tables
+        tables = soup.find_all('table')
+        ports = []
+        supervision = {}
+        software = {}
+
+        for table in tables:
+            rows = table.find_all('tr')
+            if not rows:
+                continue
+
+            header_cells = [th.get_text(strip=True).lower() for th in rows[0].find_all(['th', 'td'])]
+            if 'port' in str(header_cells):
+                # Port table: Port, Mode, Comm. Mode, MasterCycle Time, Vendor ID, Device ID, Name, Serial
+                for row in rows[1:]:
+                    cells = [td.get_text(strip=True) for td in row.find_all(['td', 'th'])]
+                    if len(cells) >= 2:
+                        port_num = cells[0] if cells[0].isdigit() else len(ports) + 1
+                        try:
+                            port_num = int(port_num)
+                        except ValueError:
+                            port_num = len(ports) + 1
+                        ports.append({
+                            'port': port_num,
+                            'mode': cells[1] if len(cells) > 1 else '',
+                            'comm_mode': cells[2] if len(cells) > 2 else '',
+                            'master_cycle_time': cells[3] if len(cells) > 3 else '',
+                            'vendor_id': cells[4] if len(cells) > 4 else '',
+                            'device_id': cells[5] if len(cells) > 5 else '',
+                            'name': cells[6] if len(cells) > 6 else '',
+                            'serial': cells[7] if len(cells) > 7 else '',
+                            'pdin': '',
+                            'pdout': ''
+                        })
+            elif 'supervision' in str(header_cells) or 'value' in str(header_cells):
+                # Supervision table: Supervision, Value
+                for row in rows[1:]:
+                    cells = [td.get_text(strip=True) for td in row.find_all(['td', 'th'])]
+                    if len(cells) >= 2:
+                        supervision[cells[0]] = cells[1]
+            elif 'software' in str(header_cells) or 'version' in str(header_cells):
+                # Software table: Software, Version
+                for row in rows[1:]:
+                    cells = [td.get_text(strip=True) for td in row.find_all(['td', 'th'])]
+                    if len(cells) >= 2:
+                        software[cells[0]] = cells[1]
+
+        # If no structured tables found, try common IFM page structure (key-value pairs)
+        if not ports and not supervision and not software:
+            for table in soup.find_all('table'):
+                for row in table.find_all('tr'):
+                    cells = row.find_all(['td', 'th'])
+                    if len(cells) == 2:
+                        key = cells[0].get_text(strip=True)
+                        val = cells[1].get_text(strip=True)
+                        if 'port' in key.lower() or 'mode' in key.lower():
+                            continue
+                        if any(x in key.lower() for x in ['sw-version', 'current', 'voltage', 'status', 'temperature']):
+                            supervision[key] = val
+                        elif any(x in key.lower() for x in ['firmware', 'container', 'bootloader', 'fieldbus']):
+                            software[key] = val
+
+        return {
+            'device_name': device_name,
+            'ports': ports,
+            'supervision': supervision,
+            'software': software,
+            'product_image_url': '/api/io-link/product-image',
+            'timestamp': time.time()
+        }
+    except Exception as e:
+        logger.debug(f"IO-Link web scrape failed: {e}")
+        return None
 
 @app.route('/api/counter-images/cleanup', methods=['POST'])
 def cleanup_counter_images():

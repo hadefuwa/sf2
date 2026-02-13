@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <link rel="apple-touch-icon" sizes="76x76" href="/assets/img/apple-icon.png">
+  <link rel="icon" type="image/png" href="/assets/img/favicon.png">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>IO-Link Master - Smart Factory</title>
+  <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
+  
+  <!-- Fonts and icons - all local (no internet required for HMI) -->
+  <link rel="stylesheet" href="/assets/fontawesome/css/all.min.css">
+  
+  <!-- CSS Files -->
+  <link href="/assets/css/material-dashboard.min.css?v=2.1.0" rel="stylesheet" />
+  <link href="/assets/css/professional-theme.css" rel="stylesheet" />
+  <style>
+    .port-active, .port-active td, .port-active th, .port-active code { color: #1a1a1a !important; }
+    
+    /* Chart container styling */
+    .chart-container {
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      margin-bottom: 10px;
+    }
+    
+    /* Make charts taller and more visible */
+    .ct-perfect-fourth {
+      display: block;
+      position: relative;
+      width: 100%;
+      height: 250px;
+    }
+    
+    /* Chart line and area colors for each graph */
+    #chartCurrent .ct-line {
+      stroke: #4caf50;
+      stroke-width: 3px;
+    }
+    #chartCurrent .ct-area {
+      fill: #4caf50;
+      fill-opacity: 0.2;
+    }
+    #chartCurrent .ct-point {
+      stroke: #4caf50;
+      stroke-width: 8px;
+    }
+    
+    #chartVoltage .ct-line {
+      stroke: #ff9800;
+      stroke-width: 3px;
+    }
+    #chartVoltage .ct-area {
+      fill: #ff9800;
+      fill-opacity: 0.2;
+    }
+    #chartVoltage .ct-point {
+      stroke: #ff9800;
+      stroke-width: 8px;
+    }
+    
+    #chartTemp .ct-line {
+      stroke: #f44336;
+      stroke-width: 3px;
+    }
+    #chartTemp .ct-area {
+      fill: #f44336;
+      fill-opacity: 0.2;
+    }
+    #chartTemp .ct-point {
+      stroke: #f44336;
+      stroke-width: 8px;
+    }
+    
+    /* Chart labels */
+    .ct-label {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 11px;
+    }
+    
+    /* Chart grid */
+    .ct-grid {
+      stroke: rgba(255, 255, 255, 0.1);
+      stroke-width: 1px;
+    }
+  </style>
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#030c1d">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- All styles consolidated in professional-theme.css -->
+</head>
+
+<body class="dark-edition">
+  <div class="wrapper">
+    <div class="sidebar" data-color="purple" data-background-color="black" data-image="">
+      <div class="sidebar-animated-bg" id="sidebarAnimatedBg"></div>
+      <div class="logo">
+        <a href="/" class="simple-text logo-normal">
+          <i class="material-icons">factory</i>
+          Smart Factory
+        </a>
+      </div>
+      <div class="sidebar-wrapper">
+        <ul class="nav">
+          <li class="nav-item">
+            <a class="nav-link" href="/index.html">
+              <i class="material-icons">dashboard</i>
+              <p>Dashboard</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/robot-arm.html">
+              <i class="material-icons">precision_manufacturing</i>
+              <p>Robot Arm</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/vision-system.html">
+              <i class="material-icons">visibility</i>
+              <p>Vision System</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/rfid.html">
+              <i class="material-icons">nfc</i>
+              <p>RFID Tracking</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/digital-twin.html">
+              <i class="material-icons">view_in_ar</i>
+              <p>Digital Twin</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/plc-diagnostics.html">
+              <i class="material-icons">analytics</i>
+              <p>PLC Diagnostics</p>
+            </a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="/io-link.html">
+              <i class="material-icons">settings_input_component</i>
+              <p>IO-Link Master</p>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="main-panel">
+      <!-- Navbar -->
+      <nav class="navbar navbar-expand-lg navbar-transparent navbar-absolute fixed-top">
+        <div class="container-fluid">
+          <div class="navbar-wrapper">
+            <a class="navbar-brand" href="javascript:;">IO-Link Master</a>
+          </div>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" aria-controls="navigation-index" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="navbar-toggler-icon icon-bar"></span>
+            <span class="navbar-toggler-icon icon-bar"></span>
+            <span class="navbar-toggler-icon icon-bar"></span>
+          </button>
+        </div>
+      </nav>
+      <!-- End Navbar -->
+
+      <div class="content">
+        <div class="container-fluid">
+          <!-- Product Image and Header -->
+          <div class="row">
+            <div class="col-md-3">
+              <div class="card">
+                <div class="card-body text-center">
+                  <img id="productImage" src="/assets/img/AL1300.png" alt="IO-Link Master" 
+                       class="img-fluid" style="max-height: 200px; object-fit: contain;"
+                       onerror="this.onerror=null; this.src='/api/io-link/product-image';">
+                  <div id="productImagePlaceholder" style="display:none; padding: 20px; color: #666;">
+                    <i class="material-icons" style="font-size: 80px;">settings_input_component</i>
+                    <p>AL1300 IO-Link Master</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-9">
+              <div class="card">
+                <div class="card-header card-header-purple">
+                  <h4 class="card-title" id="deviceName">IO-Link Master</h4>
+                  <p class="card-category">IFM IO-Link Master - Port status, supervision, and software versions</p>
+                </div>
+                <div class="card-body">
+                  <div class="status-panel">
+                    <div class="status-row">
+                      <div class="status-label">Connection:</div>
+                      <div class="status-value" id="connectionStatus">Checking...</div>
+                    </div>
+                    <div class="status-row">
+                      <div class="status-label">Data Source:</div>
+                      <div class="status-value" id="dataSource">-</div>
+                    </div>
+                    <div class="status-row">
+                      <div class="status-label">Last Update:</div>
+                      <div class="status-value" id="lastUpdate">-</div>
+                    </div>
+                    <div class="status-row">
+                      <div class="status-label">Poll Interval:</div>
+                      <div class="status-value" id="pollInterval">5s</div>
+                    </div>
+                  </div>
+                  <div class="controls" style="margin-top: 12px;">
+                    <button class="btn-control" onclick="setPollInterval(3)">3s</button>
+                    <button class="btn-control" onclick="setPollInterval(5)">5s</button>
+                    <button class="btn-control" onclick="setPollInterval(10)">10s</button>
+                    <button class="btn-control btn-primary" onclick="refreshNow()">Refresh Now</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Port Status Table -->
+          <div class="row">
+            <div class="col-md-12">
+              <div class="card">
+                <div class="card-header card-header-info">
+                  <h4 class="card-title">Port Status</h4>
+                  <p class="card-category">IO-Link ports and connected devices</p>
+                </div>
+                <div class="card-body table-responsive">
+                  <table class="table table-hover">
+                    <thead class="text-primary">
+                      <tr>
+                        <th>Port</th>
+                        <th>Mode</th>
+                        <th>Comm. Mode</th>
+                        <th>MasterCycle</th>
+                        <th>Vendor ID</th>
+                        <th>Device ID</th>
+                        <th>Name</th>
+                        <th>Serial</th>
+                        <th>PD In</th>
+                        <th>PD Out</th>
+                      </tr>
+                    </thead>
+                    <tbody id="portTableBody">
+                      <tr>
+                        <td colspan="10" class="text-center">Loading...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Supervision and Software -->
+          <div class="row">
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header card-header-success">
+                  <h4 class="card-title">Supervision</h4>
+                  <p class="card-category">Device operational parameters</p>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table">
+                      <tbody id="supervisionTableBody">
+                        <tr><td colspan="2" class="text-center">-</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div class="card card-chart">
+                <div class="card-header card-header-success">
+                  <h4 class="card-title">Supervision Trends</h4>
+                  <p class="card-category">Current, Voltage, Temperature over time</p>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-4">
+                      <div class="chart-container">
+                        <h6 class="text-center font-weight-bold">Current (mA)</h6>
+                        <div class="ct-chart ct-perfect-fourth" id="chartCurrent"></div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="chart-container">
+                        <h6 class="text-center font-weight-bold">Voltage (mV)</h6>
+                        <div class="ct-chart ct-perfect-fourth" id="chartVoltage"></div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="chart-container">
+                        <h6 class="text-center font-weight-bold">Temperature (°C)</h6>
+                        <div class="ct-chart ct-perfect-fourth" id="chartTemp"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header card-header-warning">
+                  <h4 class="card-title">Software Versions</h4>
+                  <p class="card-category">Firmware and component versions</p>
+                </div>
+                <div class="card-body">
+                  <div class="table-responsive">
+                    <table class="table">
+                      <tbody id="softwareTableBody">
+                        <tr><td colspan="2" class="text-center">-</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Core JS Files -->
+  <script src="/assets/js/core/jquery.min.js"></script>
+  <script src="/assets/js/core/popper.min.js"></script>
+  <script src="/assets/js/core/bootstrap-material-design.min.js"></script>
+  <script src="/assets/js/plugins/perfect-scrollbar.jquery.min.js"></script>
+  <script src="/assets/js/plugins/chartist.min.js"></script>
+  <script src="/assets/js/material-dashboard.min.js?v=2.1.0" type="text/javascript"></script>
+
+  <script>
+    // ========== IO-LINK MASTER LOGIC ==========
+    const API_BASE = window.location.origin;
+    let pollIntervalSec = 5;
+    let pollTimer = null;
+    let fetchInProgress = false;
+
+    function setPollInterval(sec) {
+      pollIntervalSec = sec;
+      document.getElementById('pollInterval').textContent = sec + 's';
+
+      if (pollTimer) {
+        clearInterval(pollTimer);
+      }
+
+      pollTimer = setInterval(fetchIoLinkStatus, pollIntervalSec * 1000);
+      fetchIoLinkStatus();
+    }
+
+    function refreshNow() {
+      fetchIoLinkStatus();
+    }
+
+    let lastGoodData = null;
+
+    function showError(msg, clearData) {
+      document.getElementById('connectionStatus').textContent = msg;
+      document.getElementById('connectionStatus').className = 'status-value inactive';
+      document.getElementById('dataSource').textContent = '-';
+      if (clearData || !lastGoodData) {
+        updatePortTable([]);
+        updateSupervisionTable({});
+        updateSoftwareTable({});
+      }
+    }
+
+    async function fetchIoLinkStatus() {
+      if (fetchInProgress) return;
+      fetchInProgress = true;
+
+      try {
+        const response = await fetch(`${API_BASE}/api/io-link/status`, {
+          signal: AbortSignal.timeout(15000)
+        });
+
+        const data = await response.json();
+        document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+
+        if (!response.ok) {
+          const msg = data.error || 'IO-Link Master unreachable';
+          showError(msg.length > 60 ? msg.substring(0, 57) + '...' : msg, false);
+          return;
+        }
+
+        if (data.success) {
+          lastGoodData = data;
+          document.getElementById('connectionStatus').textContent = 'Connected';
+          document.getElementById('connectionStatus').className = 'status-value active';
+          document.getElementById('dataSource').textContent = data.source || '-';
+          document.getElementById('deviceName').textContent = data.device_name || 'IO-Link Master';
+          updatePortTable(data.ports || []);
+          updateSupervisionTable(data.supervision || {});
+          updateSoftwareTable(data.software || {});
+          updateSupervisionChart();
+          const img = document.getElementById('productImage');
+          const placeholder = document.getElementById('productImagePlaceholder');
+          if (data.device_icon_url) {
+            img.src = data.device_icon_url;
+            img.style.display = '';
+            placeholder.style.display = 'none';
+          } else {
+            img.src = '/assets/img/AL1300.png';
+            img.style.display = '';
+            placeholder.style.display = 'none';
+            img.onerror = function() { this.onerror = null; this.src = '/api/io-link/product-image'; };
+          }
+        } else {
+          showError('Error: ' + (data.error || 'Unknown'));
+        }
+      } catch (error) {
+        document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+        if (error.name === 'TimeoutError' || error.message && error.message.includes('timed out')) {
+          showError('Connection lost (retrying...)', false);
+        } else {
+          showError('Error: ' + (error.message || 'Unknown'), false);
+        }
+      } finally {
+        fetchInProgress = false;
+      }
+    }
+
+    function updatePortTable(ports) {
+      const tbody = document.getElementById('portTableBody');
+      tbody.innerHTML = '';
+
+      if (ports.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center">No port data</td></tr>';
+        return;
+      }
+
+      for (let i = 0; i < ports.length; i++) {
+        const p = ports[i];
+        const isActive = (p.mode || '').toLowerCase().includes('io-link') || (p.mode || '').toLowerCase() === 'io-link';
+        const rowClass = isActive ? 'table-success port-active' : '';
+        const row = document.createElement('tr');
+        row.className = rowClass;
+        const pdin = p.pdin ? (p.pdin.length <= 8 ? p.pdin : p.pdin + '...') : '-';
+        const pdout = p.pdout ? (p.pdout.length <= 8 ? p.pdout : p.pdout + '...') : '-';
+        row.innerHTML = `
+          <td>${p.port}</td>
+          <td>${escapeHtml(p.mode || '-')}</td>
+          <td>${escapeHtml(p.comm_mode || '-')}</td>
+          <td>${escapeHtml(p.master_cycle_time || '-')}</td>
+          <td>${escapeHtml(p.vendor_id || '-')}</td>
+          <td>${escapeHtml(p.device_id || '-')}</td>
+          <td>${escapeHtml(p.name || '-')}</td>
+          <td>${escapeHtml(p.serial || '-')}</td>
+          <td><code class="process-data">${escapeHtml(pdin)}</code></td>
+          <td><code class="process-data">${escapeHtml(pdout)}</code></td>
+        `;
+        tbody.appendChild(row);
+      }
+    }
+
+    function updateSupervisionTable(supervision) {
+      const tbody = document.getElementById('supervisionTableBody');
+      tbody.innerHTML = '';
+
+      const entries = Object.entries(supervision);
+      if (entries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="2" class="text-center">No supervision data</td></tr>';
+        return;
+      }
+
+      for (let i = 0; i < entries.length; i++) {
+        const [key, val] = entries[i];
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${escapeHtml(key)}</td><td>${escapeHtml(val)}</td>`;
+        tbody.appendChild(row);
+      }
+    }
+
+    function updateSoftwareTable(software) {
+      const tbody = document.getElementById('softwareTableBody');
+      tbody.innerHTML = '';
+
+      const entries = Object.entries(software);
+      if (entries.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="2" class="text-center">No software data</td></tr>';
+        return;
+      }
+
+      for (let i = 0; i < entries.length; i++) {
+        const [key, val] = entries[i];
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${escapeHtml(key)}</td><td>${escapeHtml(val)}</td>`;
+        tbody.appendChild(row);
+      }
+    }
+
+    let chartCurrent = null, chartVoltage = null, chartTemp = null;
+
+    async function updateSupervisionChart() {
+      try {
+        const res = await fetch(`${API_BASE}/api/io-link/supervision-history`, { signal: AbortSignal.timeout(5000) });
+        const data = await res.json();
+        const history = data.history || [];
+        if (history.length < 2) return;
+
+        const step = Math.max(1, Math.floor(history.length / 6));
+        const labels = history.map((h, i) => (i % step === 0 || i === history.length - 1) ? new Date(h.ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '');
+        
+        const currentSer = history.map(h => h.current != null ? h.current : null);
+        const voltageSer = history.map(h => h.voltage != null ? h.voltage : null);
+        const tempSer = history.map(h => h.temperature != null ? h.temperature : null);
+
+        // Base chart options
+        const baseOpts = {
+          showArea: true,
+          showPoint: true,
+          fullWidth: true,
+          lineSmooth: true,
+          chartPadding: { top: 10, right: 10, bottom: 5, left: 10 },
+          axisY: { onlyInteger: false, labelInterpolationFnc: value => Math.round(value) }
+        };
+
+        // Current chart (mA) - auto scale
+        const currentOpts = { ...baseOpts, low: Math.min(...currentSer.filter(v => v != null)) * 0.95, high: Math.max(...currentSer.filter(v => v != null)) * 1.05 };
+        if (chartCurrent) chartCurrent.update({ labels: labels, series: [currentSer] }, currentOpts);
+        else chartCurrent = new Chartist.Line('#chartCurrent', { labels: labels, series: [currentSer] }, currentOpts);
+
+        // Voltage chart (mV) - auto scale
+        const voltageOpts = { ...baseOpts, low: Math.min(...voltageSer.filter(v => v != null)) * 0.95, high: Math.max(...voltageSer.filter(v => v != null)) * 1.05 };
+        if (chartVoltage) chartVoltage.update({ labels: labels, series: [voltageSer] }, voltageOpts);
+        else chartVoltage = new Chartist.Line('#chartVoltage', { labels: labels, series: [voltageSer] }, voltageOpts);
+
+        // Temperature chart (°C) - auto scale
+        const tempOpts = { ...baseOpts, low: Math.min(...tempSer.filter(v => v != null)) * 0.95, high: Math.max(...tempSer.filter(v => v != null)) * 1.05 };
+        if (chartTemp) chartTemp.update({ labels: labels, series: [tempSer] }, tempOpts);
+        else chartTemp = new Chartist.Line('#chartTemp', { labels: labels, series: [tempSer] }, tempOpts);
+      } catch (e) {
+        console.error('Chart update error:', e);
+      }
+    }
+
+    function escapeHtml(text) {
+      if (text === null || text === undefined) return '-';
+      const div = document.createElement('div');
+      div.textContent = String(text);
+      return div.innerHTML;
+    }
+
+    // Start polling on load
+    setPollInterval(5);
+  </script>
+
+  <script>
+    // Animated Factory Sidebar Background
+    function initSidebarAnimation() {
+      const container = document.getElementById('sidebarAnimatedBg');
+      if (!container) return;
+
+      for (let i = 0; i < 15; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'factory-particle';
+        particle.style.width = Math.random() * 4 + 2 + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDuration = Math.random() * 10 + 8 + 's';
+        particle.style.animationDelay = Math.random() * 5 + 's';
+        container.appendChild(particle);
+      }
+
+      for (let i = 0; i < 8; i++) {
+        const line = document.createElement('div');
+        line.className = 'circuit-line';
+        line.style.top = Math.random() * 100 + '%';
+        line.style.width = Math.random() * 150 + 100 + 'px';
+        line.style.animationDuration = Math.random() * 6 + 4 + 's';
+        line.style.animationDelay = Math.random() * 3 + 's';
+        container.appendChild(line);
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initSidebarAnimation);
+    } else {
+      initSidebarAnimation();
+    }
+  </script>
+</body>
+</html>

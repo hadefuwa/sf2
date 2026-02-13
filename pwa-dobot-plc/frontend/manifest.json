@@ -1,0 +1,10 @@
+{
+  "name": "Smart Factory Control",
+  "short_name": "Smart Factory",
+  "description": "Smart Factory Control System - PLC, IO-Link, Vision, Robot",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#030c1d",
+  "theme_color": "#030c1d",
+  "icons": []
+}

@@ -11,3 +11,4 @@ opencv-python>=4.8.0
 numpy>=1.24.0
 requests>=2.31.0
 playwright>=1.40.0
+beautifulsoup4>=4.12.0
