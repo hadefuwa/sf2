@@ -772,13 +772,14 @@
  errorMsg = error.message;
  }
  
- // Suppress timeout/abort errors as they're expected when backend is slow
- if (!errorMsg.includes('timeout') && !errorMsg.includes('aborted') && !errorMsg.includes('AbortError')) {
+// Suppress timeout/abort errors as they're expected when backend is slow
+ const isTimeoutOrAbort = (errorMsg || '').toLowerCase().includes('timeout') || (errorMsg || '').includes('aborted') || (errorMsg || '').includes('AbortError') || (errorMsg || '').includes('signal');
+ if (!isTimeoutOrAbort) {
  console.error('Unhandled promise rejection:', errorMsg, error);
  }
- 
+
  // Prevent default browser error logging for expected errors
- if (errorMsg.includes('timeout') || errorMsg.includes('aborted')) {
+ if (isTimeoutOrAbort) {
  event.preventDefault();
  }
  });
@@ -999,11 +1000,11 @@
  const placeholder = document.getElementById('cameraPlaceholder');
  if (placeholder) placeholder.style.display = 'none';
  addSerialLog('Camera snapshot mode started (2 second interval - reduced to prevent resource exhaustion)', 'camera');
- updateCameraSnapshot();
+ updateCameraSnapshot().catch(() => {}); // Swallow rejections (timeouts, etc.) - errors logged in updateCameraSnapshot
  // Increased from 1000ms to 2000ms to reduce request load
  streamInterval = setInterval(() => {
  if (cameraConnected) {
- updateCameraSnapshot();
+ updateCameraSnapshot().catch(() => {}); // Swallow rejections - errors logged in updateCameraSnapshot
  } else {
  stopStream();
  }
@@ -1067,7 +1068,7 @@
  }
  
  // Don't log timeout/abort errors as they're expected when backend is slow
- if (!errorMsg.includes('timeout') && !errorMsg.includes('aborted') && !errorMsg.includes('AbortError')) {
+ if (!errorMsg.toLowerCase().includes('timeout') && !errorMsg.includes('aborted') && !errorMsg.includes('AbortError') && !errorMsg.includes('signal')) {
  console.error('Error updating camera snapshot:', errorMsg);
  addSerialLog(`Camera error: ${errorMsg}`, 'error');
  }
@@ -1102,6 +1103,13 @@
  const placeholder = document.getElementById('cameraPlaceholder');
  if (placeholder) placeholder.style.display = 'none';
  imgElement.style.display = 'block';
+ }
+
+ function handleStreamError(imgElement) {
+ const placeholder = document.getElementById('cameraPlaceholder');
+ if (placeholder) placeholder.style.display = 'block';
+ if (imgElement) imgElement.style.display = 'none';
+ addSerialLog('Camera stream error - will retry', 'camera');
  }
 
  async function captureFrame() {
@@ -1883,7 +1891,7 @@
  addSerialLog('Crop settings saved successfully', 'success');
  // Force refresh camera feed
  if (cameraConnected) {
- updateCameraSnapshot();
+ updateCameraSnapshot().catch(() => {});
  }
  } else {
  const error = await response.json();
