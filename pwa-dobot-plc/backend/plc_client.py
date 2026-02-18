@@ -634,7 +634,11 @@ class PLCClient:
             
             # We have the lock, try to read
             try:
-                # Read all data in ONE operation: byte 40 (1 byte) + padding + INT values
+                # Read start bit from byte 36 (DB123.DBX36.0)
+                start_byte = self.client.db_read(db_number, 36, 1)
+                start_command = get_bool(start_byte, 0, 0)  # DB123.DBX36.0
+                
+                # Read other flags from byte 40 (1 byte) + padding + INT values
                 # Read from offset 40, 6 bytes total
                 all_data = self.client.db_read(db_number, 40, 6)
                 
@@ -645,12 +649,8 @@ class PLCClient:
                 object_number = get_int(all_data, 2) if len(all_data) >= 4 else 0
                 defect_number = get_int(all_data, 4) if len(all_data) >= 6 else 0
                 
-                # Build result
-                # SIMPLE: Just read the start bit directly, no filtering
-                start_command = get_bool(bool_data, 0, 0)
-                
                 result = {
-                    'start': start_command,
+                    'start': start_command,                      # 36.0
                     'connected': get_bool(bool_data, 0, 1),     # 40.1
                     'busy': get_bool(bool_data, 0, 2),          # 40.2
                     'completed': get_bool(bool_data, 0, 3),     # 40.3
@@ -662,7 +662,7 @@ class PLCClient:
                 }
                 
                 # Log what we read for debugging
-                logger.info(f"📡 Read vision tags from DB{db_number}: start={start_command}, connected={result['connected']}, busy={result['busy']}, completed={result['completed']}")
+                logger.info(f"📡 Read vision tags from DB{db_number}: start={start_command} (DBX36.0), connected={result['connected']}, busy={result['busy']}, completed={result['completed']}")
                 
                 # Update cache
                 self.cached_vision_tags = result.copy()
@@ -711,12 +711,11 @@ class PLCClient:
                 # Small delay to avoid flooding PLC
                 time.sleep(0.02)  # 20ms delay
 
-                # Read current byte 40 to preserve other bits (especially Start bit)
+                # Read current byte 40 to preserve other bits
+                # NOTE: Start bit is now at DB123.DBX36.0 (read-only, PLC controlled)
                 current_byte = bytearray(self.client.db_read(db_number, 40, 1))
 
                 # Set individual bits (updated addresses with Completed at 40.3)
-                # NOTE: 'start' bit (40.0) is READ-ONLY - only PLC can write to it
-                # We preserve the existing Start bit value by not modifying it
                 if 'connected' in tags:
                     set_bool(current_byte, 0, 1, bool(tags['connected']))  # 40.1
                 if 'busy' in tags:
@@ -803,7 +802,7 @@ class PLCClient:
         return success
 
     def read_vision_start_command(self, db_number: int = 123) -> Optional[bool]:
-        """Read Start command from PLC (DB123.DBX40.0) - SIMPLE VERSION
+        """Read Start command from PLC (DB123.DBX36.0) - SIMPLE VERSION
 
         Just read the bit. No filtering, no history, no complexity.
         If start is TRUE, camera runs. If FALSE, camera stops.
@@ -825,9 +824,9 @@ class PLCClient:
                 return None  # Return None to indicate lock busy, not a value change
 
             try:
-                bool_data = self.client.db_read(db_number, 40, 1)
-                start_value = get_bool(bool_data, 0, 0)  # Bit 0 = Start
-                logger.info(f"📡 Read start command from DB{db_number}.DBX40.0 = {start_value}")
+                bool_data = self.client.db_read(db_number, 36, 1)
+                start_value = get_bool(bool_data, 0, 0)  # Bit 0 = Start (DB123.DBX36.0)
+                logger.info(f"📡 Read start command from DB{db_number}.DBX36.0 = {start_value}")
                 return start_value
             finally:
                 self.plc_lock.release()
@@ -836,16 +835,16 @@ class PLCClient:
             return False
 
     def read_db40_start_bit(self) -> Optional[bool]:
-        """Read Start bit from PLC DB123.DBX40.0 specifically for vision system
+        """Read Start bit from PLC DB123.DBX36.0 specifically for vision system
 
         The Camera_UDT is in DB123 starting at byte 40.
-        Start bit is at DB123.DBX40.0
+        Start bit is at DB123.DBX36.0
 
         Returns:
             True if Start command is active, False if inactive, None if lock busy (can't read)
         """
         if not self.is_connected():
-            logger.warning("Cannot read DB123.40.0 start bit - PLC not connected")
+            logger.warning("Cannot read DB123.36.0 start bit - PLC not connected")
             return False
 
         try:
@@ -856,16 +855,16 @@ class PLCClient:
 
             try:
                 time.sleep(0.02)  # 20ms delay to avoid flooding
-                # Read from DB123, byte 40 (where Camera_UDT starts)
-                bool_data = self.client.db_read(123, 40, 1)
+                # Read from DB123, byte 36 (where Start bit is located)
+                bool_data = self.client.db_read(123, 36, 1)
                 byte_value = bool_data[0]  # Get the actual byte value
-                start_value = get_bool(bool_data, 0, 0)  # DB123.DBX40.0
-                logger.info(f"📡 Read vision start bit from DB123.DBX40.0: byte={byte_value:#04x} ({bin(byte_value)}), bit0={start_value}")
+                start_value = get_bool(bool_data, 0, 0)  # DB123.DBX36.0
+                logger.info(f"📡 Read vision start bit from DB123.DBX36.0: byte={byte_value:#04x} ({bin(byte_value)}), bit0={start_value}")
                 return start_value
             finally:
                 self.plc_lock.release()
         except Exception as e:
-            logger.error(f"❌ Error reading DB123.40.0 start bit: {e}", exc_info=True)
+            logger.error(f"❌ Error reading DB123.36.0 start bit: {e}", exc_info=True)
             return False
     
     def write_vision_fault_bit(self, defects_found: bool, byte_offset: int = 1, bit_offset: int = 0) -> Dict[str, Any]:

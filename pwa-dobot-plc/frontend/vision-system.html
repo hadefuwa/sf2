@@ -130,11 +130,11 @@
  </div>
  </div>
 
- <!-- DB123.40.0 Vision Start Bit Status -->
- <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
- <span class="status-indicator" id="db40StartIndicator"></span>
- <div>
- <div style="color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">DB123.DBX40.0 VISION START</div>
+<!-- DB123.36.0 Vision Start Bit Status -->
+<div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
+<span class="status-indicator" id="db40StartIndicator"></span>
+<div>
+<div style="color: var(--text-muted); font-size: 10px; margin-bottom: 4px;">DB123.DBX36.0 VISION START</div>
  <div id="db40StartText" style="color: var(--md-sys-color-on-surface-variant); font-size: 12px; font-weight: 600;">Loading...</div>
  </div>
  </div>
@@ -564,7 +564,7 @@
  <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color);">
  <h5 style="color: var(--md-sys-color-primary); font-size: 11px; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">Tag Addresses (Read-Only Reference)</h5>
  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 10px; color: var(--md-sys-color-on-surface-variant);">
- <div>Start: DB123.DBX40.0</div>
+ <div>Start: DB123.DBX36.0</div>
  <div>Connected: DB123.DBX40.1</div>
  <div>Busy: DB123.DBX40.2</div>
  <div>Completed: DB123.DBX40.3</div>
@@ -795,7 +795,7 @@
  let fullAnalysisInterval = null;
  let fullAnalysisActive = false;
  let counterImagesFirstLoad = true;
- // Override Start: bypasses PLC DB123.DBX40.0 check for 1 minute
+ // Override Start: bypasses PLC DB123.DBX36.0 check for 1 minute
  let visionOverrideActive = false;
  let visionOverrideTimeoutId = null;
  let visionOverrideCountdownIntervalId = null;
@@ -2316,7 +2316,7 @@
  <div style="padding: 8px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 6px;">
  <div style="color: var(--md-sys-color-on-surface-variant); font-size: 9px; margin-bottom: 4px;">Start</div>
  <div style="color: var(--md-sys-color-primary); font-size: 11px; font-weight: 700;">${formatBool(tags.start)}</div>
- <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBX40.0</div>
+ <div style="color: var(--text-muted); font-size: 8px; margin-top: 2px;">DB123.DBX36.0</div>
  </div>
  <div style="padding: 8px; background: var(--md-sys-color-surface-container); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 6px;">
  <div style="color: var(--md-sys-color-on-surface-variant); font-size: 9px; margin-bottom: 4px;">Connected</div>
@@ -2510,7 +2510,7 @@
  clearVisionOverride();
  }, OVERRIDE_DURATION_SECONDS * 1000);
 
- addSerialLog('Override Start active for 1 minute - bypassing DB123.DBX40.0', 'info');
+ addSerialLog('Override Start active for 1 minute - bypassing DB123.DBX36.0', 'info');
  }
 
  // Update YOLO parameters from sliders

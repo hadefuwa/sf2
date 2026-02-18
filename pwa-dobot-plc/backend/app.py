@@ -164,9 +164,9 @@ VISION_SERVICE_TIMEOUT = 5.0  # 5 second timeout
 
 plc_cache = {
     'last_update': 0.0,
-    # DB123 Vision tags (byte 40-56)
+    # DB123 Vision tags (byte 36-56)
     'db123': {
-        'start': False,           # DB123.DBX40.0
+        'start': False,           # DB123.DBX36.0
         'busy': False,            # DB123.DBX40.1
         'complete': False,        # DB123.DBX40.2
         'fault': False,           # DB123.DBX40.3
@@ -212,12 +212,12 @@ plc_write_lock = threading.Lock()
 # - If bit_offset is specified (0-7), only that specific bit is read-only
 #
 # Examples:
-#   (123, 40, 0)     - DB123.DBX40.0 (bit 0 of byte 40) is read-only
+#   (123, 36, 0)     - DB123.DBX36.0 (bit 0 of byte 36) is read-only
 #   (123, 40, None)   - Entire byte 40 in DB123 is read-only
 #   (4, 4, 1)        - DB4.DBX4.1 (bit 1 of byte 4) is read-only
 #
 READ_ONLY_TAGS = [
-    (123, 40, 0),  # DB123.DBX40.0 - Start bit (PLC controlled, read-only)
+    (123, 36, 0),  # DB123.DBX36.0 - Start bit (PLC controlled, read-only)
     # Add more read-only tags here as needed:
     # (123, 40, 1),  # Example: Another read-only bit
     # (4, 4, None),  # Example: Entire byte 4 in DB4 is read-only
@@ -286,8 +286,8 @@ def check_write_permission(db_number: int, offset: int, data_length: int = 1) ->
         if is_tag_read_only(db_number, byte_offset, None):
             return False, f"DB{db_number}.{byte_offset} is read-only (entire byte)"
         
-        # Check individual bits (for byte 40, we check bit 0 specifically)
-        if db_number == 123 and byte_offset == 40:
+        # Check individual bits (for byte 36 and 40, we check bit 0 specifically)
+        if db_number == 123 and (byte_offset == 36 or byte_offset == 40):
             if is_tag_read_only(db_number, byte_offset, 0):
                 # Bit 0 is read-only, but we allow the write if we preserve it
                 # (This is handled in write execution)
@@ -831,14 +831,10 @@ def write_vision_to_plc(object_count: int, defect_count: int, object_ok: bool, d
         
         db_number = db123_config.get('db_number', 123)
         
-        # Get cached start bit to preserve it (read-only, PLC controlled)
-        # This value was read in the last polling cycle
-        cached_start_bit = plc_cache['db123']['start']
-        
         # Prepare byte 40 with all bool flags
-        # Preserve the start bit (40.0) - it's read-only, PLC controlled
+        # Note: Start bit is now at DB123.DBX36.0 (read-only, PLC controlled)
         byte40_data = bytearray(1)
-        snap7.util.set_bool(byte40_data, 0, 0, cached_start_bit)  # Start (preserve)
+        snap7.util.set_bool(byte40_data, 0, 0, False)              # Bit 0 unused in byte 40 now
         snap7.util.set_bool(byte40_data, 0, 1, True)              # Connected = True
         snap7.util.set_bool(byte40_data, 0, 2, busy)              # Busy
         snap7.util.set_bool(byte40_data, 0, 3, completed)         # Completed
@@ -1791,8 +1787,8 @@ def poll_loop():
                 # This includes: System, Robot, Conveyors, Gantry, Camera, Objects
                 all_data = plc_client.client.db_read(123, 0, 47)
 
-                # Camera tags (byte 40-46)
-                plc_cache['db123']['start'] = snap7.util.get_bool(all_data, 40, 0)         # DB123.DBX40.0
+                # Camera tags (byte 36-46)
+                plc_cache['db123']['start'] = snap7.util.get_bool(all_data, 36, 0)         # DB123.DBX36.0
                 plc_cache['db123']['busy'] = snap7.util.get_bool(all_data, 40, 2)          # DB123.DBX40.2
                 plc_cache['db123']['complete'] = snap7.util.get_bool(all_data, 40, 3)      # DB123.DBX40.3
                 plc_cache['db123']['fault'] = snap7.util.get_bool(all_data, 40, 6)         # DB123.DBX40.6 (Defect_Detected)
@@ -1834,24 +1830,8 @@ def poll_loop():
                         logger.error(f"❌ BLOCKED write to read-only tag: DB{write_op['db']}.{write_op['offset']} - {reason}")
                         continue  # Skip this write
                     
-                    # Special handling for byte 40 writes: preserve the start bit (40.0)
-                    # The start bit is read-only (PLC controlled), so we must preserve it
-                    if write_op['db'] == 123 and write_op['offset'] == 40 and len(write_op['data']) == 1:
-                        # Check if start bit (bit 0) is read-only
-                        if is_tag_read_only(123, 40, 0):
-                            # Read current byte 40 to get the latest start bit value
-                            # We just read it above, but read again to be safe (it's fast)
-                            try:
-                                current_byte40 = plc_client.client.db_read(123, 40, 1)
-                                current_start_bit = snap7.util.get_bool(current_byte40, 0, 0)
-                                # Preserve the read-only start bit in our write data
-                                snap7.util.set_bool(write_op['data'], 0, 0, current_start_bit)
-                                logger.debug(f"✍️ Preserved read-only start bit ({current_start_bit}) in byte 40 write")
-                            except Exception as read_error:
-                                # If read fails, use cached value as fallback
-                                cached_start = plc_cache['db123']['start']
-                                snap7.util.set_bool(write_op['data'], 0, 0, cached_start)
-                                logger.debug(f"✍️ Used cached start bit ({cached_start}) in byte 40 write (read failed)")
+                    # Note: Start bit is now at DB123.DBX36.0 (read-only, PLC controlled)
+                    # Byte 40 no longer contains the start bit, so no special preservation needed
                     
                     # Execute the write
                     plc_client.client.db_write(write_op['db'], write_op['offset'], write_op['data'])
@@ -1877,10 +1857,10 @@ def poll_loop():
                 else:
                     # Start is FALSE - reset (queue write instead of direct write)
                     logger.info("📸 Start bit FALSE - resetting vision")
-                    # Queue the reset writes for next cycle (preserving start bit)
-                    # Use the cached start bit to preserve it
+                    # Queue the reset writes for next cycle
+                    # Note: Start bit is now at DB123.DBX36.0 (read-only, PLC controlled)
                     reset_byte40 = bytearray(1)
-                    snap7.util.set_bool(reset_byte40, 0, 0, start_bit)  # Preserve start bit (FALSE in this case)
+                    snap7.util.set_bool(reset_byte40, 0, 0, False)      # Bit 0 unused in byte 40 now
                     snap7.util.set_bool(reset_byte40, 0, 1, True)       # Connected = True
                     snap7.util.set_bool(reset_byte40, 0, 2, False)     # Busy = False
                     snap7.util.set_bool(reset_byte40, 0, 3, False)     # Complete = False
@@ -2664,7 +2644,7 @@ def read_db123_tags():
 
 @app.route('/api/plc/db40/start', methods=['GET'])
 def read_db40_start_bit():
-    """Read vision start bit from PLC DB123.DBX40.0 (Camera_UDT in DB123)
+    """Read vision start bit from PLC DB123.DBX36.0 (Camera_UDT in DB123)
 
     LOCK-FREE: Returns cached value from unified poll_loop()
     Zero lock contention - instant response
@@ -2679,12 +2659,12 @@ def read_db40_start_bit():
             'start': bool(plc_cache['db123']['start']),
             'plc_connected': plc_cache['plc_connected'],
             'db_number': 123,
-            'address': 'DB123.DBX40.0',
+            'address': 'DB123.DBX36.0',
             'cache_age_ms': int(cache_age * 1000),
             'cached': True
         })
     except Exception as e:
-        logger.error(f"Error reading DB123.40.0 start bit: {e}")
+        logger.error(f"Error reading DB123.36.0 start bit: {e}")
         return jsonify({
             'success': False,
             'error': str(e),

@@ -10,7 +10,7 @@ Beautiful Progressive Web App for controlling Dobot Magician robot via Siemens S
 - 🛑 **Emergency Stop** - Quick safety shutdown
 - 📊 **Control Bits Display** - Monitor PLC control signals
 - 🎨 **Beautiful UI** - Modern, gradient design with emoji indicators
-- 📷 **Vision System** - YOLO counter detection, Override Start (bypass PLC DB123.DBX40.0), detection method selector (YOLO/contour/circle/blob)
+- 📷 **Vision System** - YOLO counter detection, Override Start (bypass PLC DB123.DBX36.0), detection method selector (YOLO/contour/circle/blob)
 - ⚙️ **Real-time Parameters** - Adjust confidence, IOU, cropping, edge detection from the UI
 - 🔒 **HTTPS** - Self-signed SSL for WinCC Unified HMI (run `deploy/generate_ssl_cert.sh`)
 
