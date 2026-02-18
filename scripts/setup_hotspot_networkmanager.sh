@@ -36,7 +36,13 @@ sleep 2
 sudo systemctl start hostapd
 sleep 3
 
-# Step 5: Verify
+# Step 5: Restart app services (they may have stopped when network changed)
+echo "Step 5: Restarting Smart Factory app services..."
+sudo systemctl restart smart-factory 2>/dev/null || true
+sudo systemctl restart vision 2>/dev/null || true
+sleep 3
+
+# Step 6: Verify
 echo ""
 echo "=========================================="
 echo "Setup Complete!"
@@ -45,4 +51,6 @@ ip addr show wlan0 | grep "inet "
 echo ""
 echo "Connect to WiFi 'SmartFactory' (password: matrix123)"
 echo "Then open: http://192.168.4.1:8080"
+echo ""
+echo "If app still doesn't load, run: sudo systemctl restart smart-factory vision"
 echo ""
