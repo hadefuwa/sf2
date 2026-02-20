@@ -64,7 +64,7 @@
           
           <!-- Camera View -->
           <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-4">
               <div class="card">
                 <div class="card-header card-header-purple">
                   <h4 class="card-title">Camera Feed</h4>
@@ -72,7 +72,7 @@
                 <div class="card-body">
                   <div class="camera-viewer">
                     <img id="cameraFrame" class="camera-frame" src="" alt="Camera Feed" style="display: none; width: 100%; border-radius: 8px;">
-                    <div id="cameraPlaceholder" style="min-height: 400px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-direction: column; gap: 10px; background: rgba(10, 22, 40, 0.8); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
+                    <div id="cameraPlaceholder" style="min-height: 300px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-direction: column; gap: 10px; background: rgba(10, 22, 40, 0.8); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
                       <div style="font-size: 48px;">CAM</div>
                       <div>Loading camera feed...</div>
                     </div>
@@ -82,16 +82,32 @@
             </div>
 
             <!-- Analyzed Image -->
-            <div class="col-md-6">
+            <div class="col-md-4">
               <div class="card">
                 <div class="card-header card-header-success">
                   <h4 class="card-title">Detected Cubes</h4>
                 </div>
                 <div class="card-body">
                   <img id="analyzedImage" class="camera-frame" src="" alt="Analyzed Image" style="display: none; width: 100%; border-radius: 8px;">
-                  <div id="analyzedPlaceholder" style="min-height: 400px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-direction: column; gap: 10px; background: rgba(10, 22, 40, 0.8); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
+                  <div id="analyzedPlaceholder" style="min-height: 300px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-direction: column; gap: 10px; background: rgba(10, 22, 40, 0.8); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
                     <div style="font-size: 48px;">SCAN</div>
                     <div>Detection results will appear here</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Annotated Result -->
+            <div class="col-md-4">
+              <div class="card">
+                <div class="card-header card-header-warning">
+                  <h4 class="card-title">Final Result</h4>
+                </div>
+                <div class="card-body">
+                  <img id="annotatedImage" class="camera-frame" src="" alt="Annotated Result" style="display: none; width: 100%; border-radius: 8px;">
+                  <div id="annotatedPlaceholder" style="min-height: 300px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-direction: column; gap: 10px; background: rgba(10, 22, 40, 0.8); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
+                    <div style="font-size: 48px;">🎯</div>
+                    <div>Voting result will appear here</div>
                   </div>
                 </div>
               </div>
@@ -418,6 +434,16 @@
 
       resultsContent.innerHTML = html;
       resultsDiv.style.display = 'block';
+
+      // Display annotated image if available
+      if (result.annotated_image) {
+        const annotatedImg = document.getElementById('annotatedImage');
+        const annotatedPlaceholder = document.getElementById('annotatedPlaceholder');
+
+        annotatedImg.src = 'data:image/jpeg;base64,' + result.annotated_image;
+        annotatedImg.style.display = 'block';
+        if (annotatedPlaceholder) annotatedPlaceholder.style.display = 'none';
+      }
     }
 
     // Detect objects once (quick test - single frame)

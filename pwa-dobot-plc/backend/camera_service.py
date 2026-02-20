@@ -12,6 +12,7 @@ import hashlib
 from typing import Optional, Dict, List, Tuple
 import io
 import os
+import base64
 
 logger = logging.getLogger(__name__)
 
@@ -792,6 +793,72 @@ class CameraService:
             color_code = 0
             logger.info(f"🗳️ Voting complete: No valid detections")
 
+        # Create annotated image showing the detected cube
+        annotated_image_base64 = None
+        if winner is not None:
+            # Take one final snapshot to annotate
+            final_frame = self.read_frame()
+            if final_frame is not None:
+                # Re-run detection on this frame to get bounding box
+                final_result = self._detect_with_color(final_frame, params)
+                objects = final_result.get('objects', [])
+
+                # Find the object matching the winner color
+                winning_objects = [obj for obj in objects if obj.get('color') == winner]
+                if winning_objects:
+                    # Get the largest object of the winning color
+                    winning_obj = max(winning_objects, key=lambda o: o.get('area', 0))
+
+                    # Draw bounding box and label on the frame
+                    x = winning_obj['x']
+                    y = winning_obj['y']
+                    w = winning_obj['width']
+                    h = winning_obj['height']
+
+                    # Color map for bounding box
+                    color_map = {
+                        'yellow': (0, 255, 255),  # BGR: Yellow
+                        'white': (255, 255, 255),  # BGR: White
+                        'metal': (128, 128, 128)   # BGR: Grey
+                    }
+                    box_color = color_map.get(winner, (0, 255, 0))
+
+                    # Draw rectangle
+                    cv2.rectangle(final_frame, (x, y), (x + w, y + h), box_color, 3)
+
+                    # Prepare label text
+                    label = f"{winner.upper()} CUBE"
+                    label_bg_y = max(y - 35, 0)
+
+                    # Draw background rectangle for text
+                    (text_width, text_height), baseline = cv2.getTextSize(
+                        label, cv2.FONT_HERSHEY_SIMPLEX, 0.8, 2
+                    )
+                    cv2.rectangle(
+                        final_frame,
+                        (x, label_bg_y),
+                        (x + text_width + 10, label_bg_y + text_height + 10),
+                        box_color,
+                        -1  # Filled rectangle
+                    )
+
+                    # Draw text label
+                    cv2.putText(
+                        final_frame,
+                        label,
+                        (x + 5, label_bg_y + text_height + 5),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.8,
+                        (0, 0, 0),  # Black text
+                        2,
+                        cv2.LINE_AA
+                    )
+
+                    # Encode image to base64
+                    _, buffer = cv2.imencode('.jpg', final_frame)
+                    annotated_image_base64 = base64.b64encode(buffer).decode('utf-8')
+                    logger.info(f"✅ Created annotated image for {winner} cube")
+
         return {
             'color': winner,
             'color_code': color_code,
@@ -799,7 +866,8 @@ class CameraService:
             'vote_counts': vote_counts,
             'all_detections': all_detections,
             'total_samples': len(color_votes),
-            'valid_samples': len(valid_votes)
+            'valid_samples': len(valid_votes),
+            'annotated_image': annotated_image_base64
         }
 
     def _detect_with_color(self, frame: np.ndarray, params: Dict) -> Dict:
