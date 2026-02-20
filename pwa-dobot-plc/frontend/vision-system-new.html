@@ -114,6 +114,46 @@
                   </div>
                   <input type="hidden" id="objectDetectionMethod" value="color">
 
+                  <!-- Crop Settings -->
+                  <div style="margin-bottom: 24px; padding: 16px; background: rgba(33, 150, 243, 0.1); border: 1px solid rgba(33, 150, 243, 0.3); border-radius: 8px;">
+                    <h5 style="color: #64b5f6; font-size: 14px; margin-bottom: 12px; font-weight: 600;">
+                      📐 Camera Crop/Zoom
+                    </h5>
+                    <div style="margin-bottom: 12px;">
+                      <label style="display: flex; align-items: center; gap: 8px; color: #e0e0e0; font-size: 12px; cursor: pointer;">
+                        <input type="checkbox" id="cropEnabled" onchange="toggleCrop()" style="cursor: pointer;">
+                        <span>Enable Crop/Zoom</span>
+                      </label>
+                    </div>
+                    <div id="cropControls" style="display: none; grid-template-columns: 1fr 1fr; gap: 12px;">
+                      <div>
+                        <label style="display: block; color: #e0e0e0; font-size: 11px; margin-bottom: 6px;">X Position (%)</label>
+                        <input type="range" id="cropX" min="0" max="100" value="0" step="1" oninput="updateCropPreview()" style="width: 100%;">
+                        <div style="text-align: center; font-size: 10px; color: #64b5f6; margin-top: 4px;" id="cropXValue">0%</div>
+                      </div>
+                      <div>
+                        <label style="display: block; color: #e0e0e0; font-size: 11px; margin-bottom: 6px;">Y Position (%)</label>
+                        <input type="range" id="cropY" min="0" max="100" value="0" step="1" oninput="updateCropPreview()" style="width: 100%;">
+                        <div style="text-align: center; font-size: 10px; color: #64b5f6; margin-top: 4px;" id="cropYValue">0%</div>
+                      </div>
+                      <div>
+                        <label style="display: block; color: #e0e0e0; font-size: 11px; margin-bottom: 6px;">Width (%)</label>
+                        <input type="range" id="cropWidth" min="1" max="100" value="100" step="1" oninput="updateCropPreview()" style="width: 100%;">
+                        <div style="text-align: center; font-size: 10px; color: #64b5f6; margin-top: 4px;" id="cropWidthValue">100%</div>
+                      </div>
+                      <div>
+                        <label style="display: block; color: #e0e0e0; font-size: 11px; margin-bottom: 6px;">Height (%)</label>
+                        <input type="range" id="cropHeight" min="1" max="100" value="100" step="1" oninput="updateCropPreview()" style="width: 100%;">
+                        <div style="text-align: center; font-size: 10px; color: #64b5f6; margin-top: 4px;" id="cropHeightValue">100%</div>
+                      </div>
+                    </div>
+                    <div style="margin-top: 12px;">
+                      <button class="btn btn-primary" onclick="saveCropSettings()" style="font-size: 12px; padding: 8px 16px; width: 100%;">
+                        Save Crop Settings
+                      </button>
+                    </div>
+                  </div>
+
                   <!-- Detection Parameters -->
                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
                     <div>
@@ -403,10 +443,85 @@
       document.getElementById('stopBtn').style.display = 'none';
     }
 
+    // Crop Settings Functions
+    async function loadCropSettings() {
+      try {
+        const response = await fetch(`${API_BASE}/api/camera/crop`);
+        if (response.ok) {
+          const crop = await response.json();
+          document.getElementById('cropEnabled').checked = crop.enabled;
+          document.getElementById('cropX').value = crop.x;
+          document.getElementById('cropY').value = crop.y;
+          document.getElementById('cropWidth').value = crop.width;
+          document.getElementById('cropHeight').value = crop.height;
+          toggleCrop();
+          updateCropPreview();
+          console.log('Crop settings loaded:', crop);
+        }
+      } catch (error) {
+        console.error('Error loading crop settings:', error);
+      }
+    }
+
+    function toggleCrop() {
+      const enabled = document.getElementById('cropEnabled').checked;
+      const controls = document.getElementById('cropControls');
+      controls.style.display = enabled ? 'grid' : 'none';
+      if (!enabled) {
+        document.getElementById('cropX').value = 0;
+        document.getElementById('cropY').value = 0;
+        document.getElementById('cropWidth').value = 100;
+        document.getElementById('cropHeight').value = 100;
+        updateCropPreview();
+      }
+    }
+
+    function updateCropPreview() {
+      const x = document.getElementById('cropX').value;
+      const y = document.getElementById('cropY').value;
+      const width = document.getElementById('cropWidth').value;
+      const height = document.getElementById('cropHeight').value;
+      document.getElementById('cropXValue').textContent = x + '%';
+      document.getElementById('cropYValue').textContent = y + '%';
+      document.getElementById('cropWidthValue').textContent = width + '%';
+      document.getElementById('cropHeightValue').textContent = height + '%';
+    }
+
+    async function saveCropSettings() {
+      try {
+        const enabled = document.getElementById('cropEnabled').checked;
+        const x = parseFloat(document.getElementById('cropX').value);
+        const y = parseFloat(document.getElementById('cropY').value);
+        const width = parseFloat(document.getElementById('cropWidth').value);
+        const height = parseFloat(document.getElementById('cropHeight').value);
+
+        const response = await fetch(`${API_BASE}/api/camera/crop`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ enabled, x, y, width, height })
+        });
+
+        if (response.ok) {
+          console.log('Crop settings saved successfully');
+          alert('Crop settings saved! Detection will now use the cropped area.');
+          // Refresh camera frame to show crop
+          updateCameraFrame();
+        } else {
+          const error = await response.json();
+          console.error('Error saving crop:', error);
+          alert('Error saving crop settings: ' + (error.error || 'Unknown error'));
+        }
+      } catch (error) {
+        console.error('Error saving crop settings:', error);
+        alert('Error saving crop settings: ' + error.message);
+      }
+    }
+
     // Initialize
     window.addEventListener('load', () => {
       console.log('Color Detection Test Page Loaded');
       updateParams();
+      loadCropSettings(); // Load crop settings on page load
       startStream(); // Start fetching camera frames automatically
     });
   </script>
