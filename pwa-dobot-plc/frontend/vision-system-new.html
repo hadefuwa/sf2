@@ -172,9 +172,15 @@
 
                   <!-- Detection Buttons -->
                   <div style="display: flex; gap: 12px; margin-bottom: 24px;">
-                    <button class="btn btn-success" onclick="detectObjects()" style="flex: 1;">
-                      <i class="material-icons">search</i> Detect Cubes
+                    <button class="btn btn-success" onclick="startAnalysis()" style="flex: 2; font-size: 16px; padding: 12px;">
+                      <i class="material-icons">analytics</i> START ANALYSIS (10 votes)
                     </button>
+                    <button class="btn btn-info" onclick="detectObjects()" style="flex: 1;">
+                      <i class="material-icons">search</i> Quick Test
+                    </button>
+                  </div>
+
+                  <div style="display: none; gap: 12px; margin-bottom: 24px;" id="oldButtons">
                     <button class="btn btn-primary" onclick="startContinuousDetection()" id="startBtn">
                       <i class="material-icons">play_arrow</i> Start Continuous
                     </button>
@@ -295,8 +301,126 @@
       document.getElementById('maxAreaValue').textContent = objectParams.max_area;
     }
 
+    // START ANALYSIS - Run voting-based detection (10 snapshots)
+    async function startAnalysis() {
+      console.log('🎯 Starting Analysis with Majority Voting (10 snapshots)');
 
-    // Detect objects once
+      const resultsDiv = document.getElementById('results');
+      const resultsContent = document.getElementById('resultsContent');
+
+      // Show loading state
+      resultsContent.innerHTML = '<div style="text-align: center; padding: 20px;"><i class="fas fa-spinner fa-spin" style="font-size: 32px; color: #4caf50;"></i><br><br>Taking 10 snapshots and voting...<br><span style="color: #64b5f6; font-size: 12px;">This takes about 1 second</span></div>';
+      resultsDiv.style.display = 'block';
+
+      try {
+        const response = await fetch(`${API_BASE}/api/vision/test-color-voting`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            num_samples: 10,
+            delay_ms: 50,
+            min_area: objectParams.min_area,
+            max_area: objectParams.max_area
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('✅ Analysis complete:', data);
+
+        // Display final voting result
+        displayVotingResult(data.result);
+
+      } catch (error) {
+        console.error('Error during analysis:', error);
+        resultsContent.innerHTML = `<div style="color: #f44336;">Error: ${error.message}</div>`;
+      }
+    }
+
+    // Display voting result with nice UI
+    function displayVotingResult(result) {
+      const resultsDiv = document.getElementById('results');
+      const resultsContent = document.getElementById('resultsContent');
+
+      const color = result.color || 'none';
+      const colorCode = result.color_code || 0;
+      const confidence = result.confidence || 0;
+      const voteCounts = result.vote_counts || {};
+
+      // Color styling
+      let colorEmoji = '';
+      let colorBadge = '';
+      let borderColor = '';
+
+      if (color === 'yellow') {
+        colorEmoji = '🟡';
+        colorBadge = 'background: rgba(255, 235, 59, 0.3); border: 2px solid #ffeb3b; color: #ffeb3b;';
+        borderColor = '#ffeb3b';
+      } else if (color === 'white') {
+        colorEmoji = '⚪';
+        colorBadge = 'background: rgba(255, 255, 255, 0.3); border: 2px solid #ffffff; color: #ffffff;';
+        borderColor = '#ffffff';
+      } else if (color === 'metal') {
+        colorEmoji = '⚫';
+        colorBadge = 'background: rgba(158, 158, 158, 0.3); border: 2px solid #9e9e9e; color: #9e9e9e;';
+        borderColor = '#9e9e9e';
+      } else {
+        colorEmoji = '❌';
+        colorBadge = 'background: rgba(244, 67, 54, 0.3); border: 2px solid #f44336; color: #f44336;';
+        borderColor = '#f44336';
+      }
+
+      let html = `
+        <div style="border-left: 6px solid ${borderColor}; padding: 20px; background: rgba(0,0,0,0.3); border-radius: 8px;">
+          <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+            <div style="font-size: 64px;">${colorEmoji}</div>
+            <div style="flex: 1;">
+              <div style="font-size: 24px; font-weight: bold; margin-bottom: 8px;">FINAL RESULT</div>
+              <div style="display: inline-block; padding: 8px 20px; border-radius: 6px; font-weight: 700; font-size: 20px; ${colorBadge}">
+                ${color === 'none' ? 'NO CUBE' : color.toUpperCase()}
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 4px;">
+            <div style="margin-bottom: 8px;"><strong>Confidence:</strong> ${confidence.toFixed(1)}%</div>
+            <div style="margin-bottom: 8px;"><strong>Color Code:</strong> ${colorCode} ${colorCode > 0 ? '(Ready for PLC)' : ''}</div>
+            <div style="margin-bottom: 8px;"><strong>Total Samples:</strong> ${result.total_samples || 10}</div>
+          </div>
+
+          <div style="margin-top: 16px;">
+            <div style="color: #ffeb3b; font-size: 12px; font-weight: 600; margin-bottom: 8px;">📊 Vote Breakdown:</div>
+      `;
+
+      for (const [voteColor, count] of Object.entries(voteCounts)) {
+        const displayColor = voteColor === 'null' ? 'none' : voteColor;
+        const percentage = (count / result.total_samples) * 100;
+        html += `
+          <div style="margin-bottom: 6px;">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 2px;">
+              <span>${displayColor.toUpperCase()}</span>
+              <span>${count} votes (${percentage.toFixed(0)}%)</span>
+            </div>
+            <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px;">
+              <div style="width: ${percentage}%; height: 100%; background: ${borderColor}; border-radius: 3px;"></div>
+            </div>
+          </div>
+        `;
+      }
+
+      html += `
+          </div>
+        </div>
+      `;
+
+      resultsContent.innerHTML = html;
+      resultsDiv.style.display = 'block';
+    }
+
+    // Detect objects once (quick test - single frame)
     async function detectObjects() {
       const objectMethod = document.getElementById('objectDetectionMethod').value;
 
