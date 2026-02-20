@@ -107,18 +107,12 @@
                 </div>
                 <div class="card-body">
                   
-                  <!-- Detection Method -->
-                  <div style="margin-bottom: 24px;">
-                    <label style="display: block; color: #e0e0e0; font-size: 14px; font-weight: 600; margin-bottom: 10px;">
-                      Detection Method:
-                    </label>
-                    <select id="detectionMethodSelector" onchange="changeDetectionMethod()" style="width: 100%; padding: 12px; background: #1e1e2e; color: #ffffff; border: 2px solid #424242; border-radius: 8px; font-size: 14px;">
-                      <option value="color">🎨 Color Filter (HSV) - Yellow/White/Metal</option>
-                      <option value="yolo">🤖 YOLO AI Model</option>
-                      <option value="blob">🔵 Blob Detection</option>
-                    </select>
-                    <input type="hidden" id="objectDetectionMethod" value="color">
+                  <!-- Detection Method Info -->
+                  <div style="margin-bottom: 24px; padding: 16px; background: rgba(255, 235, 59, 0.1); border: 2px solid #ffeb3b; border-radius: 8px;">
+                    <div style="color: #ffeb3b; font-size: 18px; font-weight: 700; margin-bottom: 8px;">🎨 Color Filter Detection (OpenCV HSV)</div>
+                    <div style="color: #b0bec5; font-size: 12px;">Detects Yellow, White, and Metal/Grey cubes using HSV color filtering</div>
                   </div>
+                  <input type="hidden" id="objectDetectionMethod" value="color">
 
                   <!-- Detection Parameters -->
                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
@@ -253,15 +247,6 @@
       document.getElementById('maxAreaValue').textContent = objectParams.max_area;
     }
 
-    // Change detection method
-    function changeDetectionMethod() {
-      const selector = document.getElementById('detectionMethodSelector');
-      const hiddenInput = document.getElementById('objectDetectionMethod');
-      if (hiddenInput) {
-        hiddenInput.value = selector.value;
-      }
-      console.log('Detection method changed to:', selector.value);
-    }
 
     // Detect objects once
     async function detectObjects() {
