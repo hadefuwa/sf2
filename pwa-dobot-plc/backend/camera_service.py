@@ -924,11 +924,12 @@ class CameraService:
         total_contours = len(contours)
         rejected_small = 0
         rejected_large = 0
-        
+        rejected_aspect_ratio = 0
+
         for contour in contours:
             # Calculate area
             area = cv2.contourArea(contour)
-            
+
             # Filter by area
             if area < min_area:
                 rejected_small += 1
@@ -936,12 +937,26 @@ class CameraService:
             if area > max_area:
                 rejected_large += 1
                 continue
-            
+
             # Get bounding box
             x, y, w, h = cv2.boundingRect(contour)
+
+            # Calculate aspect ratio (width/height)
+            if h > 0:
+                aspect_ratio = w / h
+            else:
+                aspect_ratio = 0
+
+            # Filter by aspect ratio - cubes should be roughly square
+            # Accept aspect ratios between 0.5 and 2.0 (not too elongated)
+            if aspect_ratio < 0.5 or aspect_ratio > 2.0:
+                rejected_aspect_ratio += 1
+                logger.debug(f"🔍 Rejected {color_name} object: aspect ratio {aspect_ratio:.2f} (size: {w}x{h})")
+                continue
+
             center_x = x + w // 2
             center_y = y + h // 2
-            
+
             # Calculate circularity (how close to a circle)
             perimeter = cv2.arcLength(contour, True)
             if perimeter > 0:
@@ -960,20 +975,22 @@ class CameraService:
                 'area': float(area),
                 'center': (int(center_x), int(center_y)),
                 'circularity': round(circularity, 2),
+                'aspect_ratio': round(aspect_ratio, 2),
                 'confidence': 0.85,  # Color detection is fairly reliable
                 'method': 'color'
             }
-            
+
             objects.append(obj)
-            logger.info(f"🔍 {color_name.capitalize()} object found: area={area:.0f}, center=({center_x},{center_y}), size={w}x{h}")
-        
+            logger.info(f"🔍 {color_name.capitalize()} object found: area={area:.0f}, center=({center_x},{center_y}), size={w}x{h}, aspect={aspect_ratio:.2f}")
+
         # Debug logging
-        logger.info(f"🔍 {color_name.capitalize()} contours: {total_contours} total, {rejected_small} too small (<{min_area}), {rejected_large} too large (>{max_area}), {len(objects)} accepted")
+        logger.info(f"🔍 {color_name.capitalize()} contours: {total_contours} total, {rejected_small} too small, {rejected_large} too large, {rejected_aspect_ratio} wrong shape, {len(objects)} accepted")
         if debug_info is not None:
             debug_info[f'{color_name}_contours'] = {
                 'total': total_contours,
                 'rejected_small': rejected_small,
                 'rejected_large': rejected_large,
+                'rejected_aspect_ratio': rejected_aspect_ratio,
                 'accepted': len(objects),
                 'mask_pixels_before_morph': mask_before,
                 'mask_pixels_after_morph': mask_after
