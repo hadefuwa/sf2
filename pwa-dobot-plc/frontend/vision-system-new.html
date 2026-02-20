@@ -375,7 +375,7 @@
     function displayResults(results) {
       const resultsDiv = document.getElementById('results');
       const resultsContent = document.getElementById('resultsContent');
-      
+
       if (!resultsDiv || !resultsContent) return;
 
       const objectCount = results.object_count || 0;
@@ -383,15 +383,44 @@
       const debug = results.debug || {};
 
       let html = `<div style="margin-bottom: 12px;"><strong>Cubes Detected: ${objectCount}</strong></div>`;
-      
+
       if (objects.length > 0) {
         html += '<div style="margin-top: 12px;">';
         objects.forEach((obj, idx) => {
           const color = obj.color || 'unknown';
           const center = obj.center || [0, 0];
           const area = obj.area || 0;
-          html += `<div style="margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 4px;">
-            <strong>Cube ${idx + 1}:</strong> Color: ${color}, Center: (${center[0]}, ${center[1]}), Area: ${area.toFixed(0)}px²
+
+          // Color badge styling
+          let colorBadge = '';
+          let colorEmoji = '';
+          if (color === 'yellow') {
+            colorBadge = 'background: rgba(255, 235, 59, 0.2); border: 2px solid #ffeb3b; color: #ffeb3b;';
+            colorEmoji = '🟡';
+          } else if (color === 'white') {
+            colorBadge = 'background: rgba(255, 255, 255, 0.2); border: 2px solid #ffffff; color: #ffffff;';
+            colorEmoji = '⚪';
+          } else if (color === 'metal') {
+            colorBadge = 'background: rgba(158, 158, 158, 0.2); border: 2px solid #9e9e9e; color: #9e9e9e;';
+            colorEmoji = '⚫';
+          } else {
+            colorBadge = 'background: rgba(244, 67, 54, 0.2); border: 2px solid #f44336; color: #f44336;';
+            colorEmoji = '❓';
+          }
+
+          html += `<div style="margin-bottom: 12px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 4px solid ${color === 'yellow' ? '#ffeb3b' : color === 'white' ? '#ffffff' : color === 'metal' ? '#9e9e9e' : '#f44336'};">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+              <div style="font-size: 32px;">${colorEmoji}</div>
+              <div>
+                <div style="font-size: 18px; font-weight: bold; margin-bottom: 4px;">Cube ${idx + 1}</div>
+                <div style="display: inline-block; padding: 4px 12px; border-radius: 4px; font-weight: 600; ${colorBadge}">
+                  ${color.toUpperCase()}
+                </div>
+              </div>
+            </div>
+            <div style="color: #b0bec5; font-size: 12px;">
+              Center: (${center[0]}, ${center[1]}) • Area: ${area.toFixed(0)}px²
+            </div>
           </div>`;
         });
         html += '</div>';

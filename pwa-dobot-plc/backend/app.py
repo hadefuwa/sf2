@@ -870,20 +870,21 @@ def write_vision_to_plc(object_count: int, defect_count: int, object_ok: bool, d
         snap7.util.set_int(defect_number_data, 0, defect_count)
 
         # Prepare color_code INT (2 bytes at offset 46)
+        # DISABLED FOR NOW - PLC datablock needs adjusting first
         # 0 = No cube detected
         # 1 = Yellow cube
         # 2 = White cube
         # 3 = Metal/Grey cube
-        color_code_data = bytearray(2)
-        snap7.util.set_int(color_code_data, 0, color_code)
+        # color_code_data = bytearray(2)
+        # snap7.util.set_int(color_code_data, 0, color_code)
 
         # Queue all writes - they will execute AFTER the next read in polling loop
         queue_plc_write(db_number, 40, byte40_data)           # Bool flags
         queue_plc_write(db_number, 42, object_number_data)    # Object_Number
         queue_plc_write(db_number, 44, defect_number_data)    # Defect_Number
-        queue_plc_write(db_number, 46, color_code_data)       # Color_Code (NEW)
+        # queue_plc_write(db_number, 46, color_code_data)       # Color_Code (DISABLED - PLC DB needs adjustment)
 
-        logger.debug(f"Queued vision writes: busy={busy}, completed={completed}, objects={object_count}, defects={defect_count}, color={color_code}")
+        logger.debug(f"Queued vision writes: busy={busy}, completed={completed}, objects={object_count}, defects={defect_count}, color={color_code} (color NOT written to PLC yet)")
         return True
 
     except Exception as e:
