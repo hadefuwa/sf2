@@ -169,6 +169,7 @@ plc_client = None  # Will be None if snap7 fails
 dobot_client = None
 camera_service = None
 digital_twin_stream_service = None  # Renders 3D on Pi, streams as MJPEG for HMI
+latest_annotated_image = None  # Stores the latest annotated voting result (base64)
 
 # Vision service configuration
 VISION_SERVICE_URL = os.getenv('VISION_SERVICE_URL', 'http://127.0.0.1:5001')
@@ -2579,6 +2580,8 @@ def vision_process_manual():
 @app.route('/api/vision/test-color-voting', methods=['POST'])
 def test_color_voting():
     """Test the majority voting color detection system"""
+    global latest_annotated_image
+
     if camera_service is None:
         return jsonify({'error': 'Camera service not initialized'}), 503
 
@@ -2599,12 +2602,41 @@ def test_color_voting():
             max_area=max_area
         )
 
+        # Store the annotated image for the stream endpoint
+        if result.get('annotated_image'):
+            latest_annotated_image = result['annotated_image']
+
         return jsonify({
             'success': True,
             'result': result
         })
     except Exception as e:
         logger.error(f"Error in test color voting: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/vision/annotated-result')
+def get_annotated_result():
+    """Get the latest annotated voting result image"""
+    global latest_annotated_image
+
+    if latest_annotated_image is None:
+        # Return a placeholder or error
+        return jsonify({'error': 'No annotated result available yet'}), 404
+
+    try:
+        import base64
+        # Decode base64 to binary
+        image_data = base64.b64decode(latest_annotated_image)
+
+        # Return as JPEG image
+        response = make_response(image_data)
+        response.headers['Content-Type'] = 'image/jpeg'
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        return response
+    except Exception as e:
+        logger.error(f"Error serving annotated result: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/plc/db123/read', methods=['GET'])
