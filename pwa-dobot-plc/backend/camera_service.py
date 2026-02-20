@@ -1195,15 +1195,11 @@ class CameraService:
             w, h = obj['width'], obj['height']
             center = obj['center']
 
-            # Draw bounding box
+            # Draw bounding box (rectangle)
             cv2.rectangle(annotated, (x, y), (x + w, y + h), color, 2)
 
-            # Draw center point
+            # Draw center point (small dot)
             cv2.circle(annotated, center, 5, color, -1)
-
-            # Draw circle around center for visual emphasis
-            radius = max(w, h) // 2
-            cv2.circle(annotated, center, radius, color, 2)
 
             # Draw label with counter number
             counter_number = obj.get('counterNumber')
