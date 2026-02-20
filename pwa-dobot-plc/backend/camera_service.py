@@ -44,6 +44,9 @@ class CameraService:
         self.lock = threading.Lock()
         self.last_frame = None
         self.frame_time = 0
+        # Analyzed frame caching for PLC HMI stream
+        self.last_analyzed_frame = None
+        self.analyzed_frame_time = 0
         # Object detection model
         self.object_net = None
         self.object_classes = []
@@ -223,7 +226,13 @@ class CameraService:
                 'height': self.crop_height
             }
     
-    def get_frame_jpeg(self, quality: int = 85, use_cache: bool = True, max_cache_age: float = 0.5) -> Optional[bytes]:
+    def set_analyzed_frame(self, frame: np.ndarray):
+        """Store the last analyzed frame for streaming"""
+        with self.lock:
+            self.last_analyzed_frame = frame.copy() if frame is not None else None
+            self.analyzed_frame_time = time.time()
+    
+    def get_frame_jpeg(self, quality: int = 85, use_cache: bool = True, max_cache_age: float = 0.5, prefer_analyzed: bool = False, analyzed_max_age: float = 5.0) -> Optional[bytes]:
         """
         Get current frame as JPEG bytes
         
@@ -231,23 +240,36 @@ class CameraService:
             quality: JPEG quality (0-100)
             use_cache: If True, use cached frame if recent enough (reduces camera reads)
             max_cache_age: Maximum age of cached frame in seconds before reading new one
+            prefer_analyzed: If True, prefer analyzed frame when available and recent
+            analyzed_max_age: Maximum age of analyzed frame in seconds before falling back to raw
             
         Returns:
             JPEG bytes or None if frame not available
         """
         frame = None
         
-        # Use cached frame if available and recent enough (optimization for snapshot mode)
-        if use_cache and self.last_frame is not None:
-            cache_age = time.time() - self.frame_time
-            if cache_age < max_cache_age:
-                frame = self.last_frame.copy()
+        # Check if we should prefer analyzed frame
+        if prefer_analyzed:
+            with self.lock:
+                if self.last_analyzed_frame is not None:
+                    analyzed_age = time.time() - self.analyzed_frame_time
+                    if analyzed_age < analyzed_max_age:
+                        # Use analyzed frame if it's recent enough
+                        frame = self.last_analyzed_frame.copy()
+        
+        # If no analyzed frame (or not preferring it), get raw frame
+        if frame is None:
+            # Use cached frame if available and recent enough (optimization for snapshot mode)
+            if use_cache and self.last_frame is not None:
+                cache_age = time.time() - self.frame_time
+                if cache_age < max_cache_age:
+                    frame = self.last_frame.copy()
+                else:
+                    # Cache is too old, read new frame
+                    frame = self.read_frame()
             else:
-                # Cache is too old, read new frame
+                # No cache or cache disabled, read new frame
                 frame = self.read_frame()
-        else:
-            # No cache or cache disabled, read new frame
-            frame = self.read_frame()
         
         if frame is None:
             return None

@@ -1929,7 +1929,8 @@ def generate_frames():
         if camera_service is None:
             break
         
-        frame_bytes = camera_service.get_frame_jpeg(quality=70)  # Reduced quality for faster streaming
+        # Prefer analyzed frames when available (within 5 seconds), fall back to raw frames
+        frame_bytes = camera_service.get_frame_jpeg(quality=70, prefer_analyzed=True, analyzed_max_age=5.0)
         if frame_bytes is None:
             time.sleep(0.05)  # Reduced sleep time when no frame available
             continue
@@ -2433,6 +2434,9 @@ def vision_analyze():
         annotated_frame = frame.copy()
         if detected_objects:
             annotated_frame = camera_service.draw_objects(annotated_frame, detected_objects, color=(0, 255, 0))
+        
+        # Cache the analyzed frame for PLC HMI stream
+        camera_service.set_analyzed_frame(annotated_frame)
         
         # Encode as JPEG
         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
