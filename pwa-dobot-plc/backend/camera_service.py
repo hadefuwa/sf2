@@ -861,12 +861,11 @@ class CameraService:
 
         return {
             'color': winner,
-            'color_code': color_code,
-            'confidence': round(confidence, 1),
-            'vote_counts': vote_counts,
-            'all_detections': all_detections,
-            'total_samples': len(color_votes),
-            'valid_samples': len(valid_votes),
+            'color_code': int(color_code) if color_code is not None else 0,
+            'confidence': float(round(confidence, 1)),
+            'vote_counts': {str(k): int(v) for k, v in vote_counts.items()},
+            'total_samples': int(len(color_votes)),
+            'valid_samples': int(len(valid_votes)),
             'annotated_image': annotated_image_base64
         }
 
