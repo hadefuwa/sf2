@@ -189,12 +189,18 @@
       try {
         const frame = document.getElementById('cameraFrame');
         const placeholder = document.getElementById('cameraPlaceholder');
-        const response = await fetch(`${API_BASE}/api/camera/capture?t=${Date.now()}`, {
+        const timestamp = Date.now();
+        console.log(`🔍 Fetching camera frame at ${new Date().toLocaleTimeString()}`);
+        
+        const response = await fetch(`${API_BASE}/api/camera/capture?t=${timestamp}`, {
           signal: AbortSignal.timeout(10000) // 10 second timeout
         });
         
+        console.log(`🔍 Camera response status: ${response.status}`);
+        
         if (response.ok) {
           const blob = await response.blob();
+          console.log(`🔍 Camera frame received: ${(blob.size / 1024).toFixed(1)} KB`);
           const url = URL.createObjectURL(blob);
           if (frame.src && frame.src.startsWith('blob:')) {
             URL.revokeObjectURL(frame.src);
@@ -204,6 +210,8 @@
           if (placeholder) placeholder.style.display = 'none';
         } else {
           // Camera not available - show placeholder
+          const errorText = await response.text().catch(() => 'Unknown error');
+          console.error(`🔍 Camera error ${response.status}:`, errorText);
           if (response.status === 503) {
             frame.style.display = 'none';
             if (placeholder) {
@@ -215,7 +223,7 @@
       } catch (error) {
         // Don't log timeout errors
         if (!error.message?.includes('timeout') && !error.message?.includes('aborted')) {
-          console.error('Error fetching camera frame:', error);
+          console.error('🔍 Error fetching camera frame:', error);
         }
       } finally {
         isFetchingCamera = false;
@@ -252,6 +260,8 @@
     async function detectObjects() {
       const objectMethod = document.getElementById('objectDetectionMethod').value;
 
+      console.log('🔍 Starting detection with params:', objectParams);
+      
       try {
         // Get analyzed image
         const analyzeResponse = await fetch(`${API_BASE}/api/vision/analyze`, {
@@ -265,6 +275,8 @@
             defect_detection_enabled: false
           })
         });
+        
+        console.log('🔍 Analyze response status:', analyzeResponse.status);
 
         if (analyzeResponse.ok) {
           const blob = await analyzeResponse.blob();
@@ -294,7 +306,24 @@
 
         if (detectResponse.ok) {
           const results = await detectResponse.json();
+          console.log('🔍 Detection Results:', results);
+          if (results.debug) {
+            console.log('🔍 Debug Info:', results.debug);
+            // Log detailed debug info
+            Object.keys(results.debug).forEach(color => {
+              const info = results.debug[color];
+              if (info.pixels !== undefined) {
+                console.log(`🔍 ${color.toUpperCase()}: ${info.pixels} pixels matched, ${info.objects || 0} objects found`);
+              }
+              if (info.contours) {
+                console.log(`🔍 ${color.toUpperCase()} Contours: ${info.contours.total} total, ${info.contours.rejected_small} too small, ${info.contours.rejected_large} too large, ${info.contours.accepted} accepted`);
+              }
+            });
+          }
           displayResults(results);
+        } else {
+          const errorText = await detectResponse.text();
+          console.error('🔍 Detection Error:', detectResponse.status, errorText);
         }
       } catch (error) {
         console.error('Error detecting objects:', error);
@@ -311,6 +340,7 @@
 
       const objectCount = results.object_count || 0;
       const objects = results.objects || [];
+      const debug = results.debug || {};
 
       let html = `<div style="margin-bottom: 12px;"><strong>Cubes Detected: ${objectCount}</strong></div>`;
       
@@ -327,6 +357,22 @@
         html += '</div>';
       } else {
         html += '<div style="color: #f44336; margin-top: 12px;">No cubes detected</div>';
+      }
+
+      // Add debug info
+      if (Object.keys(debug).length > 0) {
+        html += '<div style="margin-top: 16px; padding: 12px; background: rgba(0,0,0,0.3); border-radius: 4px; border-left: 3px solid #ffeb3b;">';
+        html += '<div style="color: #ffeb3b; font-size: 12px; font-weight: 600; margin-bottom: 8px;">🔍 Debug Info:</div>';
+        Object.keys(debug).forEach(color => {
+          const info = debug[color];
+          if (info.pixels !== undefined) {
+            html += `<div style="color: #b0bec5; font-size: 11px; margin-bottom: 4px;">${color.toUpperCase()}: ${info.pixels} pixels matched, ${info.objects || 0} objects</div>`;
+          }
+          if (info.contours) {
+            html += `<div style="color: #b0bec5; font-size: 11px; margin-bottom: 4px;">${color.toUpperCase()} Contours: ${info.contours.total} total, ${info.contours.rejected_small} too small, ${info.contours.rejected_large} too large, ${info.contours.accepted} accepted</div>`;
+          }
+        });
+        html += '</div>';
       }
 
       resultsContent.innerHTML = html;

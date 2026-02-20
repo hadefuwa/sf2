@@ -723,10 +723,21 @@ class CameraService:
         detect_metal = params.get('detect_metal', True)
         
         try:
+            # Debug: Log frame info
+            frame_height, frame_width = frame.shape[:2]
+            logger.info(f"🔍 Color Detection Debug - Frame size: {frame_width}x{frame_height}, Min area: {min_area}, Max area: {max_area}")
+            
             # Convert BGR to HSV color space
             hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
             
+            # Debug: Log HSV statistics
+            h_mean = np.mean(hsv[:, :, 0])
+            s_mean = np.mean(hsv[:, :, 1])
+            v_mean = np.mean(hsv[:, :, 2])
+            logger.info(f"🔍 HSV Statistics - H: {h_mean:.1f}, S: {s_mean:.1f}, V: {v_mean:.1f}")
+            
             all_objects = []
+            debug_info = {}
             
             # Define HSV color ranges (may need tuning based on lighting)
             # Yellow cubes
@@ -734,33 +745,43 @@ class CameraService:
                 lower_yellow = np.array([20, 100, 100])
                 upper_yellow = np.array([30, 255, 255])
                 mask_yellow = cv2.inRange(hsv, lower_yellow, upper_yellow)
-                objects_yellow = self._find_objects_from_mask(mask_yellow, min_area, max_area, 'yellow')
+                yellow_pixels = np.sum(mask_yellow > 0)
+                logger.info(f"🔍 Yellow mask: {yellow_pixels} pixels matched (range: H[20-30], S[100-255], V[100-255])")
+                objects_yellow = self._find_objects_from_mask(mask_yellow, min_area, max_area, 'yellow', debug_info)
                 all_objects.extend(objects_yellow)
+                debug_info['yellow'] = {'pixels': yellow_pixels, 'objects': len(objects_yellow)}
             
             # White cubes (low saturation, high brightness)
             if detect_white:
                 lower_white = np.array([0, 0, 180])
                 upper_white = np.array([180, 40, 255])
                 mask_white = cv2.inRange(hsv, lower_white, upper_white)
-                objects_white = self._find_objects_from_mask(mask_white, min_area, max_area, 'white')
+                white_pixels = np.sum(mask_white > 0)
+                logger.info(f"🔍 White mask: {white_pixels} pixels matched (range: H[0-180], S[0-40], V[180-255])")
+                objects_white = self._find_objects_from_mask(mask_white, min_area, max_area, 'white', debug_info)
                 all_objects.extend(objects_white)
+                debug_info['white'] = {'pixels': white_pixels, 'objects': len(objects_white)}
             
             # Metal/Grey cubes (low saturation, mid-range brightness)
             if detect_metal:
                 lower_metal = np.array([0, 0, 50])
                 upper_metal = np.array([180, 50, 150])
                 mask_metal = cv2.inRange(hsv, lower_metal, upper_metal)
-                objects_metal = self._find_objects_from_mask(mask_metal, min_area, max_area, 'metal')
+                metal_pixels = np.sum(mask_metal > 0)
+                logger.info(f"🔍 Metal mask: {metal_pixels} pixels matched (range: H[0-180], S[0-50], V[50-150])")
+                objects_metal = self._find_objects_from_mask(mask_metal, min_area, max_area, 'metal', debug_info)
                 all_objects.extend(objects_metal)
+                debug_info['metal'] = {'pixels': metal_pixels, 'objects': len(objects_metal)}
             
-            logger.info(f"Color filter detected {len(all_objects)} objects (yellow: {len([o for o in all_objects if o.get('color') == 'yellow'])}, white: {len([o for o in all_objects if o.get('color') == 'white'])}, metal: {len([o for o in all_objects if o.get('color') == 'metal'])})")
+            logger.info(f"🔍 Color filter detected {len(all_objects)} objects (yellow: {len([o for o in all_objects if o.get('color') == 'yellow'])}, white: {len([o for o in all_objects if o.get('color') == 'white'])}, metal: {len([o for o in all_objects if o.get('color') == 'metal'])})")
             
             return {
                 'objects_found': len(all_objects) > 0,
                 'object_count': len(all_objects),
                 'objects': all_objects,
                 'method': 'color',
-                'timestamp': time.time()
+                'timestamp': time.time(),
+                'debug': debug_info
             }
             
         except Exception as e:
@@ -773,7 +794,7 @@ class CameraService:
                 'error': str(e)
             }
     
-    def _find_objects_from_mask(self, mask: np.ndarray, min_area: int, max_area: int, color_name: str) -> List[Dict]:
+    def _find_objects_from_mask(self, mask: np.ndarray, min_area: int, max_area: int, color_name: str, debug_info: Dict = None) -> List[Dict]:
         """
         Find objects from a binary mask using contour detection
         
@@ -782,6 +803,7 @@ class CameraService:
             min_area: Minimum object area in pixels
             max_area: Maximum object area in pixels
             color_name: Name of the color being detected (for labeling)
+            debug_info: Optional dict to store debug information
             
         Returns:
             List of detected objects with bounding boxes
@@ -790,18 +812,29 @@ class CameraService:
         
         # Clean up the mask with morphological operations
         kernel = np.ones((5, 5), np.uint8)
+        mask_before = np.sum(mask > 0)
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)  # Fill small holes
         mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)    # Remove small noise
+        mask_after = np.sum(mask > 0)
         
         # Find contours
         contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        # Debug: Log contour info
+        total_contours = len(contours)
+        rejected_small = 0
+        rejected_large = 0
         
         for contour in contours:
             # Calculate area
             area = cv2.contourArea(contour)
             
             # Filter by area
-            if area < min_area or area > max_area:
+            if area < min_area:
+                rejected_small += 1
+                continue
+            if area > max_area:
+                rejected_large += 1
                 continue
             
             # Get bounding box
@@ -832,6 +865,19 @@ class CameraService:
             }
             
             objects.append(obj)
+            logger.info(f"🔍 {color_name.capitalize()} object found: area={area:.0f}, center=({center_x},{center_y}), size={w}x{h}")
+        
+        # Debug logging
+        logger.info(f"🔍 {color_name.capitalize()} contours: {total_contours} total, {rejected_small} too small (<{min_area}), {rejected_large} too large (>{max_area}), {len(objects)} accepted")
+        if debug_info is not None:
+            debug_info[f'{color_name}_contours'] = {
+                'total': total_contours,
+                'rejected_small': rejected_small,
+                'rejected_large': rejected_large,
+                'accepted': len(objects),
+                'mask_pixels_before_morph': mask_before,
+                'mask_pixels_after_morph': mask_after
+            }
         
         return objects
     
