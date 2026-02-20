@@ -707,10 +707,105 @@ class CameraService:
                 'error': str(e)
             }
     
+    def detect_cube_color_with_voting(self, num_samples: int = 10, delay_ms: int = 50,
+                                       min_area: int = 500, max_area: int = 50000) -> Dict:
+        """
+        Detect cube color using majority voting across multiple frames
+
+        Takes multiple snapshots and returns the most frequently detected color.
+        This prevents false detections caused by lighting fluctuations or noise.
+
+        Args:
+            num_samples: Number of frames to sample (default: 10)
+            delay_ms: Delay between samples in milliseconds (default: 50ms)
+            min_area: Minimum object area in pixels
+            max_area: Maximum object area in pixels
+
+        Returns:
+            Dictionary with:
+            - color: Most frequently detected color ('yellow', 'white', 'metal', or None)
+            - color_code: Integer code for PLC (1=yellow, 2=white, 3=metal, 0=none)
+            - confidence: Percentage of samples that agreed (0-100)
+            - vote_counts: Dictionary of vote counts per color
+            - all_detections: List of all detection results
+        """
+        from collections import Counter
+
+        logger.info(f"🗳️ Starting majority voting detection with {num_samples} samples")
+
+        color_votes = []
+        all_detections = []
+        params = {
+            'min_area': min_area,
+            'max_area': max_area,
+            'detect_yellow': True,
+            'detect_white': True,
+            'detect_metal': True
+        }
+
+        for i in range(num_samples):
+            # Read frame
+            frame = self.read_frame()
+            if frame is None:
+                logger.warning(f"Sample {i+1}/{num_samples}: Failed to read frame")
+                continue
+
+            # Detect color
+            result = self._detect_with_color(frame, params)
+            all_detections.append(result)
+
+            # Extract the dominant color from this detection
+            objects = result.get('objects', [])
+            if objects:
+                # Get the largest object (most likely the cube we care about)
+                largest_obj = max(objects, key=lambda o: o.get('area', 0))
+                detected_color = largest_obj.get('color')
+                color_votes.append(detected_color)
+                logger.info(f"Sample {i+1}/{num_samples}: Detected {detected_color} (area: {largest_obj.get('area', 0):.0f})")
+            else:
+                color_votes.append(None)
+                logger.info(f"Sample {i+1}/{num_samples}: No object detected")
+
+            # Small delay between samples
+            if i < num_samples - 1:
+                time.sleep(delay_ms / 1000.0)
+
+        # Count votes
+        vote_counter = Counter(color_votes)
+        vote_counts = dict(vote_counter)
+
+        # Find winner (most common color, excluding None)
+        valid_votes = [c for c in color_votes if c is not None]
+        if valid_votes:
+            winner = vote_counter.most_common(1)[0][0]
+            winner_count = vote_counter[winner]
+            confidence = (winner_count / len(color_votes)) * 100
+
+            # Map color to PLC code
+            color_code_map = {'yellow': 1, 'white': 2, 'metal': 3}
+            color_code = color_code_map.get(winner, 0)
+
+            logger.info(f"🗳️ Voting complete: {winner} won with {winner_count}/{len(color_votes)} votes ({confidence:.1f}% confidence)")
+        else:
+            winner = None
+            confidence = 0
+            color_code = 0
+            logger.info(f"🗳️ Voting complete: No valid detections")
+
+        return {
+            'color': winner,
+            'color_code': color_code,
+            'confidence': round(confidence, 1),
+            'vote_counts': vote_counts,
+            'all_detections': all_detections,
+            'total_samples': len(color_votes),
+            'valid_samples': len(valid_votes)
+        }
+
     def _detect_with_color(self, frame: np.ndarray, params: Dict) -> Dict:
         """
         Detect cubes using HSV color filtering (Yellow, White, Metal/Grey)
-        
+
         This is a simple color-based detection method that doesn't use AI.
         It converts the image to HSV color space and looks for specific color ranges.
         HSV is better for computer vision because Hue stays consistent even with shadows.
@@ -738,41 +833,43 @@ class CameraService:
             
             all_objects = []
             debug_info = {}
-            
-            # Define HSV color ranges (may need tuning based on lighting)
-            # Yellow cubes
+
+            # Define HSV color ranges - IMPROVED for better accuracy
+            # Tuned for green side lighting and varied illumination
+
+            # Yellow cubes - wider hue range to handle lighting variations
             if detect_yellow:
-                lower_yellow = np.array([20, 100, 100])
-                upper_yellow = np.array([30, 255, 255])
+                lower_yellow = np.array([18, 80, 100])  # Wider H range, lower S threshold
+                upper_yellow = np.array([35, 255, 255])  # Captures more yellow tones
                 mask_yellow = cv2.inRange(hsv, lower_yellow, upper_yellow)
                 yellow_pixels = np.sum(mask_yellow > 0)
-                logger.info(f"🔍 Yellow mask: {yellow_pixels} pixels matched (range: H[20-30], S[100-255], V[100-255])")
+                logger.info(f"🔍 Yellow mask: {yellow_pixels} pixels matched (range: H[18-35], S[80-255], V[100-255])")
                 objects_yellow = self._find_objects_from_mask(mask_yellow, min_area, max_area, 'yellow', debug_info)
                 all_objects.extend(objects_yellow)
                 debug_info['yellow'] = {'pixels': yellow_pixels, 'objects': len(objects_yellow)}
-            
-            # White cubes (low saturation, high brightness)
+
+            # White cubes - strict criteria to avoid false positives from background
             if detect_white:
-                lower_white = np.array([0, 0, 180])
-                upper_white = np.array([180, 40, 255])
+                lower_white = np.array([0, 0, 200])  # Very high brightness required
+                upper_white = np.array([180, 30, 255])  # Lower saturation threshold
                 mask_white = cv2.inRange(hsv, lower_white, upper_white)
                 white_pixels = np.sum(mask_white > 0)
-                logger.info(f"🔍 White mask: {white_pixels} pixels matched (range: H[0-180], S[0-40], V[180-255])")
+                logger.info(f"🔍 White mask: {white_pixels} pixels matched (range: H[0-180], S[0-30], V[200-255])")
                 objects_white = self._find_objects_from_mask(mask_white, min_area, max_area, 'white', debug_info)
                 all_objects.extend(objects_white)
                 debug_info['white'] = {'pixels': white_pixels, 'objects': len(objects_white)}
-            
-            # Metal/Grey cubes (low saturation, mid-range brightness)
+
+            # Metal/Grey cubes - adjusted to avoid overlap with white and yellow
             if detect_metal:
-                lower_metal = np.array([0, 0, 50])
-                upper_metal = np.array([180, 50, 150])
+                lower_metal = np.array([0, 0, 60])  # Slightly higher V minimum
+                upper_metal = np.array([180, 60, 180])  # Higher saturation and brightness allowed
                 mask_metal = cv2.inRange(hsv, lower_metal, upper_metal)
                 metal_pixels = np.sum(mask_metal > 0)
-                logger.info(f"🔍 Metal mask: {metal_pixels} pixels matched (range: H[0-180], S[0-50], V[50-150])")
+                logger.info(f"🔍 Metal mask: {metal_pixels} pixels matched (range: H[0-180], S[0-60], V[60-180])")
                 objects_metal = self._find_objects_from_mask(mask_metal, min_area, max_area, 'metal', debug_info)
                 all_objects.extend(objects_metal)
                 debug_info['metal'] = {'pixels': metal_pixels, 'objects': len(objects_metal)}
-            
+
             logger.info(f"🔍 Color filter detected {len(all_objects)} objects (yellow: {len([o for o in all_objects if o.get('color') == 'yellow'])}, white: {len([o for o in all_objects if o.get('color') == 'white'])}, metal: {len([o for o in all_objects if o.get('color') == 'metal'])})")
             
             return {

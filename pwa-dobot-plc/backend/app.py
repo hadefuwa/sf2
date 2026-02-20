@@ -821,13 +821,13 @@ def save_config(config):
     with open(config_path, 'w') as f:
         json.dump(config, f, indent=2)
 
-def write_vision_to_plc(object_count: int, defect_count: int, object_ok: bool, defect_detected: bool, 
-                       busy: bool = False, completed: bool = False):
+def write_vision_to_plc(object_count: int, defect_count: int, object_ok: bool, defect_detected: bool,
+                       busy: bool = False, completed: bool = False, color_code: int = 0):
     """Write vision detection results to PLC DB123 tags
-    
+
     This function queues writes to be executed AFTER reads in the polling loop,
     preventing write/read conflicts.
-    
+
     Args:
         object_count: Number of objects detected
         defect_count: Number of defects found
@@ -835,20 +835,21 @@ def write_vision_to_plc(object_count: int, defect_count: int, object_ok: bool, d
         defect_detected: Whether any defects were detected
         busy: Whether vision system is currently processing (default: False)
         completed: Whether vision processing is completed (default: False)
+        color_code: Detected cube color (0=none, 1=yellow, 2=white, 3=metal/grey)
     """
     if plc_client is None:
         return False
-    
+
     try:
         config = load_config()
         db123_config = config.get('plc', {}).get('db123', {})
-        
+
         # Check if DB123 communication is enabled
         if not db123_config.get('enabled', False):
             return False
-        
+
         db_number = db123_config.get('db_number', 123)
-        
+
         # Prepare byte 40 with all bool flags
         # Note: Start bit is now at DB123.DBX36.0 (read-only, PLC controlled)
         byte40_data = bytearray(1)
@@ -859,23 +860,32 @@ def write_vision_to_plc(object_count: int, defect_count: int, object_ok: bool, d
         snap7.util.set_bool(byte40_data, 0, 4, object_count > 0)  # Object_Detected
         snap7.util.set_bool(byte40_data, 0, 5, object_ok)         # Object_OK
         snap7.util.set_bool(byte40_data, 0, 6, defect_detected)   # Defect_Detected
-        
+
         # Prepare object_number INT (2 bytes at offset 42)
         object_number_data = bytearray(2)
         snap7.util.set_int(object_number_data, 0, object_count)
-        
+
         # Prepare defect_number INT (2 bytes at offset 44)
         defect_number_data = bytearray(2)
         snap7.util.set_int(defect_number_data, 0, defect_count)
-        
-        # Queue all three writes - they will execute AFTER the next read in polling loop
-        queue_plc_write(db_number, 40, byte40_data)      # Bool flags
-        queue_plc_write(db_number, 42, object_number_data)  # Object_Number
-        queue_plc_write(db_number, 44, defect_number_data)   # Defect_Number
-        
-        logger.debug(f"Queued vision writes: busy={busy}, completed={completed}, objects={object_count}, defects={defect_count}")
+
+        # Prepare color_code INT (2 bytes at offset 46)
+        # 0 = No cube detected
+        # 1 = Yellow cube
+        # 2 = White cube
+        # 3 = Metal/Grey cube
+        color_code_data = bytearray(2)
+        snap7.util.set_int(color_code_data, 0, color_code)
+
+        # Queue all writes - they will execute AFTER the next read in polling loop
+        queue_plc_write(db_number, 40, byte40_data)           # Bool flags
+        queue_plc_write(db_number, 42, object_number_data)    # Object_Number
+        queue_plc_write(db_number, 44, defect_number_data)    # Defect_Number
+        queue_plc_write(db_number, 46, color_code_data)       # Color_Code (NEW)
+
+        logger.debug(f"Queued vision writes: busy={busy}, completed={completed}, objects={object_count}, defects={defect_count}, color={color_code}")
         return True
-        
+
     except Exception as e:
         logger.error(f"Error queuing vision tags to PLC: {e}")
         return False
@@ -1649,126 +1659,79 @@ def start_polling_thread():
 
 def process_vision_handshake():
     """Process vision detection when Start command is received from PLC
-    
+
     This function:
-    1. Detects objects
+    1. Uses MAJORITY VOTING to detect cube color (takes 10 snapshots)
     2. Saves images
     3. Checks for defects
-    4. Writes results to PLC
+    4. Writes results to PLC including color code
     5. Sets Completed flag when done
     """
     global vision_handshake_processing
-    
+
     if camera_service is None:
         logger.warning("Camera service not available for handshake processing")
         return False
-    
+
     try:
         vision_handshake_processing = True
         logger.info("🔄 Vision handshake: Starting processing (Start command received)")
         logger.info("🔄 Vision handshake: Step 1 - Setting Busy flag")
-        
+
         # Set busy flag
-        write_vision_to_plc(0, 0, True, False, busy=True, completed=False)
-        logger.info("🔄 Vision handshake: Step 2 - Busy flag set, reading frame")
+        write_vision_to_plc(0, 0, True, False, busy=True, completed=False, color_code=0)
+        logger.info("🔄 Vision handshake: Step 2 - Busy flag set, starting color detection")
+
+        # Use majority voting to detect cube color (10 snapshots)
+        logger.info("🔄 Vision handshake: Step 3 - Running majority voting detection (10 frames)")
+        voting_result = camera_service.detect_cube_color_with_voting(
+            num_samples=10,
+            delay_ms=50,
+            min_area=500,
+            max_area=50000
+        )
+
+        detected_color = voting_result.get('color')
+        color_code = voting_result.get('color_code', 0)
+        confidence = voting_result.get('confidence', 0)
+        vote_counts = voting_result.get('vote_counts', {})
+
+        logger.info(f"🔄 Vision handshake: Step 4 - Voting complete")
+        logger.info(f"   Detected color: {detected_color}")
+        logger.info(f"   Color code: {color_code} (1=yellow, 2=white, 3=metal)")
+        logger.info(f"   Confidence: {confidence}%")
+        logger.info(f"   Vote counts: {vote_counts}")
         
-        # Read current frame
-        frame = camera_service.read_frame()
-        if frame is None:
-            logger.error("Vision handshake: Failed to read frame")
-            write_vision_to_plc(0, 0, True, False, busy=False, completed=True)
-            return False
-        
-        logger.info("🔄 Vision handshake: Step 3 - Frame read successfully, running YOLO detection")
-        
-        # Run object detection using YOLO
-        object_params = {}
-        object_results = call_vision_service(frame, object_params)
-        logger.info(f"🔄 Vision handshake: Step 4 - YOLO detection completed")
-        
-        if 'error' in object_results:
-            logger.error(f"Vision handshake: Object detection error: {object_results['error']}")
-            write_vision_to_plc(0, 0, True, False, busy=False, completed=True)
-            return False
-        
-        detected_objects = object_results.get('objects', [])
-        
-        # Find the selected counter (only process 1 counter)
-        config = load_config()
-        vision_config = config.get('vision', {})
-        single_counter_enabled = vision_config.get('single_counter_enabled', True)
-        selection_method = vision_config.get('counter_selection_method', 'most_central')
-        
-        if single_counter_enabled:
-            central_counter = find_most_central_counter(detected_objects, frame.shape, selection_method)
-        else:
-            # Process all counters (use first one for now, but could be extended)
-            central_counter = detected_objects[0] if detected_objects else None
-        
-        if central_counter:
-            # Only process the most central counter
-            logger.info(f"🎯 Processing most central counter (out of {len(detected_objects)} detected)")
-            
-            # Load existing counter positions
-            existing_counters = load_existing_counter_positions()
-            existing_counter_numbers = set(existing_counters.keys())
-            
-            detection_timestamp = time.time()
-            
-            obj_center = central_counter.get('center', (central_counter.get('x', 0) + central_counter.get('width', 0) // 2,
-                                                        central_counter.get('y', 0) + central_counter.get('height', 0) // 2))
-            
-            # Try to match this object to an existing counter by position
-            matched_counter_num = find_matching_counter(central_counter, existing_counters)
-            
-            if matched_counter_num:
-                # Matched to an existing counter - save image
-                saved_path = save_counter_image(frame, central_counter, matched_counter_num, detection_timestamp)
-                if saved_path:
-                    central_counter['counterNumber'] = matched_counter_num
-                    central_counter['saved_image_path'] = saved_path
-            else:
-                # Assign new number and save image
-                counter_num = get_next_counter_number()
-                saved_path = save_counter_image(frame, central_counter, counter_num, detection_timestamp)
-                if saved_path:
-                    central_counter['counterNumber'] = counter_num
-                    existing_counter_numbers.add(counter_num)
-                    central_counter['saved_image_path'] = saved_path
-            
-            # Update object_count to reflect only the central counter
+        # Determine if we successfully detected a cube
+        if detected_color is not None:
             object_count = 1
+            logger.info(f"✅ Successfully detected {detected_color} cube with {confidence}% confidence")
         else:
             object_count = 0
-            logger.info("No counters detected")
-        
-        # Check for defects (from stored results)
+            logger.info("⚠️ No cube detected in majority voting")
+
+        # For now, we're not doing defect detection - focus on color only
         defect_count = 0
         defect_detected = False
         object_ok = True
-        
-        try:
-            if os.path.exists(COUNTER_DEFECTS_FILE):
-                with open(COUNTER_DEFECTS_FILE, 'r') as f:
-                    defect_data = json.load(f)
-                    # Count defects with significant issues
-                    defect_count = sum(1 for item in defect_data.values() 
-                                     if item.get('defect_results', {}).get('defects_found', False))
-                    defect_detected = defect_count > 0
-                    object_ok = not defect_detected
-        except Exception as e:
-            logger.debug(f"Error reading defect data: {e}")
-        
-        # Write final results to PLC (busy=False, completed=True)
-        write_vision_to_plc(object_count, defect_count, object_ok, defect_detected, 
-                          busy=False, completed=True)
-        
-        logger.info(f"✅ Vision handshake: Completed - {object_count} objects, {defect_count} defects")
+
+        # Write final results to PLC (busy=False, completed=True, with color_code)
+        write_vision_to_plc(
+            object_count=object_count,
+            defect_count=defect_count,
+            object_ok=object_ok,
+            defect_detected=defect_detected,
+            busy=False,
+            completed=True,
+            color_code=color_code
+        )
+
+        logger.info(f"✅ Vision handshake: Completed - {object_count} objects, color_code={color_code} ({detected_color}), confidence={confidence}%")
         return True
         
     except Exception as e:
         logger.error(f"Error in vision handshake processing: {e}", exc_info=True)
-        write_vision_to_plc(0, 0, True, False, busy=False, completed=True)
+        write_vision_to_plc(0, 0, True, False, busy=False, completed=True, color_code=0)
         return False
     finally:
         vision_handshake_processing = False
@@ -2603,14 +2566,45 @@ def vision_detect():
 def vision_process_manual():
     """Manually trigger vision processing"""
     logger.info("📸 Manual vision processing triggered via API")
-    
+
     # Run the handshake process in a background thread to avoid blocking the API response
     threading.Thread(target=process_vision_handshake, daemon=True).start()
-    
+
     return jsonify({
         'success': True,
         'message': 'Vision processing started. Results will be available shortly.'
     })
+
+@app.route('/api/vision/test-color-voting', methods=['POST'])
+def test_color_voting():
+    """Test the majority voting color detection system"""
+    if camera_service is None:
+        return jsonify({'error': 'Camera service not initialized'}), 503
+
+    try:
+        data = request.json or {}
+        num_samples = data.get('num_samples', 10)
+        delay_ms = data.get('delay_ms', 50)
+        min_area = data.get('min_area', 500)
+        max_area = data.get('max_area', 50000)
+
+        logger.info(f"🧪 Testing color voting with {num_samples} samples")
+
+        # Run majority voting detection
+        result = camera_service.detect_cube_color_with_voting(
+            num_samples=num_samples,
+            delay_ms=delay_ms,
+            min_area=min_area,
+            max_area=max_area
+        )
+
+        return jsonify({
+            'success': True,
+            'result': result
+        })
+    except Exception as e:
+        logger.error(f"Error in test color voting: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/plc/db123/read', methods=['GET'])
 def read_db123_tags():

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="utf-8" />
+ <link rel="apple-touch-icon" sizes="76x76" href="/assets/img/apple-icon.png">
+ <link rel="icon" type="image/png" href="/assets/img/favicon.png">
+ <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+ <title>Color Voting Test - Smart Factory</title>
+ <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
+
+ <!-- Fonts and icons -->
+ <link rel="stylesheet" href="/assets/fontawesome/css/all.min.css">
+
+ <!-- CSS Files -->
+ <link href="/assets/css/material-dashboard.min.css?v=2.1.0" rel="stylesheet" />
+ <link href="/assets/demo/demo.css" rel="stylesheet" />
+ <link href="/assets/css/professional-theme.css" rel="stylesheet" />
+
+ <!-- PWA Manifest -->
+ <link rel="manifest" href="/manifest.json">
+ <meta name="theme-color" content="#030c1d">
+ <meta name="mobile-web-app-capable" content="yes">
+ <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+ <style>
+   .result-box {
+     padding: 20px;
+     margin: 20px 0;
+     border-radius: 8px;
+     background: rgba(0,0,0,0.3);
+     border: 2px solid #444;
+   }
+   .result-box.yellow { border-color: #ffeb3b; background: rgba(255, 235, 59, 0.1); }
+   .result-box.white { border-color: #ffffff; background: rgba(255, 255, 255, 0.1); }
+   .result-box.metal { border-color: #9e9e9e; background: rgba(158, 158, 158, 0.1); }
+   .result-box.none { border-color: #f44336; background: rgba(244, 67, 54, 0.1); }
+
+   .color-label {
+     font-size: 32px;
+     font-weight: bold;
+     margin-bottom: 10px;
+   }
+   .color-label.yellow { color: #ffeb3b; }
+   .color-label.white { color: #ffffff; }
+   .color-label.metal { color: #9e9e9e; }
+   .color-label.none { color: #f44336; }
+
+   .confidence-bar {
+     width: 100%;
+     height: 30px;
+     background: rgba(255,255,255,0.1);
+     border-radius: 4px;
+     overflow: hidden;
+     position: relative;
+   }
+   .confidence-fill {
+     height: 100%;
+     background: linear-gradient(90deg, #4caf50, #8bc34a);
+     transition: width 0.5s ease;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     color: white;
+     font-weight: bold;
+   }
+ </style>
+</head>
+<body class="dark-edition">
+  <div class="wrapper ">
+    <div class="sidebar" data-color="purple" data-background-color="black" data-image="">
+      <div class="logo">
+        <a href="/" class="simple-text logo-normal">
+          <i class="material-icons">factory</i>
+          Smart Factory
+        </a>
+      </div>
+      <div class="sidebar-wrapper">
+        <ul class="nav">
+          <li class="nav-item">
+            <a class="nav-link" href="/index.html">
+              <i class="material-icons">dashboard</i>
+              <p>Dashboard</p>
+            </a>
+          </li>
+          <li class="nav-item active">
+            <a class="nav-link" href="/color-voting-test.html">
+              <i class="material-icons">palette</i>
+              <p>Color Voting Test</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/vision-system-new.html">
+              <i class="material-icons">visibility</i>
+              <p>Vision System</p>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="main-panel">
+      <!-- Navbar -->
+      <nav class="navbar navbar-expand-lg navbar-transparent navbar-absolute fixed-top ">
+        <div class="container-fluid">
+          <div class="navbar-wrapper">
+            <a class="navbar-brand" href="javascript:;">Color Voting Test</a>
+          </div>
+        </div>
+      </nav>
+
+      <div class="content">
+        <div class="container-fluid">
+
+          <!-- Test Controls -->
+          <div class="row">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-header card-header-success">
+                  <h4 class="card-title">Majority Voting Color Detection</h4>
+                  <p class="card-category">Takes 10 snapshots and returns the most common color detected</p>
+                </div>
+                <div class="card-body">
+
+                  <div style="margin-bottom: 24px;">
+                    <button class="btn btn-success btn-lg" onclick="runTest()" id="testBtn" style="width: 100%;">
+                      <i class="material-icons">play_arrow</i> Run Color Detection Test
+                    </button>
+                  </div>
+
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                    <div>
+                      <label style="display: block; color: #e0e0e0; font-size: 12px; margin-bottom: 8px;">
+                        Number of Samples: <span id="samplesValue">10</span>
+                      </label>
+                      <input type="range" id="numSamples" min="3" max="20" value="10" oninput="updateValues()" style="width: 100%;">
+                    </div>
+                    <div>
+                      <label style="display: block; color: #e0e0e0; font-size: 12px; margin-bottom: 8px;">
+                        Delay (ms): <span id="delayValue">50</span>
+                      </label>
+                      <input type="range" id="delayMs" min="10" max="200" value="50" step="10" oninput="updateValues()" style="width: 100%;">
+                    </div>
+                  </div>
+
+                  <!-- Results -->
+                  <div id="results" style="display: none;">
+                    <h5 style="color: #ffffff; margin-bottom: 16px;">Detection Results</h5>
+
+                    <div id="resultBox" class="result-box">
+                      <div id="colorLabel" class="color-label">-</div>
+                      <div style="margin-bottom: 16px;">
+                        <strong>Color Code for PLC:</strong> <span id="colorCode" style="font-size: 24px; color: #4caf50;">-</span>
+                      </div>
+                      <div style="margin-bottom: 8px;">
+                        <strong>Confidence:</strong>
+                      </div>
+                      <div class="confidence-bar">
+                        <div class="confidence-fill" id="confidenceFill" style="width: 0%;">
+                          <span id="confidenceText">0%</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style="margin-top: 24px; padding: 16px; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                      <h6 style="color: #ffeb3b; margin-bottom: 12px;">Vote Breakdown:</h6>
+                      <div id="voteBreakdown" style="color: #b0bec5;"></div>
+                    </div>
+
+                    <div style="margin-top: 16px; padding: 12px; background: rgba(33, 150, 243, 0.1); border-radius: 8px; border-left: 3px solid #2196f3;">
+                      <div style="color: #64b5f6; font-size: 12px; margin-bottom: 4px;"><strong>PLC Integration Info:</strong></div>
+                      <div style="color: #b0bec5; font-size: 11px;">
+                        Color codes written to DB123.DBW46:<br>
+                        0 = No cube detected<br>
+                        1 = Yellow cube<br>
+                        2 = White cube<br>
+                        3 = Metal/Grey cube
+                      </div>
+                    </div>
+                  </div>
+
+                  <div id="loading" style="display: none; text-align: center; padding: 40px;">
+                    <div style="color: #4caf50; font-size: 18px; margin-bottom: 16px;">
+                      <i class="fas fa-spinner fa-spin" style="font-size: 32px;"></i>
+                    </div>
+                    <div style="color: #b0bec5;">Taking snapshots and analyzing...</div>
+                    <div id="progress" style="color: #64b5f6; margin-top: 8px; font-size: 14px;">0/10 samples</div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Camera Feed -->
+          <div class="row">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-header card-header-purple">
+                  <h4 class="card-title">Camera Feed</h4>
+                </div>
+                <div class="card-body">
+                  <div class="camera-viewer">
+                    <img id="cameraFrame" class="camera-frame" src="" alt="Camera Feed" style="display: none; width: 100%; border-radius: 8px;">
+                    <div id="cameraPlaceholder" style="min-height: 400px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-direction: column; gap: 10px; background: rgba(10, 22, 40, 0.8); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
+                      <div style="font-size: 48px;">CAM</div>
+                      <div>Camera feed will appear here</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/assets/js/core/jquery.min.js"></script>
+  <script src="/assets/js/core/popper.min.js"></script>
+  <script src="/assets/js/core/bootstrap-material-design.min.js"></script>
+  <script src="/assets/js/plugins/perfect-scrollbar.jquery.min.js"></script>
+  <script src="/assets/js/material-dashboard.min.js?v=2.1.0"></script>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let streamInterval = null;
+
+    function updateValues() {
+      document.getElementById('samplesValue').textContent = document.getElementById('numSamples').value;
+      document.getElementById('delayValue').textContent = document.getElementById('delayMs').value;
+    }
+
+    async function runTest() {
+      const testBtn = document.getElementById('testBtn');
+      const results = document.getElementById('results');
+      const loading = document.getElementById('loading');
+
+      testBtn.disabled = true;
+      results.style.display = 'none';
+      loading.style.display = 'block';
+
+      const numSamples = parseInt(document.getElementById('numSamples').value);
+      const delayMs = parseInt(document.getElementById('delayMs').value);
+
+      try {
+        console.log(`Running color voting test with ${numSamples} samples, ${delayMs}ms delay`);
+
+        const response = await fetch(`${API_BASE}/api/vision/test-color-voting`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            num_samples: numSamples,
+            delay_ms: delayMs,
+            min_area: 500,
+            max_area: 50000
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+        }
+
+        const data = await response.json();
+        console.log('Test result:', data);
+
+        displayResults(data.result);
+      } catch (error) {
+        console.error('Error running test:', error);
+        alert('Error: ' + error.message);
+      } finally {
+        testBtn.disabled = false;
+        loading.style.display = 'none';
+      }
+    }
+
+    function displayResults(result) {
+      const results = document.getElementById('results');
+      const resultBox = document.getElementById('resultBox');
+      const colorLabel = document.getElementById('colorLabel');
+      const colorCode = document.getElementById('colorCode');
+      const confidenceFill = document.getElementById('confidenceFill');
+      const confidenceText = document.getElementById('confidenceText');
+      const voteBreakdown = document.getElementById('voteBreakdown');
+
+      const color = result.color || 'none';
+      const code = result.color_code || 0;
+      const confidence = result.confidence || 0;
+      const voteCounts = result.vote_counts || {};
+
+      // Update color label
+      colorLabel.textContent = color === 'none' ? 'NO CUBE DETECTED' : color.toUpperCase() + ' CUBE';
+      colorLabel.className = 'color-label ' + color;
+
+      // Update result box style
+      resultBox.className = 'result-box ' + color;
+
+      // Update color code
+      colorCode.textContent = code;
+      colorCode.style.color = code > 0 ? '#4caf50' : '#f44336';
+
+      // Update confidence bar
+      confidenceFill.style.width = confidence + '%';
+      confidenceText.textContent = confidence.toFixed(1) + '%';
+
+      // Update vote breakdown
+      let breakdownHtml = '';
+      const colorNames = { 'yellow': '🟡 Yellow', 'white': '⚪ White', 'metal': '⚫ Metal/Grey', 'null': '❌ None' };
+      for (const [colorKey, count] of Object.entries(voteCounts)) {
+        const displayName = colorNames[colorKey] || colorKey;
+        breakdownHtml += `<div style="margin-bottom: 8px;">
+          <strong>${displayName}:</strong> ${count} vote${count !== 1 ? 's' : ''}
+          <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 4px;">
+            <div style="width: ${(count / result.total_samples) * 100}%; height: 100%; background: #2196f3; border-radius: 4px;"></div>
+          </div>
+        </div>`;
+      }
+      voteBreakdown.innerHTML = breakdownHtml;
+
+      results.style.display = 'block';
+    }
+
+    // Camera stream
+    async function updateCameraFrame() {
+      try {
+        const frame = document.getElementById('cameraFrame');
+        const placeholder = document.getElementById('cameraPlaceholder');
+        const timestamp = Date.now();
+
+        const response = await fetch(`${API_BASE}/api/camera/capture?t=${timestamp}`, {
+          signal: AbortSignal.timeout(10000)
+        });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          if (frame.src && frame.src.startsWith('blob:')) {
+            URL.revokeObjectURL(frame.src);
+          }
+          frame.src = url;
+          frame.style.display = 'block';
+          if (placeholder) placeholder.style.display = 'none';
+        }
+      } catch (error) {
+        // Silently fail
+      }
+    }
+
+    function startStream() {
+      if (streamInterval) return;
+      updateCameraFrame();
+      streamInterval = setInterval(updateCameraFrame, 2000);
+    }
+
+    // Initialize
+    window.addEventListener('load', () => {
+      console.log('Color Voting Test Page Loaded');
+      updateValues();
+      startStream();
+    });
+  </script>
+</body>
+</html>
