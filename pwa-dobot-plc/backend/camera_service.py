@@ -316,7 +316,7 @@ class CameraService:
 
         Args:
             frame: Input image frame (BGR format)
-            method: Detection method - 'yolo' (default), 'blob'
+            method: Detection method - 'yolo' (default), 'blob', 'color'
             params: Optional detection parameters:
                 YOLO:
                 - conf: Confidence threshold (default: 0.25)
@@ -329,6 +329,13 @@ class CameraService:
                 - min_circularity: Minimum circularity (0-1, default: 0.6)
                 - min_convexity: Minimum convexity (0-1, default: 0.7)
                 - min_inertia_ratio: Minimum inertia ratio (0-1, default: 0.3)
+                
+                Color Filter (HSV):
+                - min_area: Minimum object area in pixels (default: 500)
+                - max_area: Maximum object area in pixels (default: 50000)
+                - detect_yellow: Detect yellow cubes (default: True)
+                - detect_white: Detect white cubes (default: True)
+                - detect_metal: Detect metal/grey cubes (default: True)
 
         Returns:
             Dictionary with counter detection results
@@ -352,6 +359,10 @@ class CameraService:
             # SimpleBlobDetector (fallback)
             elif method == 'blob':
                 return self._detect_with_blob(frame, params)
+
+            # Color Filter (HSV-based)
+            elif method == 'color':
+                return self._detect_with_color(frame, params)
 
             else:
                 return {
@@ -695,6 +706,134 @@ class CameraService:
                 'objects': [],
                 'error': str(e)
             }
+    
+    def _detect_with_color(self, frame: np.ndarray, params: Dict) -> Dict:
+        """
+        Detect cubes using HSV color filtering (Yellow, White, Metal/Grey)
+        
+        This is a simple color-based detection method that doesn't use AI.
+        It converts the image to HSV color space and looks for specific color ranges.
+        HSV is better for computer vision because Hue stays consistent even with shadows.
+        """
+        # Extract parameters with defaults
+        min_area = params.get('min_area', 500)
+        max_area = params.get('max_area', 50000)
+        detect_yellow = params.get('detect_yellow', True)
+        detect_white = params.get('detect_white', True)
+        detect_metal = params.get('detect_metal', True)
+        
+        try:
+            # Convert BGR to HSV color space
+            hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+            
+            all_objects = []
+            
+            # Define HSV color ranges (may need tuning based on lighting)
+            # Yellow cubes
+            if detect_yellow:
+                lower_yellow = np.array([20, 100, 100])
+                upper_yellow = np.array([30, 255, 255])
+                mask_yellow = cv2.inRange(hsv, lower_yellow, upper_yellow)
+                objects_yellow = self._find_objects_from_mask(mask_yellow, min_area, max_area, 'yellow')
+                all_objects.extend(objects_yellow)
+            
+            # White cubes (low saturation, high brightness)
+            if detect_white:
+                lower_white = np.array([0, 0, 180])
+                upper_white = np.array([180, 40, 255])
+                mask_white = cv2.inRange(hsv, lower_white, upper_white)
+                objects_white = self._find_objects_from_mask(mask_white, min_area, max_area, 'white')
+                all_objects.extend(objects_white)
+            
+            # Metal/Grey cubes (low saturation, mid-range brightness)
+            if detect_metal:
+                lower_metal = np.array([0, 0, 50])
+                upper_metal = np.array([180, 50, 150])
+                mask_metal = cv2.inRange(hsv, lower_metal, upper_metal)
+                objects_metal = self._find_objects_from_mask(mask_metal, min_area, max_area, 'metal')
+                all_objects.extend(objects_metal)
+            
+            logger.info(f"Color filter detected {len(all_objects)} objects (yellow: {len([o for o in all_objects if o.get('color') == 'yellow'])}, white: {len([o for o in all_objects if o.get('color') == 'white'])}, metal: {len([o for o in all_objects if o.get('color') == 'metal'])})")
+            
+            return {
+                'objects_found': len(all_objects) > 0,
+                'object_count': len(all_objects),
+                'objects': all_objects,
+                'method': 'color',
+                'timestamp': time.time()
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in color detection: {e}")
+            return {
+                'objects_found': False,
+                'object_count': 0,
+                'objects': [],
+                'method': 'color',
+                'error': str(e)
+            }
+    
+    def _find_objects_from_mask(self, mask: np.ndarray, min_area: int, max_area: int, color_name: str) -> List[Dict]:
+        """
+        Find objects from a binary mask using contour detection
+        
+        Args:
+            mask: Binary mask (white = object, black = background)
+            min_area: Minimum object area in pixels
+            max_area: Maximum object area in pixels
+            color_name: Name of the color being detected (for labeling)
+            
+        Returns:
+            List of detected objects with bounding boxes
+        """
+        objects = []
+        
+        # Clean up the mask with morphological operations
+        kernel = np.ones((5, 5), np.uint8)
+        mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)  # Fill small holes
+        mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)    # Remove small noise
+        
+        # Find contours
+        contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        
+        for contour in contours:
+            # Calculate area
+            area = cv2.contourArea(contour)
+            
+            # Filter by area
+            if area < min_area or area > max_area:
+                continue
+            
+            # Get bounding box
+            x, y, w, h = cv2.boundingRect(contour)
+            center_x = x + w // 2
+            center_y = y + h // 2
+            
+            # Calculate circularity (how close to a circle)
+            perimeter = cv2.arcLength(contour, True)
+            if perimeter > 0:
+                circularity = 4 * np.pi * area / (perimeter * perimeter)
+            else:
+                circularity = 0
+            
+            # Create object dictionary
+            obj = {
+                'type': 'cube',
+                'color': color_name,
+                'x': int(x),
+                'y': int(y),
+                'width': int(w),
+                'height': int(h),
+                'area': float(area),
+                'center': (int(center_x), int(center_y)),
+                'circularity': round(circularity, 2),
+                'confidence': 0.85,  # Color detection is fairly reliable
+                'method': 'color'
+            }
+            
+            objects.append(obj)
+        
+        return objects
     
     def _merge_nearby_objects(self, objects: List[Dict], threshold: int = 30) -> List[Dict]:
         """Merge objects that are close to each other"""

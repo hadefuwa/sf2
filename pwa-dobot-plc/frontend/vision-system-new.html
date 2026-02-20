@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="utf-8" />
+ <link rel="apple-touch-icon" sizes="76x76" href="/assets/img/apple-icon.png">
+ <link rel="icon" type="image/png" href="/assets/img/favicon.png">
+ <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+ <title>Color Detection Test - Smart Factory</title>
+ <meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, shrink-to-fit=no' name='viewport' />
+ 
+ <!-- Fonts and icons -->
+ <link rel="stylesheet" href="/assets/fontawesome/css/all.min.css">
+ 
+ <!-- CSS Files -->
+ <link href="/assets/css/material-dashboard.min.css?v=2.1.0" rel="stylesheet" />
+ <link href="/assets/demo/demo.css" rel="stylesheet" />
+ <link href="/assets/css/professional-theme.css" rel="stylesheet" />
+ 
+ <!-- PWA Manifest -->
+ <link rel="manifest" href="/manifest.json">
+ <meta name="theme-color" content="#030c1d">
+ <meta name="mobile-web-app-capable" content="yes">
+ <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body class="dark-edition">
+  <div class="wrapper ">
+    <div class="sidebar" data-color="purple" data-background-color="black" data-image="">
+      <div class="logo">
+        <a href="/" class="simple-text logo-normal">
+          <i class="material-icons">factory</i>
+          Smart Factory
+        </a>
+      </div>
+      <div class="sidebar-wrapper">
+        <ul class="nav">
+          <li class="nav-item">
+            <a class="nav-link" href="/index.html">
+              <i class="material-icons">dashboard</i>
+              <p>Dashboard</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/vision-system.html">
+              <i class="material-icons">visibility</i>
+              <p>Vision System</p>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="main-panel">
+      <!-- Navbar -->
+      <nav class="navbar navbar-expand-lg navbar-transparent navbar-absolute fixed-top ">
+        <div class="container-fluid">
+          <div class="navbar-wrapper">
+            <a class="navbar-brand" href="javascript:;">Color Detection Test</a>
+          </div>
+        </div>
+      </nav>
+
+      <div class="content">
+        <div class="container-fluid">
+          
+          <!-- Camera View -->
+          <div class="row">
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header card-header-purple">
+                  <h4 class="card-title">Camera Feed</h4>
+                </div>
+                <div class="card-body">
+                  <div class="camera-viewer">
+                    <img id="cameraFrame" class="camera-frame" src="" alt="Camera Feed" style="display: none; width: 100%; border-radius: 8px;">
+                    <div id="cameraPlaceholder" style="min-height: 400px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-direction: column; gap: 10px; background: rgba(10, 22, 40, 0.8); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
+                      <div style="font-size: 48px;">CAM</div>
+                      <div>Camera not connected</div>
+                    </div>
+                    <div style="margin-top: 16px;">
+                      <button class="btn btn-primary" onclick="connectCamera()">Connect Camera</button>
+                      <button class="btn btn-danger" onclick="disconnectCamera()" style="margin-left: 8px;">Disconnect</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Analyzed Image -->
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header card-header-success">
+                  <h4 class="card-title">Detected Cubes</h4>
+                </div>
+                <div class="card-body">
+                  <img id="analyzedImage" class="camera-frame" src="" alt="Analyzed Image" style="display: none; width: 100%; border-radius: 8px;">
+                  <div id="analyzedPlaceholder" style="min-height: 400px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); flex-direction: column; gap: 10px; background: rgba(10, 22, 40, 0.8); border: 1px solid var(--md-sys-color-outline-variant); border-radius: 8px;">
+                    <div style="font-size: 48px;">SCAN</div>
+                    <div>Detection results will appear here</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detection Controls -->
+          <div class="row">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-header card-header-success">
+                  <h4 class="card-title">Color Detection</h4>
+                </div>
+                <div class="card-body">
+                  
+                  <!-- Detection Method -->
+                  <div style="margin-bottom: 24px;">
+                    <label style="display: block; color: #e0e0e0; font-size: 14px; font-weight: 600; margin-bottom: 10px;">
+                      Detection Method:
+                    </label>
+                    <select id="detectionMethodSelector" onchange="changeDetectionMethod()" style="width: 100%; padding: 12px; background: #1e1e2e; color: #ffffff; border: 2px solid #424242; border-radius: 8px; font-size: 14px;">
+                      <option value="color">🎨 Color Filter (HSV) - Yellow/White/Metal</option>
+                      <option value="yolo">🤖 YOLO AI Model</option>
+                      <option value="blob">🔵 Blob Detection</option>
+                    </select>
+                    <input type="hidden" id="objectDetectionMethod" value="color">
+                  </div>
+
+                  <!-- Detection Parameters -->
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                    <div>
+                      <label style="display: block; color: #e0e0e0; font-size: 12px; margin-bottom: 8px;">
+                        Min Area: <span id="minAreaValue">500</span> pixels
+                      </label>
+                      <input type="range" id="minAreaSlider" min="100" max="5000" step="100" value="500" oninput="updateParams()" style="width: 100%;">
+                    </div>
+                    <div>
+                      <label style="display: block; color: #e0e0e0; font-size: 12px; margin-bottom: 8px;">
+                        Max Area: <span id="maxAreaValue">50000</span> pixels
+                      </label>
+                      <input type="range" id="maxAreaSlider" min="10000" max="100000" step="5000" value="50000" oninput="updateParams()" style="width: 100%;">
+                    </div>
+                  </div>
+
+                  <!-- Detection Buttons -->
+                  <div style="display: flex; gap: 12px; margin-bottom: 24px;">
+                    <button class="btn btn-success" onclick="detectObjects()" style="flex: 1;">
+                      <i class="material-icons">search</i> Detect Cubes
+                    </button>
+                    <button class="btn btn-primary" onclick="startContinuousDetection()" id="startBtn">
+                      <i class="material-icons">play_arrow</i> Start Continuous
+                    </button>
+                    <button class="btn btn-danger" onclick="stopContinuousDetection()" id="stopBtn" style="display: none;">
+                      <i class="material-icons">stop</i> Stop
+                    </button>
+                  </div>
+
+                  <!-- Results -->
+                  <div id="results" style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 8px; display: none;">
+                    <h5 style="color: #ffffff; margin-bottom: 12px;">Detection Results</h5>
+                    <div id="resultsContent" style="color: #b0bec5; font-size: 14px;"></div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/assets/js/core/jquery.min.js"></script>
+  <script src="/assets/js/core/popper.min.js"></script>
+  <script src="/assets/js/core/bootstrap-material-design.min.js"></script>
+  <script src="/assets/js/plugins/perfect-scrollbar.jquery.min.js"></script>
+  <script src="/assets/js/material-dashboard.min.js?v=2.1.0"></script>
+
+  <script>
+    const API_BASE = window.location.origin;
+    let cameraConnected = false;
+    let streamInterval = null;
+    let detectionInterval = null;
+    let detectionActive = false;
+
+    let objectParams = {
+      min_area: 500,
+      max_area: 50000
+    };
+
+    // Connect to camera
+    async function connectCamera() {
+      try {
+        const response = await fetch(`${API_BASE}/api/camera/connect`, { method: 'POST' });
+        if (response.ok) {
+          cameraConnected = true;
+          startStream();
+          console.log('Camera connected');
+        } else {
+          alert('Failed to connect camera');
+        }
+      } catch (error) {
+        console.error('Error connecting camera:', error);
+        alert('Error connecting camera');
+      }
+    }
+
+    // Disconnect camera
+    async function disconnectCamera() {
+      try {
+        const response = await fetch(`${API_BASE}/api/camera/disconnect`, { method: 'POST' });
+        cameraConnected = false;
+        stopStream();
+        console.log('Camera disconnected');
+      } catch (error) {
+        console.error('Error disconnecting camera:', error);
+      }
+    }
+
+    // Start camera stream
+    function startStream() {
+      if (streamInterval) clearInterval(streamInterval);
+      const frame = document.getElementById('cameraFrame');
+      const placeholder = document.getElementById('cameraPlaceholder');
+      
+      streamInterval = setInterval(async () => {
+        try {
+          const response = await fetch(`${API_BASE}/api/camera/capture?t=${Date.now()}`);
+          if (response.ok) {
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            if (frame.src && frame.src.startsWith('blob:')) {
+              URL.revokeObjectURL(frame.src);
+            }
+            frame.src = url;
+            frame.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+          }
+        } catch (error) {
+          console.error('Error fetching frame:', error);
+        }
+      }, 500); // Update every 500ms
+    }
+
+    // Stop camera stream
+    function stopStream() {
+      if (streamInterval) {
+        clearInterval(streamInterval);
+        streamInterval = null;
+      }
+      const frame = document.getElementById('cameraFrame');
+      const placeholder = document.getElementById('cameraPlaceholder');
+      if (frame) {
+        frame.style.display = 'none';
+        if (frame.src && frame.src.startsWith('blob:')) {
+          URL.revokeObjectURL(frame.src);
+        }
+      }
+      if (placeholder) placeholder.style.display = 'flex';
+    }
+
+    // Update parameters
+    function updateParams() {
+      objectParams.min_area = parseInt(document.getElementById('minAreaSlider').value);
+      objectParams.max_area = parseInt(document.getElementById('maxAreaSlider').value);
+      document.getElementById('minAreaValue').textContent = objectParams.min_area;
+      document.getElementById('maxAreaValue').textContent = objectParams.max_area;
+    }
+
+    // Change detection method
+    function changeDetectionMethod() {
+      const selector = document.getElementById('detectionMethodSelector');
+      const hiddenInput = document.getElementById('objectDetectionMethod');
+      if (hiddenInput) {
+        hiddenInput.value = selector.value;
+      }
+      console.log('Detection method changed to:', selector.value);
+    }
+
+    // Detect objects once
+    async function detectObjects() {
+      if (!cameraConnected) {
+        alert('Please connect camera first');
+        return;
+      }
+
+      const objectMethod = document.getElementById('objectDetectionMethod').value;
+
+      try {
+        // Get analyzed image
+        const analyzeResponse = await fetch(`${API_BASE}/api/vision/analyze`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            method: 'combined',
+            use_object_detection: true,
+            object_method: objectMethod,
+            object_params: objectParams,
+            defect_detection_enabled: false
+          })
+        });
+
+        if (analyzeResponse.ok) {
+          const blob = await analyzeResponse.blob();
+          const url = URL.createObjectURL(blob);
+          const analyzedImg = document.getElementById('analyzedImage');
+          const analyzedPlaceholder = document.getElementById('analyzedPlaceholder');
+          
+          if (analyzedImg.src && analyzedImg.src.startsWith('blob:')) {
+            URL.revokeObjectURL(analyzedImg.src);
+          }
+          analyzedImg.src = url;
+          analyzedImg.style.display = 'block';
+          if (analyzedPlaceholder) analyzedPlaceholder.style.display = 'none';
+        }
+
+        // Get detection results
+        const detectResponse = await fetch(`${API_BASE}/api/vision/detect`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            object_detection_enabled: true,
+            defect_detection_enabled: false,
+            object_method: objectMethod,
+            object_params: objectParams
+          })
+        });
+
+        if (detectResponse.ok) {
+          const results = await detectResponse.json();
+          displayResults(results);
+        }
+      } catch (error) {
+        console.error('Error detecting objects:', error);
+        alert('Error detecting objects: ' + error.message);
+      }
+    }
+
+    // Display results
+    function displayResults(results) {
+      const resultsDiv = document.getElementById('results');
+      const resultsContent = document.getElementById('resultsContent');
+      
+      if (!resultsDiv || !resultsContent) return;
+
+      const objectCount = results.object_count || 0;
+      const objects = results.objects || [];
+
+      let html = `<div style="margin-bottom: 12px;"><strong>Cubes Detected: ${objectCount}</strong></div>`;
+      
+      if (objects.length > 0) {
+        html += '<div style="margin-top: 12px;">';
+        objects.forEach((obj, idx) => {
+          const color = obj.color || 'unknown';
+          const center = obj.center || [0, 0];
+          const area = obj.area || 0;
+          html += `<div style="margin-bottom: 8px; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 4px;">
+            <strong>Cube ${idx + 1}:</strong> Color: ${color}, Center: (${center[0]}, ${center[1]}), Area: ${area.toFixed(0)}px²
+          </div>`;
+        });
+        html += '</div>';
+      } else {
+        html += '<div style="color: #f44336; margin-top: 12px;">No cubes detected</div>';
+      }
+
+      resultsContent.innerHTML = html;
+      resultsDiv.style.display = 'block';
+    }
+
+    // Start continuous detection
+    function startContinuousDetection() {
+      if (!cameraConnected) {
+        alert('Please connect camera first');
+        return;
+      }
+      detectionActive = true;
+      document.getElementById('startBtn').style.display = 'none';
+      document.getElementById('stopBtn').style.display = 'inline-block';
+      
+      detectionInterval = setInterval(() => {
+        if (detectionActive) {
+          detectObjects();
+        }
+      }, 2000); // Detect every 2 seconds
+    }
+
+    // Stop continuous detection
+    function stopContinuousDetection() {
+      detectionActive = false;
+      if (detectionInterval) {
+        clearInterval(detectionInterval);
+        detectionInterval = null;
+      }
+      document.getElementById('startBtn').style.display = 'inline-block';
+      document.getElementById('stopBtn').style.display = 'none';
+    }
+
+    // Initialize
+    window.addEventListener('load', () => {
+      console.log('Color Detection Test Page Loaded');
+      updateParams();
+    });
+  </script>
+</body>
+</html>
