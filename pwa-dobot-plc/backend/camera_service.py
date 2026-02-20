@@ -834,39 +834,42 @@ class CameraService:
             all_objects = []
             debug_info = {}
 
-            # Define HSV color ranges - IMPROVED for better accuracy
-            # Tuned for green side lighting and varied illumination
+            # Define HSV color ranges - IMPROVED to avoid conveyor structure false positives
+            # Tuned for green side lighting and to ignore metal/white conveyor parts
 
             # Yellow cubes - wider hue range to handle lighting variations
             if detect_yellow:
-                lower_yellow = np.array([18, 80, 100])  # Wider H range, lower S threshold
-                upper_yellow = np.array([35, 255, 255])  # Captures more yellow tones
+                lower_yellow = np.array([18, 100, 120])  # Higher S and V to ensure vivid yellow
+                upper_yellow = np.array([35, 255, 255])  # Captures yellow tones
                 mask_yellow = cv2.inRange(hsv, lower_yellow, upper_yellow)
                 yellow_pixels = np.sum(mask_yellow > 0)
-                logger.info(f"🔍 Yellow mask: {yellow_pixels} pixels matched (range: H[18-35], S[80-255], V[100-255])")
-                objects_yellow = self._find_objects_from_mask(mask_yellow, min_area, max_area, 'yellow', debug_info)
+                logger.info(f"🔍 Yellow mask: {yellow_pixels} pixels matched (range: H[18-35], S[100-255], V[120-255])")
+                # Use higher min_area for yellow to avoid small reflections
+                objects_yellow = self._find_objects_from_mask(mask_yellow, max(min_area, 3000), max_area, 'yellow', debug_info)
                 all_objects.extend(objects_yellow)
                 debug_info['yellow'] = {'pixels': yellow_pixels, 'objects': len(objects_yellow)}
 
-            # White cubes - strict criteria to avoid false positives from background
+            # White cubes - VERY strict to avoid conveyor sides (disable if not working well)
             if detect_white:
-                lower_white = np.array([0, 0, 200])  # Very high brightness required
-                upper_white = np.array([180, 30, 255])  # Lower saturation threshold
+                lower_white = np.array([0, 0, 230])  # VERY high brightness required (almost pure white)
+                upper_white = np.array([180, 15, 255])  # Very low saturation (no color tint)
                 mask_white = cv2.inRange(hsv, lower_white, upper_white)
                 white_pixels = np.sum(mask_white > 0)
-                logger.info(f"🔍 White mask: {white_pixels} pixels matched (range: H[0-180], S[0-30], V[200-255])")
-                objects_white = self._find_objects_from_mask(mask_white, min_area, max_area, 'white', debug_info)
+                logger.info(f"🔍 White mask: {white_pixels} pixels matched (range: H[0-180], S[0-15], V[230-255])")
+                # Much higher min_area for white to filter out conveyor highlights
+                objects_white = self._find_objects_from_mask(mask_white, max(min_area, 5000), max_area, 'white', debug_info)
                 all_objects.extend(objects_white)
                 debug_info['white'] = {'pixels': white_pixels, 'objects': len(objects_white)}
 
-            # Metal/Grey cubes - adjusted to avoid overlap with white and yellow
+            # Metal/Grey cubes - narrow range to avoid conveyor frame
             if detect_metal:
-                lower_metal = np.array([0, 0, 60])  # Slightly higher V minimum
-                upper_metal = np.array([180, 60, 180])  # Higher saturation and brightness allowed
+                lower_metal = np.array([0, 0, 80])  # Higher V minimum
+                upper_metal = np.array([180, 40, 140])  # Narrower saturation and brightness range
                 mask_metal = cv2.inRange(hsv, lower_metal, upper_metal)
                 metal_pixels = np.sum(mask_metal > 0)
-                logger.info(f"🔍 Metal mask: {metal_pixels} pixels matched (range: H[0-180], S[0-60], V[60-180])")
-                objects_metal = self._find_objects_from_mask(mask_metal, min_area, max_area, 'metal', debug_info)
+                logger.info(f"🔍 Metal mask: {metal_pixels} pixels matched (range: H[0-180], S[0-40], V[80-140])")
+                # Much higher min_area for metal to filter out conveyor frame
+                objects_metal = self._find_objects_from_mask(mask_metal, max(min_area, 4000), max_area, 'metal', debug_info)
                 all_objects.extend(objects_metal)
                 debug_info['metal'] = {'pixels': metal_pixels, 'objects': len(objects_metal)}
 
