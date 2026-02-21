@@ -3,7 +3,7 @@ PWA Dobot-PLC Control Backend
 Flask API with WebSocket support for real-time PLC monitoring
 """
 
-from flask import Flask, jsonify, request, send_from_directory, Response, abort
+from flask import Flask, jsonify, request, send_from_directory, Response, abort, make_response
 from flask_socketio import SocketIO, emit
 from flask_cors import CORS
 import logging
