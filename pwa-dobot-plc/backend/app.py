@@ -2619,14 +2619,50 @@ def get_annotated_result():
     """Get the latest annotated voting result image"""
     global latest_annotated_image
 
-    if latest_annotated_image is None:
-        # Return a placeholder or error
-        return jsonify({'error': 'No annotated result available yet'}), 404
-
     try:
         import base64
-        # Decode base64 to binary
-        image_data = base64.b64decode(latest_annotated_image)
+        import cv2
+        import numpy as np
+
+        if latest_annotated_image is None:
+            # Create placeholder image
+            placeholder = np.zeros((480, 640, 3), dtype=np.uint8)
+            placeholder[:] = (20, 30, 50)  # Dark blue-grey background
+
+            # Add text
+            text_lines = [
+                "ANALYSIS NOT COMPLETE",
+                "",
+                "Click 'START ANALYSIS'",
+                "to generate result"
+            ]
+
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            font_scale = 0.8
+            thickness = 2
+            color = (180, 180, 180)  # Light grey text
+
+            y_start = 180
+            line_height = 40
+
+            for i, line in enumerate(text_lines):
+                if line:  # Skip empty lines
+                    text_size = cv2.getTextSize(line, font, font_scale, thickness)[0]
+                    x = (640 - text_size[0]) // 2  # Center horizontally
+                    y = y_start + (i * line_height)
+                    cv2.putText(placeholder, line, (x, y), font, font_scale, color, thickness, cv2.LINE_AA)
+
+            # Add icon/symbol at top
+            cv2.circle(placeholder, (320, 100), 40, (100, 100, 100), 3)
+            cv2.line(placeholder, (320, 70), (320, 110), (100, 100, 100), 3)
+            cv2.line(placeholder, (300, 100), (340, 100), (100, 100, 100), 3)
+
+            # Encode to JPEG
+            _, buffer = cv2.imencode('.jpg', placeholder)
+            image_data = buffer.tobytes()
+        else:
+            # Decode base64 to binary
+            image_data = base64.b64decode(latest_annotated_image)
 
         # Return as JPEG image
         response = make_response(image_data)
