@@ -381,9 +381,11 @@ python3 app.py
 - ✅ **Settings Management** - Web-based configuration interface
 - ✅ **Emergency Stop** - Safety controls for immediate shutdown
 - ✅ **Progressive Web App** - Install and use offline
-- ✅ **Vision System** - YOLO counter detection, Override Start (bypass PLC), multiple detection methods (YOLO, contour, circle, blob)
+- ✅ **Vision System** - YOLO counter detection, HSV color detection (Yellow/White/Metal cubes), Override Start (bypass PLC), multiple detection methods
+- ✅ **Color Detection with Voting** - Majority voting system (10 snapshots) for reliable cube color detection
+- ✅ **Annotated Results** - Visual feedback with bounding boxes and color labels on detected cubes
 - ✅ **Real-time Parameter Controls** - Adjust detection confidence, IOU, cropping, edge sensitivity from the UI
-- ✅ **Camera Support** - MJPEG stream, optional camera integration
+- ✅ **Camera Support** - Multiple MJPEG streams for raw feed, analyzed image, and annotated results
 - ✅ **HTTPS for WinCC** - Self-signed SSL for embedding camera in WinCC Unified HMI (run `deploy/generate_ssl_cert.sh`)
 - ✅ **WinCC HMI Support** - Custom Web Control to view camera streams on Siemens Unified Panels
 
@@ -689,6 +691,43 @@ chmod +x scripts/check_wifi_ap.sh scripts/fix_wifi_ap.sh
 # Try to repair and restart the hotspot:
 ./scripts/fix_wifi_ap.sh
 ```
+
+---
+
+## 📹 Vision System API
+
+### Camera Streams
+
+The vision system provides multiple camera stream endpoints that can be embedded in WinCC HMI or accessed directly:
+
+- **Raw Camera Feed**: `https://192.168.7.5:8080/api/camera/stream`
+  - Live MJPEG stream from camera
+  - Unprocessed image
+
+- **Analyzed Image**: `https://192.168.7.5:8080/api/vision/analyze`
+  - Shows all detected objects with bounding boxes
+  - Updates on each detection
+
+- **Annotated Result**: `https://192.168.7.5:8080/api/vision/annotated-result`
+  - Shows the final voting result with color label (e.g., "YELLOW CUBE")
+  - Updates after each voting analysis
+  - Displays the winning cube with colored bounding box
+
+### Color Detection Voting
+
+Test the color detection system with majority voting:
+
+```bash
+# From web interface
+Open: https://192.168.7.5:8080/vision-system-new.html
+Click "START ANALYSIS (10 votes)"
+```
+
+The system takes 10 snapshots, votes on the most common color detected, and displays:
+- Final color result with confidence percentage
+- Vote breakdown by color
+- Annotated image with labeled cube
+- Color code for PLC integration (0=none, 1=yellow, 2=white, 3=metal)
 
 ---
 
